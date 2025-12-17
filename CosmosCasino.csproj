@@ -1,0 +1,18 @@
+<Project Sdk="Godot.NET.Sdk/4.5.1">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework Condition="'$(GodotTargetPlatform)' == 'android'">net9.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>CosmosCasino</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Reference the real game project -->
+  <ItemGroup>
+    <ProjectReference Include="code/Game/Game.csproj" />
+  </ItemGroup>
+
+  <!-- Do NOT compile source files directly -->
+  <ItemGroup>
+    <Compile Remove="code/**/*.cs" />
+  </ItemGroup>
+</Project>

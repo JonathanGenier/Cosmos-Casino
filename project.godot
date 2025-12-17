@@ -10,10 +10,11 @@ config_version=5
 
 [application]
 
-config/name="Cosmos Casino"
-config/features=PackedStringArray("4.5", "Forward Plus")
+config/name="CosmosCasino"
+run/main_scene="res://scenes/test.tscn"
+config/features=PackedStringArray("4.5", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
 [dotnet]
 
-project/assembly_name="Cosmos Casino"
+project/assembly_name="CosmosCasino"

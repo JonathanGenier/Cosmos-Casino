@@ -2,3 +2,9 @@ root = true
 
 [*]
 charset = utf-8
+
+# Prefer file-scoped namespaces
+dotnet_style_namespace_declarations = file_scoped:suggestion
+
+# Do not require full qualification everywhere
+dotnet_style_qualification_for_namespace = false:suggestion
