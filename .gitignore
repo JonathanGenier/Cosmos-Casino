@@ -1,0 +1,27 @@
+# Godot 4+ specific ignores
+/android/
+.import/
+.export/
+*.translation
+mono_crash.*.json
+
+# Godot 4 cache
+.godot/
+
+# Visual Studio
+.vs/
+
+# C# / Mono
+.mono/
+data_*/
+*.user
+*.userprefs
+*.sln.DotSettings
+
+# Builds
+bin/
+obj/
+
+# OS junk
+.DS_Store
+Thumbs.db
