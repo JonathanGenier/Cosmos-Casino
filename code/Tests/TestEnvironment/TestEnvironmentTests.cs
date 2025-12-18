@@ -5,6 +5,8 @@ namespace CosmosCasino.Tests.TestEnvironment
     [TestFixture]
     internal class TestEnvironmentTests
     {
+        // Sanity check to ensure the test framework is operational
+
         [Test]
         public void TestFrameWork_IsOperational()
         {
