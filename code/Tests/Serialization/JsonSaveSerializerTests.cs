@@ -1,5 +1,7 @@
 using CosmosCasino.Core.Serialization;
 using NUnit.Framework;
+using System;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 
@@ -8,7 +10,7 @@ namespace CosmosCasino.Tests.Serialization
     [TestFixture]
     internal class JsonSaveSerializerTests
     {
-        JsonSaveSerializer _serializer;
+        JsonSaveSerializer? _serializer;
 
         private sealed class TestData
         {
@@ -31,7 +33,7 @@ namespace CosmosCasino.Tests.Serialization
         public void Serialize_DataIsNull_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Assert.That(() => _serializer.Serialize<object>(null!), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => _serializer!.Serialize<object>(null!), Throws.TypeOf<ArgumentNullException>());
         }
 
         [Test]
@@ -41,7 +43,7 @@ namespace CosmosCasino.Tests.Serialization
             var obj = new TestData { Value = 42 };
 
             // Act
-            var bytes = _serializer.Serialize(obj);
+            var bytes = _serializer!.Serialize(obj);
 
             // Assert
             Assert.That(bytes, Is.Not.Null);
@@ -56,7 +58,7 @@ namespace CosmosCasino.Tests.Serialization
         public void Deserialize_BytesIsNull_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Assert.That(() => _serializer.Deserialize<object>(null!), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => _serializer!.Deserialize<object>(null!), Throws.TypeOf<ArgumentNullException>());
         }
 
         [Test]
@@ -66,7 +68,7 @@ namespace CosmosCasino.Tests.Serialization
             var emptyBytes = Array.Empty<byte>();
 
             // Act & Assert
-            Assert.That(() => _serializer.Deserialize<object>(emptyBytes), Throws.TypeOf<InvalidDataException>());
+            Assert.That(() => _serializer!.Deserialize<object>(emptyBytes), Throws.TypeOf<InvalidDataException>());
         }
 
         [Test]
@@ -76,7 +78,7 @@ namespace CosmosCasino.Tests.Serialization
             var invalidJsonBytes = Encoding.UTF8.GetBytes("NOT JSON");
 
             // Act & Assert
-            Assert.That(() => _serializer.Deserialize<TestData>(invalidJsonBytes), Throws.TypeOf<JsonException>());
+            Assert.That(() => _serializer!.Deserialize<TestData>(invalidJsonBytes), Throws.TypeOf<JsonException>());
         }
 
         [Test]
@@ -84,10 +86,10 @@ namespace CosmosCasino.Tests.Serialization
         {
             // Arrange
             var original = new TestData { Value = 123 };
-            var bytes = _serializer.Serialize(original);
+            var bytes = _serializer!.Serialize(original);
 
             // Act
-            var result = _serializer.Deserialize<TestData>(bytes);
+            var result = _serializer!.Deserialize<TestData>(bytes);
 
             // Assert
             Assert.That(result.Value, Is.EqualTo(123));
@@ -102,8 +104,8 @@ namespace CosmosCasino.Tests.Serialization
         {
             var original = new TestData { Value = 99 };
 
-            var bytes = _serializer.Serialize(original);
-            var result = _serializer.Deserialize<TestData>(bytes);
+            var bytes = _serializer!.Serialize(original);
+            var result = _serializer!.Deserialize<TestData>(bytes);
 
             Assert.That(result.Value, Is.EqualTo(original.Value));
         }

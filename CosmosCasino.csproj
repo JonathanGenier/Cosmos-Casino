@@ -1,23 +1,18 @@
 <Project Sdk="Godot.NET.Sdk/4.5.1">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <TargetFramework Condition="'$(GodotTargetPlatform)' == 'android'">net9.0</TargetFramework>
-    <EnableDynamicLoading>true</EnableDynamicLoading>
-    <RootNamespace>CosmosCasino</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
-  <!-- Reference the real game project -->
+  <!-- Compile all game code EXCEPT tests -->
   <ItemGroup>
-    <ProjectReference Include="code/Game/Game.csproj" />
+    <Compile Remove="code/Tests/**/*.cs" />
+    <Compile Remove="code/Core/**/*.cs" />
   </ItemGroup>
 
-  <!-- Do NOT compile source files directly -->
+  <!-- Reference Core logic -->
   <ItemGroup>
-    <Compile Remove="code/**/*.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
-    <PackageReference Include="NUnit" Version="4.4.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="6.0.0" />
+    <ProjectReference Include="code/Core/Core.csproj" />
   </ItemGroup>
 </Project>

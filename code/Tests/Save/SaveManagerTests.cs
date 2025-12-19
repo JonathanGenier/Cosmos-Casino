@@ -1,6 +1,8 @@
 using CosmosCasino.Core.Save;
 using CosmosCasino.Core.Serialization;
 using NUnit.Framework;
+using System;
+using System.IO;
 using System.Text.Json;
 
 namespace CosmosCasino.Tests.Save
@@ -9,9 +11,9 @@ namespace CosmosCasino.Tests.Save
     [TestFixture]
     internal class SaveManagerTests
     {
-        private string _tempPath;
-        private JsonSaveSerializer _serializer;
-        private SaveManager _saveManager;
+        private string? _tempPath;
+        private JsonSaveSerializer? _serializer;
+        private SaveManager? _saveManager;
 
         private sealed class TestSaveParticipant : ISaveParticipant
         {
@@ -69,16 +71,16 @@ namespace CosmosCasino.Tests.Save
         public void SaveManager_WhenSerializerIsNull_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Assert.That(() => new SaveManager(null!, _tempPath), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => new SaveManager(null!, _tempPath!), Throws.TypeOf<ArgumentNullException>());
         }
 
         [Test]
         public void SaveManager_WhenFilePathIsNullOrWhiteSpace_ThrowsArgumentException()
         {
             // Act & Assert
-            Assert.That(() => new SaveManager(_serializer, null!), Throws.TypeOf<ArgumentException>());
-            Assert.That(() => new SaveManager(_serializer, ""), Throws.TypeOf<ArgumentException>());
-            Assert.That(() => new SaveManager(_serializer, "   "), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => new SaveManager(_serializer!, null!), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => new SaveManager(_serializer!, ""), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => new SaveManager(_serializer!, "   "), Throws.TypeOf<ArgumentException>());
         }
 
         #endregion
@@ -89,7 +91,7 @@ namespace CosmosCasino.Tests.Save
         public void Register_WhenParticipantIsNull_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Assert.That(() => _saveManager.Register(null!), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => _saveManager!.Register(null!), Throws.TypeOf<ArgumentNullException>());
         }
 
         [Test]
@@ -97,7 +99,7 @@ namespace CosmosCasino.Tests.Save
         {
             // Arrange
             var participant = new TestSaveParticipant("p1");
-            _saveManager.Register(participant);
+            _saveManager!.Register(participant);
 
             // Act & Assert
             Assert.That(() => _saveManager.Register(participant), Throws.TypeOf<InvalidOperationException>());
@@ -111,7 +113,7 @@ namespace CosmosCasino.Tests.Save
         public void Save_WhenNoParticipantsRegistered_DoesNotThrow()
         {
             // Act & Assert
-            Assert.That(() => _saveManager.Save(), Throws.Nothing);
+            Assert.That(() => _saveManager!.Save(), Throws.Nothing);
         }
 
         [Test]
@@ -119,7 +121,7 @@ namespace CosmosCasino.Tests.Save
         {
             // Arrange
             var participant = new TestSaveParticipant("p1");
-            _saveManager.Register(participant);
+            _saveManager!.Register(participant);
 
             // Act
             _saveManager.Save();
@@ -133,7 +135,7 @@ namespace CosmosCasino.Tests.Save
         {
             // Arrange
             var participant = new TestSaveParticipant("p1") { Value = 123 };
-            _saveManager.Register(participant);
+            _saveManager!.Register(participant);
 
             // Act
             _saveManager.Save();
@@ -151,7 +153,7 @@ namespace CosmosCasino.Tests.Save
         {
             // Arrange
             var participant = new TestSaveParticipant("p1") { Value = 123 };
-            _saveManager.Register(participant);
+            _saveManager!.Register(participant);
 
             // Act
             _saveManager.Save();
@@ -166,7 +168,7 @@ namespace CosmosCasino.Tests.Save
         {
             // Arrange
             var participant = new TestSaveParticipant("p1");
-            _saveManager.Register(participant);
+            _saveManager!.Register(participant);
 
             // Act & Assert
             Assert.That(() => _saveManager.Load(), Throws.Nothing);
@@ -177,11 +179,11 @@ namespace CosmosCasino.Tests.Save
         public void Load_WhenFileIsInvalid_ThrowsJsonException()
         {
             // Arrange
-            File.WriteAllText(_tempPath, "NOT VALID JSON");
+            File.WriteAllText(_tempPath!, "NOT VALID JSON");
 
             // Act & Assert
             Assert.That(
-                () => _saveManager.Load(), 
+                () => _saveManager!.Load(), 
                 Throws.TypeOf<InvalidDataException>().With.InnerException.TypeOf<JsonException>()
                 );
         }
@@ -195,7 +197,7 @@ namespace CosmosCasino.Tests.Save
         {
             // Arrange
             var participant = new TestSaveParticipant("p1") { Value = 42 };
-            _saveManager.Register(participant);
+            _saveManager!.Register(participant);
 
             // Act
             _saveManager.Save();
@@ -212,8 +214,8 @@ namespace CosmosCasino.Tests.Save
             // Arrange
             var p1 = new TestSaveParticipant("P1") { Value = 1 };
             var p2 = new TestSaveParticipant("P2") { Value = 2 };
-            _saveManager.Register(p1);
-            _saveManager.Register(p2);
+            _saveManager!.Register(p1);
+            _saveManager!.Register(p2);
 
             // Act
             _saveManager.Save();

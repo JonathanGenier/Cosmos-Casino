@@ -11,10 +11,20 @@ config_version=5
 [application]
 
 config/name="CosmosCasino"
-run/main_scene="res://scenes/test.tscn"
+run/main_scene="uid://besel0psdc6vv"
 config/features=PackedStringArray("4.5", "C#", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+AppManager="*res://code/Client/Application/AppManager.cs"
 
 [dotnet]
 
 project/assembly_name="CosmosCasino"
+
+[dotnet.editor]
+
+external_editor="custom"
+external_editor_path="C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/devenv.exe"
+external_editor_args="C:/Users/j_gen/OneDrive/Documents/Game_Projects/Cosmos_Casino/cosmos-casino/CosmosCasino.sln"
