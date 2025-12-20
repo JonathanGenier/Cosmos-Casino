@@ -1,5 +1,7 @@
 using CosmosCasino.Core.IO;
 using CosmosCasino.Core.Serialization;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
@@ -35,15 +37,8 @@ namespace CosmosCasino.Core.Save
         /// </exception>
         public SaveManager(ISerializer serializer, string path)
         {
-            if (serializer == null)
-            {
-                throw new ArgumentNullException(nameof(serializer));
-            }
-
-            if(string.IsNullOrWhiteSpace(path))
-            {
-                throw new ArgumentException("Save path cannot be null or whitespace.", nameof(path));
-            }
+            ArgumentNullException.ThrowIfNull(serializer, nameof(serializer));
+            ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
 
             _serializer = serializer;
             _path = path;
@@ -64,11 +59,8 @@ namespace CosmosCasino.Core.Save
         /// </exception>
         public void Register(ISaveParticipant participant)
         {
-            if(participant == null)
-            {
-                throw new ArgumentNullException(nameof(participant));
-            }
-                
+            ArgumentNullException.ThrowIfNull(participant, nameof(participant));
+
             if(_participants.Contains(participant))
             {
                 throw new InvalidOperationException("Participant already registered.");

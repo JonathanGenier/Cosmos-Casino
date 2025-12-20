@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using System.Text;
 using System.Text.Json;
 
@@ -64,10 +66,7 @@ namespace CosmosCasino.Core.Serialization
         /// </exception>
         public T Deserialize<T>(byte[] bytes)
         {
-            if(bytes == null)
-            {
-                throw new ArgumentNullException(nameof(bytes));
-            }
+            ArgumentNullException.ThrowIfNull(bytes, nameof(bytes));
 
             if(bytes.Length == 0)
             {
@@ -77,12 +76,7 @@ namespace CosmosCasino.Core.Serialization
             var json = Encoding.UTF8.GetString(bytes);
             var result = JsonSerializer.Deserialize<T>(json, Options);
 
-            if(result == null)
-            {
-                throw new InvalidDataException("Failed to deserialize saved data.");
-            }
-
-            return result;
+            return result ?? throw new InvalidDataException("Failed to deserialize saved data.");
         }
     }
 }

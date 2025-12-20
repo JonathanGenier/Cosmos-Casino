@@ -1,0 +1,106 @@
+using CosmosCasino.Core.Game;
+using CosmosCasino.Core.Save;
+using CosmosCasino.Core.Serialization;
+
+namespace CosmosCasino.Core.Services
+{
+    /// <summary>
+    /// Central composition root for all core (engine-agnostic) services.
+    /// <para>
+    /// <see cref="CoreServices"/> owns and manages the lifetime of services that
+    /// must exist for the application to function, as well as services that are
+    /// only valid during an active game session.
+    /// </para>
+    /// </summary>
+    public sealed class CoreServices
+    {
+        /// <summary>
+        /// Provides persistence and save/load functionality for the application.
+        /// 
+        /// <para>
+        /// This service is created at application startup and is guaranteed
+        /// to remain valid for the lifetime of <see cref="CoreServices"/>.
+        /// </para>
+        /// </summary>
+        public SaveManager SaveManager { get; init; }
+
+        /// <summary>
+        /// Manages core game logic for an active game session.
+        /// <para>
+        /// This property is <c>null</c> when no game is running and is initialized
+        /// by calling <see cref="StartNewGame"/>. It is cleared when
+        /// <see cref="EndGame"/> is called.
+        /// </para>
+        /// </summary>
+        public GameManager? GameManager { get; private set; }
+
+        /// <summary>
+        /// Initializes all core services required for the application to function.
+        /// <para>
+        /// This constructor establishes all mandatory invariants for the core
+        /// layer. If this constructor succeeds, all required core services are
+        /// guaranteed to be in a valid state.
+        /// </para>
+        /// </summary>
+        /// <param name="serializer">
+        /// Serializer implementation used by the save system.
+        /// </param>
+        /// <param name="savePath">
+        /// Absolute or relative path where save data will be stored.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="serializer"/> is <c>null</c>.
+        /// </exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown if <paramref name="savePath"/> is null, empty, or whitespace.
+        /// </exception>
+        public CoreServices(ISerializer serializer, string savePath)
+        {
+            ArgumentNullException.ThrowIfNull(serializer);
+            ArgumentException.ThrowIfNullOrWhiteSpace(savePath);
+
+            SaveManager = new SaveManager(serializer, savePath);
+        }
+
+        /// <summary>
+        /// Starts a new game session and initializes all game-scoped core services.
+        /// <para>
+        /// This method may only be called when no game is currently running.
+        /// Calling it while a game session is active is considered a logic error.
+        /// </para>
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if a game session is already active.
+        /// </exception>
+        public void StartNewGame()
+        {
+            if(GameManager != null)
+            {
+                throw new InvalidOperationException("Game already started.");
+            }
+
+            GameManager = new GameManager(SaveManager);
+        }
+
+        /// <summary>
+        /// Ends the currently active game session and releases all game-scoped
+        /// core services.
+        /// <para>
+        /// This method enforces a strict lifecycle: it may only be called when
+        /// a game session is currently active.
+        /// </para>
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if no game session is currently running.
+        /// </exception>
+        public void EndGame()
+        {
+            if(GameManager == null)
+            {
+                throw new InvalidOperationException("No game is currently running.");
+            }
+
+            GameManager = null;
+        }
+    }
+}

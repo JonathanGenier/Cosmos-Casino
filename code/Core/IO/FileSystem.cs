@@ -28,15 +28,8 @@ namespace CosmosCasino.Core.IO
         /// </exception>
         public static void AtomicSave(string path, byte[] bytes)
         {
-            if(bytes == null)
-            {
-                throw new ArgumentNullException(nameof(bytes));
-            }
-
-            if(string.IsNullOrWhiteSpace(path))
-            {
-                throw new ArgumentException("Path cannot be null or whitespace.", nameof(path));
-            }
+            ArgumentNullException.ThrowIfNull(bytes, nameof(bytes));
+            ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
 
             var tempPath = path + ".tmp";
 
@@ -80,10 +73,7 @@ namespace CosmosCasino.Core.IO
         /// </exception>
         public static bool TryReadBytes(string path, out byte[] bytes)
         {
-            if(string.IsNullOrWhiteSpace(path))
-            {
-                throw new ArgumentException(nameof(path));
-            }
+            ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
 
             if(!File.Exists(path))
             {

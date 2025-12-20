@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cilfhwa8wiefe"]
+
+[ext_resource type="Script" uid="uid://c8evshik05x1l" path="res://code/Client/Loading/LoadingController.cs" id="1_ir5ef"]
+
+[node name="Loading" type="Node3D"]
+script = ExtResource("1_ir5ef")

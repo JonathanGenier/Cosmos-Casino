@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 
 namespace CosmosCasino.Core.Save
@@ -28,15 +30,8 @@ namespace CosmosCasino.Core.Save
         /// </exception>
         public static void Write<T>(this Dictionary<string, JsonElement> sections, string key, T value)
         {
-            if(sections == null)
-            {
-                throw new ArgumentNullException(nameof(sections));
-            }
-
-            if(string.IsNullOrWhiteSpace(key))
-            {
-                throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(sections, nameof(sections));
+            ArgumentException.ThrowIfNullOrWhiteSpace(key, nameof(key));
 
             sections[key] = JsonSerializer.SerializeToElement(value);
         }
@@ -60,15 +55,8 @@ namespace CosmosCasino.Core.Save
         /// </exception>
         public static T Read<T>(this Dictionary<string, JsonElement> sections, string key)
         {
-            if(sections == null)
-            {
-                throw new ArgumentNullException(nameof(sections));
-            }
-
-            if(string.IsNullOrWhiteSpace(key))
-            {
-                throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(sections, nameof(sections));
+            ArgumentException.ThrowIfNullOrWhiteSpace(key, nameof(key));
 
             return sections[key].Deserialize<T>()!;
         }
@@ -95,15 +83,8 @@ namespace CosmosCasino.Core.Save
         /// </exception>
         public static bool TryRead<T>(this Dictionary<string, JsonElement> sections, string key, out T value)
         {
-            if(sections == null)
-            {
-                throw new ArgumentNullException(nameof(sections));
-            }
-
-            if(string.IsNullOrWhiteSpace(key))
-            {
-                throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
-            }
+            ArgumentNullException.ThrowIfNull(sections, nameof(sections));
+            ArgumentException.ThrowIfNullOrWhiteSpace(key, nameof(key));
 
             if(!sections.TryGetValue(key, out var element))
             {

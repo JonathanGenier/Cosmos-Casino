@@ -1,13 +1,15 @@
 using CosmosCasino.Core.IO;
 using NUnit.Framework;
+using System;
+using System.IO;
 
 namespace CosmosCasino.Tests.IO
 {
     [TestFixture]
     internal class FileSystemTests
     {
-        private string _tempDir;
-        private string _filePath;
+        private string? _tempDir;
+        private string? _filePath;
 
         #region SETUP & TEARDOWN
 
@@ -35,14 +37,14 @@ namespace CosmosCasino.Tests.IO
         public void AtomicSave_WhenBytesNull_ThrowsArgumentNullException()
         {
             // Act & Assert
-            Assert.That(() => FileSystem.AtomicSave(_filePath, null!), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => FileSystem.AtomicSave(_filePath!, null!), Throws.TypeOf<ArgumentNullException>());
         }
 
         [Test]
         public void AtomicSave_WhenPathIsNullOrWhitespace_ThrowsArgumentException()
         {
             // Act & Assert
-            Assert.That(() => FileSystem.AtomicSave(null!, new byte[] { 1 }), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => FileSystem.AtomicSave(null!, new byte[] { 1 }), Throws.TypeOf<ArgumentNullException>());
             Assert.That(() => FileSystem.AtomicSave("", new byte[] { 2 }), Throws.TypeOf<ArgumentException>());
             Assert.That(() => FileSystem.AtomicSave("   ", new byte[] { 3 }), Throws.TypeOf<ArgumentException>());
         }
@@ -54,7 +56,7 @@ namespace CosmosCasino.Tests.IO
             var bytes = new byte[] { 1, 2, 3 };
 
             // Act
-            FileSystem.AtomicSave(_filePath, bytes);
+            FileSystem.AtomicSave(_filePath!, bytes);
 
             // Assert
             Assert.That(File.Exists(_filePath), Is.True);
@@ -67,9 +69,9 @@ namespace CosmosCasino.Tests.IO
             var bytes = new byte[] { 10, 20, 30 };
 
             // Act
-            FileSystem.AtomicSave(_filePath, bytes);
+            FileSystem.AtomicSave(_filePath!, bytes);
 
-            var result = File.ReadAllBytes(_filePath);
+            var result = File.ReadAllBytes(_filePath!);
 
             // Assert
             Assert.That(result, Is.EqualTo(bytes));
@@ -79,10 +81,10 @@ namespace CosmosCasino.Tests.IO
         public void AtomicSave_WhenFileExists_OverwritesContents()
         {
             // Act
-            FileSystem.AtomicSave(_filePath, new byte[] { 1 });
-            FileSystem.AtomicSave(_filePath, new byte[] { 2, 3 });
+            FileSystem.AtomicSave(_filePath!, new byte[] { 1 });
+            FileSystem.AtomicSave(_filePath!, new byte[] { 2, 3 });
 
-            var result = File.ReadAllBytes(_filePath);
+            var result = File.ReadAllBytes(_filePath!);
 
             // Assert
             Assert.That(result, Is.EqualTo(new byte[] { 2, 3 }));
@@ -92,7 +94,7 @@ namespace CosmosCasino.Tests.IO
         public void AtomicSave_DoesNotLeaveTempFile()
         {
             // Act
-            FileSystem.AtomicSave(_filePath, new byte[] { 1 });
+            FileSystem.AtomicSave(_filePath!, new byte[] { 1 });
 
             // Assert
             Assert.That(File.Exists(_filePath + ".tmp"), Is.False);
@@ -113,7 +115,7 @@ namespace CosmosCasino.Tests.IO
         public void TryReadBytes_WhenFileMissing_ReturnsFalseAndEmptyArray()
         {
             // Act
-            var result = FileSystem.TryReadBytes(_filePath, out var bytes);
+            var result = FileSystem.TryReadBytes(_filePath!, out var bytes);
 
             // Assert
             Assert.That(result, Is.False);
@@ -123,9 +125,9 @@ namespace CosmosCasino.Tests.IO
         [Test]
         public void TryReadBytes_WhenFileExistsButEmpty_ReturnsTrueAndEmptyArray()
         {
-            FileSystem.AtomicSave(_filePath, Array.Empty<byte>());
+            FileSystem.AtomicSave(_filePath!, Array.Empty<byte>());
 
-            var result = FileSystem.TryReadBytes(_filePath, out var bytes);
+            var result = FileSystem.TryReadBytes(_filePath!, out var bytes);
 
             Assert.That(result, Is.True);
             Assert.That(bytes, Is.Empty);
@@ -138,9 +140,9 @@ namespace CosmosCasino.Tests.IO
             var expected = new byte[] { 9, 8, 7 };
 
             // Act
-            FileSystem.AtomicSave(_filePath, expected);
+            FileSystem.AtomicSave(_filePath!, expected);
 
-            var result = FileSystem.TryReadBytes(_filePath, out var bytes);
+            var result = FileSystem.TryReadBytes(_filePath!, out var bytes);
 
             // Assert
             Assert.That(result, Is.True);

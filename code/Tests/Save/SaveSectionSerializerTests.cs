@@ -1,5 +1,7 @@
 using CosmosCasino.Core.Save;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 
 namespace CosmosCasino.Tests.Save
@@ -7,7 +9,7 @@ namespace CosmosCasino.Tests.Save
     [TestFixture]
     internal class SaveSectionSerializerTests
     {
-        private Dictionary<string, JsonElement> _sections;
+        private Dictionary<string, JsonElement>? _sections;
 
         private sealed class TestData
         {
@@ -41,19 +43,19 @@ namespace CosmosCasino.Tests.Save
         public void Write_KeyIsNullOrWhiteSpace_ThrowsArgumentException()
         {
             // Act & Assert
-            Assert.That(() => _sections.Write(null!, 1), Throws.TypeOf<ArgumentException>());
-            Assert.That(() => _sections.Write("", 1), Throws.TypeOf<ArgumentException>());
-            Assert.That(() => _sections.Write("   ", 1), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => _sections!.Write(null!, 1), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => _sections!.Write("", 1), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => _sections!.Write("   ", 1), Throws.TypeOf<ArgumentException>());
         }
 
         [Test]
         public void Write_AddsNewValue()
         {
             // Act
-            _sections.Write("test", 3);
+            _sections!.Write("test", 3);
 
             // Assert
-            var result = _sections.Read<int>("test");
+            var result = _sections!.Read<int>("test");
             Assert.That(result, Is.EqualTo(3));
         }
 
@@ -61,11 +63,11 @@ namespace CosmosCasino.Tests.Save
         public void Write_OverridesExistingValue()
         {
             // Arrange
-            _sections.Write("test", 1);
-            _sections.Write("test", 2);
+            _sections!.Write("test", 1);
+            _sections!.Write("test", 2);
 
             // Act
-            var result = _sections.Read<int>("test");
+            var result = _sections!.Read<int>("test");
 
             // Assert
             Assert.That(result, Is.EqualTo(2));
@@ -90,16 +92,16 @@ namespace CosmosCasino.Tests.Save
         public void Read_KeyIsNullOrWhiteSpace_ThrowsArgumentException()
         {
             // Act & Assert
-            Assert.That(() => _sections.Read<int>(null!), Throws.TypeOf<ArgumentException>());
-            Assert.That(() => _sections.Read<int>(""), Throws.TypeOf<ArgumentException>());
-            Assert.That(() => _sections.Read<int>("   "), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => _sections!.Read<int>(null!), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => _sections!.Read<int>(""), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => _sections!.Read<int>("   "), Throws.TypeOf<ArgumentException>());
         }
 
         [Test]
         public void Read_WhenKeyMissing_Throws()
         {
             // Act & Assert
-            Assert.That(() => _sections.Read<int>("missing"), Throws.TypeOf<KeyNotFoundException>());
+            Assert.That(() => _sections!.Read<int>("missing"), Throws.TypeOf<KeyNotFoundException>());
         }
 
         #endregion
@@ -120,16 +122,16 @@ namespace CosmosCasino.Tests.Save
         public void TryRead_KeyIsNullOrWhiteSpace_ThrowsArgumentException()
         {
             // Act & Assert
-            Assert.That(() => _sections.TryRead<int>(null!, out _), Throws.TypeOf<ArgumentException>());
-            Assert.That(() => _sections.TryRead<int>("", out _), Throws.TypeOf<ArgumentException>());
-            Assert.That(() => _sections.TryRead<int>("   ", out _), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => _sections!.TryRead<int>(null!, out _), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => _sections!.TryRead<int>("", out _), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => _sections!.TryRead<int>("   ", out _), Throws.TypeOf<ArgumentException>());
         }
 
         [Test]
         public void TryRead_WhenKeyMissing_ReturnsFalse()
         {
             // Act
-            var success = _sections.TryRead<int>("missing", out var value);
+            var success = _sections!.TryRead<int>("missing", out var value);
 
             // Assert
             Assert.That(success, Is.False);
@@ -140,10 +142,10 @@ namespace CosmosCasino.Tests.Save
         public void TryRead_WhenKeyExists_ReturnsTrueAndValue()
         {
             // Arrange
-            _sections.Write("test", 42);
+            _sections!.Write("test", 42);
 
             // Act
-            var success = _sections.TryRead<int>("test", out var value);
+            var success = _sections!.TryRead<int>("test", out var value);
 
             // Assert
             Assert.That(success, Is.True);
@@ -158,10 +160,10 @@ namespace CosmosCasino.Tests.Save
         public void Write_Read_RoundTrip_ReturnsValue()
         {
             // Arrange
-            _sections.Write("test", 100);
+            _sections!.Write("test", 100);
 
             // Act
-            var result = _sections.Read<int>("test");
+            var result = _sections!.Read<int>("test");
 
             // Assert
             Assert.That(result, Is.EqualTo(100));
