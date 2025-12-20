@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3 uid="uid://0b0venf65idy"]
+
+[ext_resource type="Script" uid="uid://cqv3ickbgii1m" path="res://code/Client/MainMenu/MainMenuController.cs" id="1_l6cm7"]
+
+[node name="MainMenu" type="Node3D"]
+script = ExtResource("1_l6cm7")
+
+[node name="Button_Play" type="Button" parent="."]
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 336.0
+offset_top = 228.0
+offset_right = -1522.0
+offset_bottom = -824.0
+
+[node name="Label_Play" type="Label" parent="Button_Play"]
+layout_mode = 0
+offset_right = 57.0
+offset_bottom = 25.0
+text = "PLAY"
+horizontal_alignment = 1
+vertical_alignment = 1
+metadata/_edit_lock_ = true
