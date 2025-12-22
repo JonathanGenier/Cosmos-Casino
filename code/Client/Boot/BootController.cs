@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Debug.Logging;
 using Godot;
 using System.Threading.Tasks;
 
@@ -45,8 +46,8 @@ public partial class BootController : Node
     /// </summary>
     private async Task BootAsync()
     {
-        GD.Print("Boot: Loading...");
-        
+        DevLog.Info("Boot", "Loading...");
+
         //LoadConfig();
         //LoadUserPreferences();
         //LoadLocalization();
@@ -58,7 +59,7 @@ public partial class BootController : Node
 
         //InitializeCaches();
 
-        GD.Print("Boot: Loading complete");
+        DevLog.Info("Boot", "Loading complete.");
 
         // Deferred to avoid scene tree modification during initialization
         AppManager.Instance.CallDeferred(

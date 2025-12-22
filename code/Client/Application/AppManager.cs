@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Debug.Logging;
 using CosmosCasino.Core.Serialization;
 using CosmosCasino.Core.Services;
 using Godot;
@@ -43,7 +44,7 @@ public partial class AppManager : Node
     {
         if(Instance != null)
         {
-            GD.PrintErr("Multiple instances of AppManager detected. There should only be one instance.");
+            DevLog.Error("Application", "Multiple instances of AppManager detected. There should only be one instance.");
             QueueFree();
             return;
         }
@@ -80,14 +81,31 @@ public partial class AppManager : Node
             return;
         }
 
-        GD.Print($"Changing AppState from {State} to {newState}.");
-        State = newState;
-        ChangeScene(newState);
+        var success = ChangeScene(newState);
+
+        if(success)
+        {
+            State = newState;
+        }
     }
 
     #endregion
 
     #region SCENE MANAGEMENT
+
+    /// <summary>
+    /// Performs the actual scene transition for the given application state.
+    /// <para>
+    /// This method isolates scene-loading logic from state management and delegates
+    /// the loading process to <see cref="SceneLoader"/>.
+    /// </para>
+    /// </summary>
+    /// <param name="state">Application state whose scene should be loaded.</param>
+    private bool ChangeScene(AppState state)
+    {
+        var path = GetScenePathForState(state);
+        return SceneLoader.Load(path);
+    }
 
     /// <summary>
     /// Resolves the scene path associated with a given application state.
@@ -106,20 +124,6 @@ public partial class AppManager : Node
             AppState.Game => ScenePaths.Game,
             _ => string.Empty
         };
-    }
-
-    /// <summary>
-    /// Performs the actual scene transition for the given application state.
-    /// <para>
-    /// This method isolates scene-loading logic from state management and delegates
-    /// the loading process to <see cref="SceneLoader"/>.
-    /// </para>
-    /// </summary>
-    /// <param name="state">Application state whose scene should be loaded.</param>
-    private void ChangeScene(AppState state)
-    {
-        var path = GetScenePathForState(state);
-        SceneLoader.Load(path);
     }
 
     #endregion

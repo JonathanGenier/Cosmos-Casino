@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36804.6
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CosmosCasino", "CosmosCasino.csproj", "{1907849B-56F3-4A89-9FBB-81C13352ECCB}"
 EndProject
@@ -45,8 +45,8 @@ Global
 		{1907849B-56F3-4A89-9FBB-81C13352ECCB}.ExportRelease|x64.Build.0 = ExportRelease|Any CPU
 		{1907849B-56F3-4A89-9FBB-81C13352ECCB}.ExportRelease|x86.ActiveCfg = ExportRelease|Any CPU
 		{1907849B-56F3-4A89-9FBB-81C13352ECCB}.ExportRelease|x86.Build.0 = ExportRelease|Any CPU
-		{1907849B-56F3-4A89-9FBB-81C13352ECCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1907849B-56F3-4A89-9FBB-81C13352ECCB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1907849B-56F3-4A89-9FBB-81C13352ECCB}.Release|Any CPU.ActiveCfg = ExportRelease|Any CPU
+		{1907849B-56F3-4A89-9FBB-81C13352ECCB}.Release|Any CPU.Build.0 = ExportRelease|Any CPU
 		{1907849B-56F3-4A89-9FBB-81C13352ECCB}.Release|x64.ActiveCfg = Release|Any CPU
 		{1907849B-56F3-4A89-9FBB-81C13352ECCB}.Release|x64.Build.0 = Release|Any CPU
 		{1907849B-56F3-4A89-9FBB-81C13352ECCB}.Release|x86.ActiveCfg = Release|Any CPU
@@ -106,5 +106,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{996FD494-6B70-4087-A19F-07DFDEECF6AE} = {314C6247-30EA-3492-19B6-DF847E3B326F}
 		{6AFF1D92-E0A2-4ED1-B19A-F8BB5D364CB9} = {314C6247-30EA-3492-19B6-DF847E3B326F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4693B97B-EE5F-40DE-BD94-FA8DDD853009}
 	EndGlobalSection
 EndGlobal

@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Debug.Logging;
 using CosmosCasino.Core.IO;
 using CosmosCasino.Core.Serialization;
 using System;
@@ -55,7 +56,7 @@ namespace CosmosCasino.Core.Save
         /// Thrown when <paramref name="participant"/> is null.
         /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown when the participant has already been registered.
+        /// Thrown in debug builds when the participant has already been registered.
         /// </exception>
         public void Register(ISaveParticipant participant)
         {
@@ -63,7 +64,12 @@ namespace CosmosCasino.Core.Save
 
             if(_participants.Contains(participant))
             {
-                throw new InvalidOperationException("Participant already registered.");
+                DevLog.Warning("Save", "Participant is already registered to SaveManager. No consequences, just a useless call.");
+#if DEBUG
+                throw new InvalidOperationException("Participant is already registered to SaveManager.");
+#else
+                return;
+#endif
             }
 
             _participants.Add(participant);

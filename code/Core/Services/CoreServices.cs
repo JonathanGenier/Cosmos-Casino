@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Debug.Logging;
 using CosmosCasino.Core.Game;
 using CosmosCasino.Core.Save;
 using CosmosCasino.Core.Serialization;
@@ -72,14 +73,22 @@ namespace CosmosCasino.Core.Services
         /// <exception cref="InvalidOperationException">
         /// Thrown if a game session is already active.
         /// </exception>
-        public void StartNewGame()
+        public bool StartNewGame()
         {
             if(GameManager != null)
             {
-                throw new InvalidOperationException("Game already started.");
+                DevLog.Error("Game", "Cannot start a new game when a game has already started.");
+
+#if DEBUG
+                throw new InvalidOperationException("Cannot start a new game when a game has already started.");
+#else
+                
+                return false;
+#endif
             }
 
             GameManager = new GameManager(SaveManager);
+            return true;
         }
 
         /// <summary>
@@ -93,14 +102,21 @@ namespace CosmosCasino.Core.Services
         /// <exception cref="InvalidOperationException">
         /// Thrown if no game session is currently running.
         /// </exception>
-        public void EndGame()
+        public bool EndGame()
         {
             if(GameManager == null)
             {
-                throw new InvalidOperationException("No game is currently running.");
+                DevLog.Error("Game", "Trying to end game but no game is currently running.");
+
+#if DEBUG
+                throw new InvalidOperationException("Trying to end game but no game is currently running.");
+#else
+                return false;
+#endif
             }
 
             GameManager = null;
+            return true;
         }
     }
 }

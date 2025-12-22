@@ -1,9 +1,5 @@
+using CosmosCasino.Core.Debug.Logging;
 using CosmosCasino.Core.Save;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CosmosCasino.Core.Game
 {
@@ -11,6 +7,7 @@ namespace CosmosCasino.Core.Game
     {
         public GameManager(SaveManager saveManager) 
         {
+            DevLog.Info("GameManager", "Initializing GameManager.");
             saveManager.Register(this);
         }
 

@@ -38,10 +38,7 @@ namespace CosmosCasino.Core.Serialization
         /// </exception>
         public byte[] Serialize<T>(T data)
         {
-            if(data == null)
-            {
-                throw new ArgumentNullException(nameof(data));
-            }
+            ArgumentNullException.ThrowIfNull(data, "data");
 
             var json = JsonSerializer.Serialize(data, Options);
 
