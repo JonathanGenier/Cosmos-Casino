@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Debug.Logging;
 using CosmosCasino.Core.Services;
 using Godot;
 using System.Threading.Tasks;
@@ -49,7 +50,7 @@ public partial class LoadingController : Node
     {
         var coreServices = AppManager.Instance.CoreServices;
 
-        GD.Print("Loading: Loading...");
+        DevLog.Info("Loading", "Loading...");
 
         // Decide new game vs load game
         StartNewGame(coreServices);
@@ -58,7 +59,7 @@ public partial class LoadingController : Node
         // core.Game.LoadSave(...)
         // core.Game.InitializeWorld()
 
-        GD.Print("Loading: Loading complete");
+        DevLog.Info("Loading", "Loading complete");
 
         AppManager.Instance.CallDeferred(
             nameof(AppManager.ChangeState), 
@@ -78,8 +79,15 @@ public partial class LoadingController : Node
     /// </param>
     private void StartNewGame(CoreServices coreServices)
     {
-        coreServices.StartNewGame();
-        GD.Print("Starting new game...");
+        var success = coreServices.StartNewGame();
+
+        if(!success)
+        {
+            DevLog.Error("Game", "Could not start a new game,");
+            return;
+        }
+        
+        // Do something...
     }
 
     #endregion

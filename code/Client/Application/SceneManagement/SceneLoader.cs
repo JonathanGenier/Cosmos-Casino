@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Debug.Logging;
 using Godot;
 using System;
 
@@ -19,19 +20,28 @@ public static class SceneLoader
     /// exits gracefully without throwing.
     /// </para>
     /// </summary>
-    /// <param name="scenePath">Path to the scene to load.</param>
-    public static void Load(string scenePath)
+    /// <param name="path">Path to the scene to load.</param>
+    public static bool Load(string path)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(scenePath);
+        if(string.IsNullOrEmpty(path))
+        {
+            DevLog.Error("Scene", "Given scene path is null or empty.");
+#if DEBUG
+            throw new ArgumentException($"No scene path defined.");
+#else
+            return false;
+#endif
+        }
 
         var tree = Engine.GetMainLoop() as SceneTree;
 
         if(tree == null)
         {
-            GD.PrintErr("SceneLoader: SceneTree not available.");
-            return;
+            DevLog.Error("Scene", "SceneTree not available to change scenes.");
+            return false;
         }
 
-        tree.ChangeSceneToFile(scenePath);
+        tree.ChangeSceneToFile(path);
+        return true;
     }
 }

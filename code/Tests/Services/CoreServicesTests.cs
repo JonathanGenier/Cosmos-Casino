@@ -40,19 +40,7 @@ namespace CosmosCasino.Tests.Services
         #region STARTNEWGAME
 
         [Test]
-        public void StartNewGame_WhenGameAlreadyStarted_ThrowsInvalidOperationException()
-        {
-            // Arrange
-            var coreServices = new CoreServices(new JsonSaveSerializer(), "path");
-            coreServices.StartNewGame();
-
-            // Act & Assert
-            Assert.That(() => coreServices.StartNewGame(), Throws.TypeOf<InvalidOperationException>());
-        }
-
-
-        [Test]
-        public void StartNewGame_ShouldInitializeGameManager()
+        public void StartNewGame_WhenGameManagerIsNull_ShouldInitializeGameManager()
         {
             // Arrange
             var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
@@ -64,12 +52,51 @@ namespace CosmosCasino.Tests.Services
             Assert.That(coreServices.GameManager, Is.Not.Null);
         }
 
+        [Test]
+        public void StartNewGame_WhenGameManagerIsNull_ShouldReturnTrue()
+        {
+            // Arrange
+            var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
+
+            // Act
+            var result = coreServices.StartNewGame();
+
+            // Assert
+            Assert.That(result, Is.True);
+        }
+
+#if DEBUG
+        [Test]
+        public void StartNewGame_WhenGameAlreadyStarted_ThrowsInvalidOperationException_InDebug()
+        {
+            // Arrange
+            var coreServices = new CoreServices(new JsonSaveSerializer(), "path");
+            coreServices.StartNewGame();
+
+            // Act & Assert
+            Assert.That(() => coreServices.StartNewGame(), Throws.TypeOf<InvalidOperationException>());
+        }
+#endif
+
+#if !DEBUG
+        [Test]
+        public void StartNewGame_WhenGameAlreadyStarted_ReturnFalse_InRelease()
+        {
+            // Arrange
+            var coreServices = new CoreServices(new JsonSaveSerializer(), "path");
+            coreServices.StartNewGame();
+
+            // Act & Assert
+            Assert.That(() => coreServices.StartNewGame(), Is.False);
+        }
+#endif
+
         #endregion
 
         #region ENDGAME
 
         [Test]
-        public void EndGame_ShouldSetGameManagerToNull()
+        public void EndGame_WhenGameExists_ShouldSetGameManagerToNull()
         {
             // Arrange
             var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
@@ -83,7 +110,22 @@ namespace CosmosCasino.Tests.Services
         }
 
         [Test]
-        public void EndGame_WhenNoGameStarted_ThrowsInvalidOperationException()
+        public void EndGame_WhenGameExists_ShouldReturnTrue()
+        {
+            // Arrange
+            var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
+            coreServices.StartNewGame();
+
+            // Act
+            var result = coreServices.EndGame();
+
+            // Assert
+            Assert.That(result, Is.True);
+        }
+
+#if DEBUG
+        [Test]
+        public void EndGame_WhenNoGameStarted_ThrowsInvalidOperationException_InDebug()
         {
             // Arrange
             var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
@@ -91,6 +133,19 @@ namespace CosmosCasino.Tests.Services
             // Act & Assert
             Assert.That(() => coreServices.EndGame(), Throws.TypeOf<InvalidOperationException>());
         }
+#endif
+
+#if !DEBUG
+        [Test]
+        public void EndGame_WhenNoGameStarted_ReturnFalse_InRelease()
+        {
+            // Arrange
+            var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
+
+            // Act & Assert
+            Assert.That(coreServices.EndGame(), Is.False);
+        }
+#endif
 
         #endregion
     }

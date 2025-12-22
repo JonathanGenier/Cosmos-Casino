@@ -94,8 +94,9 @@ namespace CosmosCasino.Tests.Save
             Assert.That(() => _saveManager!.Register(null!), Throws.TypeOf<ArgumentNullException>());
         }
 
+#if DEBUG
         [Test]
-        public void Register_WhenParticipantIsAlreadyRegistered_ThrowsInvalidOperationException()
+        public void Register_WhenParticipantIsAlreadyRegistered_ThrowsInvalidOperationException_InDebug()
         {
             // Arrange
             var participant = new TestSaveParticipant("p1");
@@ -104,6 +105,20 @@ namespace CosmosCasino.Tests.Save
             // Act & Assert
             Assert.That(() => _saveManager.Register(participant), Throws.TypeOf<InvalidOperationException>());
         }
+#endif
+
+#if !DEBUG
+        [Test]
+        public void Register_WhenParticipantAlreadyRegistered_DoesNotThrow_InRelease()
+        {
+            // Arrange
+            var participant = new TestSaveParticipant("p1");
+            _saveManager!.Register(participant);
+
+            // Act & Assert
+            Assert.DoesNotThrow(() => _saveManager.Register(participant));
+        }
+#endif
 
         #endregion
 

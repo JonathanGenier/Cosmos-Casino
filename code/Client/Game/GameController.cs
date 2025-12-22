@@ -21,7 +21,7 @@ public partial class GameController : Node
     /// </summary>
     public override void _Ready()
     {
-        GD.Print("GameController: Ready");
+
     }
 
     #endregion
