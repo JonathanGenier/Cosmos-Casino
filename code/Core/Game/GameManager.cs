@@ -9,8 +9,6 @@ namespace CosmosCasino.Core.Game
         {
             DevLog.Info("GameManager", "Initializing GameManager.");
             saveManager.Register(this);
-
-            // Delete this comment. Used to trigger CI.
         }
 
         public void ReadFrom(GameSaveData save)
