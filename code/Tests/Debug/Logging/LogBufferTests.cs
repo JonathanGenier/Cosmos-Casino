@@ -180,7 +180,7 @@ namespace CosmosCasino.Tests.Debug.Logging
             // Arrange
             var buffer = new LogBuffer(1);
             buffer.Add(CreateLogEntry());
-            
+
             // Act
             buffer.Clear();
 

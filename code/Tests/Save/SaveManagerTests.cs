@@ -10,7 +10,7 @@ namespace CosmosCasino.Tests.Save
     internal class SaveManagerTests
     {
         #region FIELDS
-        
+
         private string? _tempPath;
         private JsonSaveSerializer? _serializer;
         private SaveManager? _saveManager;
@@ -30,7 +30,7 @@ namespace CosmosCasino.Tests.Save
         [TearDown]
         public void TearDown()
         {
-            if(File.Exists(_tempPath))
+            if (File.Exists(_tempPath))
             {
                 File.Delete(_tempPath);
             }
@@ -171,7 +171,7 @@ namespace CosmosCasino.Tests.Save
 
             // Act & Assert
             Assert.That(
-                () => _saveManager!.Load(), 
+                () => _saveManager!.Load(),
                 Throws.TypeOf<InvalidDataException>().With.InnerException.TypeOf<JsonException>()
                 );
         }

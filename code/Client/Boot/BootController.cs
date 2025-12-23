@@ -63,7 +63,7 @@ public partial class BootController : Node
 
         // Deferred to avoid scene tree modification during initialization
         AppManager.Instance.CallDeferred(
-            nameof(AppManager.ChangeState), 
+            nameof(AppManager.ChangeState),
             (int)AppState.MainMenu
         );
     }

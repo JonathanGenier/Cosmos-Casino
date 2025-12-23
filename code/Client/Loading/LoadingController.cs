@@ -62,7 +62,7 @@ public partial class LoadingController : Node
         DevLog.Info("Loading", "Loading complete");
 
         AppManager.Instance.CallDeferred(
-            nameof(AppManager.ChangeState), 
+            nameof(AppManager.ChangeState),
             (int)AppState.Game
         );
     }
@@ -77,12 +77,12 @@ public partial class LoadingController : Node
     {
         var success = coreServices.StartNewGame();
 
-        if(!success)
+        if (!success)
         {
             DevLog.Error("Game", "Could not start a new game,");
             return;
         }
-        
+
         // Do something...
     }
 

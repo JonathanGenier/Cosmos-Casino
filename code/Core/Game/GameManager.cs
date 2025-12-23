@@ -17,7 +17,7 @@ namespace CosmosCasino.Core.Game
         /// <param name="saveManager">
         /// Save manager responsible for coordinating save and load operations.
         /// </param>
-        public GameManager(SaveManager saveManager) 
+        public GameManager(SaveManager saveManager)
         {
             DevLog.Info("GameManager", "Initializing GameManager.");
             saveManager.Register(this);

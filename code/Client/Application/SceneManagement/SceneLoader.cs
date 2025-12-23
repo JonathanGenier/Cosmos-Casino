@@ -32,7 +32,7 @@ public static class SceneLoader
     /// </exception>
     public static bool Load(string path)
     {
-        if(string.IsNullOrEmpty(path))
+        if (string.IsNullOrEmpty(path))
         {
             DevLog.Error("Scene", "Given scene path is null or empty.");
 #if DEBUG
@@ -44,7 +44,7 @@ public static class SceneLoader
 
         SceneTree tree = Engine.GetMainLoop() as SceneTree;
 
-        if(tree == null)
+        if (tree == null)
         {
             DevLog.Error("Scene", "SceneTree not available to change scenes.");
             return false;

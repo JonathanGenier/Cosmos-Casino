@@ -89,7 +89,7 @@ namespace CosmosCasino.Core.Services
         /// </exception>
         public bool StartNewGame()
         {
-            if(GameManager != null)
+            if (GameManager != null)
             {
                 DevLog.Error("Game", "Cannot start a new game when a game has already started.");
 
@@ -123,7 +123,7 @@ namespace CosmosCasino.Core.Services
         /// </exception>
         public bool EndGame()
         {
-            if(GameManager == null)
+            if (GameManager == null)
             {
                 DevLog.Error("Game", "Trying to end game but no game is currently running.");
 

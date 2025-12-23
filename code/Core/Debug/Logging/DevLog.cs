@@ -12,7 +12,7 @@ namespace CosmosCasino.Core.Debug.Logging
     {
         #region FIELDS
 
-        private static readonly LogBuffer _buffer = new (capacity: 500);
+        private static readonly LogBuffer _buffer = new(capacity: 500);
 
         #endregion
 
@@ -42,7 +42,7 @@ namespace CosmosCasino.Core.Debug.Logging
         {
 
             // Enforces that errors and warning should always be visible in debug or prod no matter what is the info.
-            if((level == LogLevel.Error || level == LogLevel.Warning) && safety == LogSafety.Unsafe)
+            if ((level == LogLevel.Error || level == LogLevel.Warning) && safety == LogSafety.Unsafe)
             {
 #if DEBUG
                 throw new InvalidOperationException(
@@ -54,7 +54,7 @@ namespace CosmosCasino.Core.Debug.Logging
             }
 
             // Enforce production safety.
-            if(AppEnvironment.IsProd && safety == LogSafety.Unsafe)
+            if (AppEnvironment.IsProd && safety == LogSafety.Unsafe)
             {
                 return;
             }
