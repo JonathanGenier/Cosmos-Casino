@@ -21,6 +21,11 @@ namespace CosmosCasino.Core.Game
         {
             DevLog.Info("GameManager", "Initializing GameManager.");
             saveManager.Register(this);
+
+            if(true)
+            {
+                int i = 0;
+            }
         }
 
         #endregion
