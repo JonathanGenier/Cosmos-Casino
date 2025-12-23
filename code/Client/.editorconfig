@@ -1,0 +1,3 @@
+[*.cs]
+# Godot scripts must live in the global namespace
+dotnet_diagnostic.CA1050.severity = none
