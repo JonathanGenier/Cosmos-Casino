@@ -6,6 +6,8 @@ namespace CosmosCasino.Core.Debug.Logging
     /// </summary>
     public readonly struct LogEntry
     {
+        #region FIELDS
+
         /// <summary>
         /// Timestamp in milliseconds since application start.
         /// </summary>
@@ -36,6 +38,10 @@ namespace CosmosCasino.Core.Debug.Logging
         /// Human-readable diagnostic message.
         /// </summary>
         public readonly string Message;
+
+        #endregion
+
+        #region CONSTRUCTORS
 
         /// <summary>
         /// Creates a new structured log entry.
@@ -75,5 +81,7 @@ namespace CosmosCasino.Core.Debug.Logging
             Category = category ?? "Undefined";
             Message = message ?? string.Empty;
         }
+
+        #endregion
     }
 }

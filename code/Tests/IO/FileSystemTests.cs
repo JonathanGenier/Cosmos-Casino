@@ -1,15 +1,17 @@
 using CosmosCasino.Core.IO;
 using NUnit.Framework;
-using System;
-using System.IO;
 
 namespace CosmosCasino.Tests.IO
 {
     [TestFixture]
     internal class FileSystemTests
     {
+        #region FIELDS
+
         private string? _tempDir;
         private string? _filePath;
+
+        #endregion
 
         #region SETUP & TEARDOWN
 
@@ -45,7 +47,7 @@ namespace CosmosCasino.Tests.IO
         {
             // Act & Assert
             Assert.That(() => FileSystem.AtomicSave(null!, new byte[] { 1 }), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => FileSystem.AtomicSave("", new byte[] { 2 }), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => FileSystem.AtomicSave(string.Empty, new byte[] { 2 }), Throws.TypeOf<ArgumentException>());
             Assert.That(() => FileSystem.AtomicSave("   ", new byte[] { 3 }), Throws.TypeOf<ArgumentException>());
         }
 
@@ -108,7 +110,7 @@ namespace CosmosCasino.Tests.IO
         public void TryReadBytes_WhenPathInvalid_ThrowsArgumentException()
         {
             // Act & Assert
-            Assert.That(() => FileSystem.TryReadBytes("", out _), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => FileSystem.TryReadBytes(string.Empty, out _), Throws.TypeOf<ArgumentException>());
         }
 
         [Test]

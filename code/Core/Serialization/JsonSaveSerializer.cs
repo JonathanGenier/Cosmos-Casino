@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using System.Text;
 using System.Text.Json;
 
@@ -13,6 +11,8 @@ namespace CosmosCasino.Core.Serialization
     /// </summary>
     public sealed class JsonSaveSerializer : ISerializer
     {
+        #region FIELDS
+
         /// <summary>
         /// Shared JSON serialization options used for all save operations.
         /// Configured for readability and tolerant property name matching.
@@ -23,6 +23,10 @@ namespace CosmosCasino.Core.Serialization
             PropertyNameCaseInsensitive = true,
             IncludeFields = true
         };
+
+        #endregion
+
+        #region PUBLIC METHODS
 
         /// <summary>
         /// Serializes the specified object into a UTF-8 encoded JSON byte array.
@@ -75,5 +79,7 @@ namespace CosmosCasino.Core.Serialization
 
             return result ?? throw new InvalidDataException("Failed to deserialize saved data.");
         }
+
+        #endregion
     }
 }

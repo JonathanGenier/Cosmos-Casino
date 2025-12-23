@@ -3,8 +3,117 @@ root = true
 [*]
 charset = utf-8
 
+# ============================================================
+# C# language / Roslyn preferences
+# ============================================================
+
 # Prefer file-scoped namespaces
 dotnet_style_namespace_declarations = file_scoped:suggestion
 
 # Do not require full qualification everywhere
 dotnet_style_qualification_for_namespace = false:suggestion
+
+# ============================================================
+# StyleCop — Documentation (presence, not prose)
+# ============================================================
+
+# Require documentation on ALL elements
+# (public, protected, internal, private)
+dotnet_diagnostic.SA1600.severity = warning
+dotnet_diagnostic.SA1601.severity = warning
+
+# Require <summary> in documentation
+dotnet_diagnostic.SA1604.severity = warning
+
+# Public members must be documented
+dotnet_diagnostic.SA1602.severity = warning
+
+# Disable grammar / wording / punctuation policing
+dotnet_diagnostic.SA1652.severity = none   # summary wording
+dotnet_diagnostic.SA1623.severity = none   # boolean property wording
+dotnet_diagnostic.SA1642.severity = none   # constructor wording
+dotnet_diagnostic.SA1629.severity = none   # punctuation
+
+# ============================================================
+# StyleCop — Ordering & structure (KEEP)
+# ============================================================
+
+# Static members before instance members
+dotnet_diagnostic.SA1204.severity = warning
+
+# Accessibility order: public → internal → protected → private
+dotnet_diagnostic.SA1202.severity = warning
+
+# Member order: fields → properties → constructors → methods
+dotnet_diagnostic.SA1201.severity = warning
+
+# One type per file
+dotnet_diagnostic.SA1402.severity = warning
+
+# Explicit access modifiers required (even for private)
+dotnet_diagnostic.SA1400.severity = warning
+
+# Fields must be private
+dotnet_diagnostic.SA1401.severity = warning
+
+# Require braces everywhere
+dotnet_diagnostic.SA1503.severity = warning
+
+
+# ============================================================
+# StyleCop — Naming rules
+# ============================================================
+
+# Allow underscore prefix for private fields
+dotnet_diagnostic.SA1309.severity = none
+
+# Do not require `this.` qualification
+dotnet_diagnostic.SA1101.severity = none
+
+
+# ============================================================
+# StyleCop — Regions
+# ============================================================
+
+# Allow regions for organization
+dotnet_diagnostic.SA1124.severity = none
+
+
+# ============================================================
+# StyleCop — Formatting (ALL delegated to formatter)
+# ============================================================
+
+# Using directives
+dotnet_diagnostic.SA1200.severity = none
+dotnet_diagnostic.SA1208.severity = none
+
+# Spacing / punctuation / layout
+dotnet_diagnostic.SA1000.severity = none
+dotnet_diagnostic.SA1002.severity = none
+dotnet_diagnostic.SA1009.severity = none
+dotnet_diagnostic.SA1011.severity = none
+
+# Parenthesis / wrapping
+dotnet_diagnostic.SA1111.severity = none
+
+# Blank lines & whitespace
+dotnet_diagnostic.SA1028.severity = none
+dotnet_diagnostic.SA1505.severity = none
+dotnet_diagnostic.SA1507.severity = none
+dotnet_diagnostic.SA1508.severity = none
+dotnet_diagnostic.SA1512.severity = none
+dotnet_diagnostic.SA1514.severity = none
+dotnet_diagnostic.SA1516.severity = none
+dotnet_diagnostic.SA1517.severity = none
+dotnet_diagnostic.SA1518.severity = none
+
+# Trailing commas
+dotnet_diagnostic.SA1413.severity = none
+
+
+# ============================================================
+# StyleCop — File headers (never enforced)
+# ============================================================
+
+dotnet_diagnostic.SA1633.severity = none
+dotnet_diagnostic.SA1636.severity = none

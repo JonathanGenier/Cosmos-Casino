@@ -9,6 +9,8 @@ namespace CosmosCasino.Core.Save
     /// </summary>
     public interface ISaveParticipant
     {
+        #region PUBLIC METHODS
+
         /// <summary>
         /// Writes the current state of the participant into the provided
         /// <see cref="GameSaveData"/> instance.
@@ -18,7 +20,7 @@ namespace CosmosCasino.Core.Save
         /// <param name="save">
         /// The shared save container to write data into.
         /// </param>
-        void WriteTo(GameSaveData save);
+        public void WriteTo(GameSaveData save);
 
         /// <summary>
         /// Restores the participant's state from the provided
@@ -30,6 +32,8 @@ namespace CosmosCasino.Core.Save
         /// <param name="save">
         /// The shared save container to read data from.
         /// </param>
-        void ReadFrom(GameSaveData save);
+        public void ReadFrom(GameSaveData save);
+
+        #endregion
     }
 }

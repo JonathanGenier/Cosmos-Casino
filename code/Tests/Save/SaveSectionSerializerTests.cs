@@ -1,7 +1,5 @@
 using CosmosCasino.Core.Save;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Text.Json;
 
 namespace CosmosCasino.Tests.Save
@@ -9,12 +7,11 @@ namespace CosmosCasino.Tests.Save
     [TestFixture]
     internal class SaveSectionSerializerTests
     {
+        #region FIELDS
+
         private Dictionary<string, JsonElement>? _sections;
 
-        private sealed class TestData
-        {
-            public string Name = "TestParticipant" ;
-        }
+        #endregion
 
         #region SETUP & TEARDOWN
 
@@ -44,7 +41,7 @@ namespace CosmosCasino.Tests.Save
         {
             // Act & Assert
             Assert.That(() => _sections!.Write(null!, 1), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _sections!.Write("", 1), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => _sections!.Write(string.Empty, 1), Throws.TypeOf<ArgumentException>());
             Assert.That(() => _sections!.Write("   ", 1), Throws.TypeOf<ArgumentException>());
         }
 
@@ -93,7 +90,7 @@ namespace CosmosCasino.Tests.Save
         {
             // Act & Assert
             Assert.That(() => _sections!.Read<int>(null!), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _sections!.Read<int>(""), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => _sections!.Read<int>(string.Empty), Throws.TypeOf<ArgumentException>());
             Assert.That(() => _sections!.Read<int>("   "), Throws.TypeOf<ArgumentException>());
         }
 
@@ -123,7 +120,7 @@ namespace CosmosCasino.Tests.Save
         {
             // Act & Assert
             Assert.That(() => _sections!.TryRead<int>(null!, out _), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => _sections!.TryRead<int>("", out _), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => _sections!.TryRead<int>(string.Empty, out _), Throws.TypeOf<ArgumentException>());
             Assert.That(() => _sections!.TryRead<int>("   ", out _), Throws.TypeOf<ArgumentException>());
         }
 
@@ -181,6 +178,15 @@ namespace CosmosCasino.Tests.Save
 
             // Assert
             Assert.That(result, Is.Null);
+        }
+
+        #endregion
+
+        #region CLASSES
+
+        private sealed class TestData
+        {
+            public string Name { get; set; } = "TestParticipant";
         }
 
         #endregion

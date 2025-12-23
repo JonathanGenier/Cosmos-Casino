@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,6 +10,8 @@ namespace CosmosCasino.Core.Save
     /// </summary>
     public sealed class GameSaveData
     {
+        #region CONSTRUCTOR
+
         /// <summary>
         /// Initializes a new instance of <see cref="GameSaveData"/> with the
         /// specified save format version.
@@ -22,6 +23,10 @@ namespace CosmosCasino.Core.Save
         {
             Version = version;
         }
+
+        #endregion
+
+        #region PROPERTIES
 
         /// <summary>
         /// Indicates the version of the save data format.
@@ -37,5 +42,7 @@ namespace CosmosCasino.Core.Save
         /// interpreting the structure of its own data.
         /// </summary>
         public Dictionary<string, JsonElement> Sections { get; set; } = new();
+
+        #endregion
     }
 }

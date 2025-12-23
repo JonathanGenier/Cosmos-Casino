@@ -1,9 +1,6 @@
 using CosmosCasino.Core.Debug.Logging;
 using CosmosCasino.Core.IO;
 using CosmosCasino.Core.Serialization;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text.Json;
 
 namespace CosmosCasino.Core.Save
@@ -16,9 +13,15 @@ namespace CosmosCasino.Core.Save
     /// </summary>
     public sealed class SaveManager
     {
+        #region FIELDS
+
         private readonly List<ISaveParticipant> _participants = new();
         private readonly ISerializer _serializer;
         private readonly string _path;
+
+        #endregion
+
+        #region CONSTRUCTORS
 
         /// <summary>
         /// Initializes a new <see cref="SaveManager"/> with the given serializer
@@ -44,6 +47,10 @@ namespace CosmosCasino.Core.Save
             _serializer = serializer;
             _path = path;
         }
+
+        #endregion
+
+        #region PUBLIC METHODS
 
         /// <summary>
         /// Registers a participant that contributes data to save and load operations.
@@ -130,5 +137,7 @@ namespace CosmosCasino.Core.Save
                 participant.ReadFrom(save);
             }
         }
+
+        #endregion
     }
 }

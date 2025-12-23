@@ -1,6 +1,5 @@
 namespace CosmosCasino.Core.Serialization
 {
-
     /// <summary>
     /// Defines a strategy for converting objects to and from byte arrays.
     /// Implementations are responsible for choosing the underlying data
@@ -9,6 +8,8 @@ namespace CosmosCasino.Core.Serialization
     /// </summary>
     public interface ISerializer
     {
+        #region PUBLIC METHODS
+
         /// <summary>
         /// Serializes the specified object into a byte array representation.
         /// </summary>
@@ -17,7 +18,7 @@ namespace CosmosCasino.Core.Serialization
         /// <returns>
         /// A byte array containing the serialized representation of the object.
         /// </returns>
-        byte[] Serialize<T>(T data);
+        public byte[] Serialize<T>(T data);
 
         /// <summary>
         /// Deserializes the specified byte array into an object instance.
@@ -25,6 +26,8 @@ namespace CosmosCasino.Core.Serialization
         /// <typeparam name="T">The expected type of the deserialized object.</typeparam>
         /// <param name="bytes">The serialized byte data.</param>
         /// <returns>The deserialized object instance.</returns>
-        T Deserialize<T>(byte[] bytes);
+        public T Deserialize<T>(byte[] bytes);
+
+        #endregion
     }
 }

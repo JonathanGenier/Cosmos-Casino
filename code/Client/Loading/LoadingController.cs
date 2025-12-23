@@ -31,7 +31,7 @@ public partial class LoadingController : Node
 
     #endregion
 
-    #region LOADING MANGEMENT
+    #region PRIVATE METHODS
 
     /// <summary>
     /// Executes the asynchronous loading workflow.
@@ -66,10 +66,6 @@ public partial class LoadingController : Node
             (int)AppState.Game
         );
     }
-
-    #endregion
-
-    #region GAME INITIALIZATION
 
     /// <summary>
     /// Starts a new game session using the provided core services.

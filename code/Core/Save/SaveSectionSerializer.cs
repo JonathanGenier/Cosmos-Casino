@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Text.Json;
 
 namespace CosmosCasino.Core.Save
@@ -13,6 +11,8 @@ namespace CosmosCasino.Core.Save
     /// </summary>
     public static class SaveSectionSerializer
     {
+        #region PUBLIC METHODS
+
         /// <summary>
         /// Writes a value into the save sections dictionary under the specified key.
         /// If the key already exists, its value is overwritten.
@@ -95,5 +95,7 @@ namespace CosmosCasino.Core.Save
             value = element.Deserialize<T>()!;
             return true;
         }
+
+        #endregion
     }
 }

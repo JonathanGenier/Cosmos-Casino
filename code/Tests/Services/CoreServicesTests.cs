@@ -21,7 +21,7 @@ namespace CosmosCasino.Tests.Services
         {
             // Act & Assert
             Assert.That(() => new CoreServices(new JsonSaveSerializer(), null!), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => new CoreServices(new JsonSaveSerializer(), ""), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => new CoreServices(new JsonSaveSerializer(), string.Empty), Throws.TypeOf<ArgumentException>());
             Assert.That(() => new CoreServices(new JsonSaveSerializer(), "   "), Throws.TypeOf<ArgumentException>());
         }
 

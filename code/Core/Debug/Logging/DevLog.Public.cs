@@ -1,13 +1,12 @@
 namespace CosmosCasino.Core.Debug.Logging
 {
     /// <summary>
+    /// PUBLIC API
     /// Internal implementation of the DevLog logging pipeline.
     /// </summary>
     public static partial class DevLog
     {
-        // =========================================================================
-        // PUBLIC API
-        // =========================================================================
+        #region PUBLIC METHODS
 
         /// <summary>
         /// Writes a general informational log entry.
@@ -137,5 +136,7 @@ namespace CosmosCasino.Core.Debug.Logging
         {
             Write(LogLevel.Info, safety, LogKind.Command, category, message);
         }
+
+        #endregion
     }
 }

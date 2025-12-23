@@ -12,6 +12,7 @@ using System;
 /// </summary>
 public static class SceneLoader
 {
+    #region PUBLIC METHODS
 
     /// <summary>
     /// Loads the specified scene and replaces the current scene tree root.
@@ -21,6 +22,14 @@ public static class SceneLoader
     /// </para>
     /// </summary>
     /// <param name="path">Path to the scene to load.</param>
+    /// <returns>
+    /// <c>true</c> if the scene change request was successfully issued;
+    /// <c>false</c> if the path is invalid or the scene tree is unavailable
+    /// and the application is running in a non-debug build.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown in debug builds if <paramref name="path"/> is null or empty.
+    /// </exception>
     public static bool Load(string path)
     {
         if(string.IsNullOrEmpty(path))
@@ -33,7 +42,7 @@ public static class SceneLoader
 #endif
         }
 
-        var tree = Engine.GetMainLoop() as SceneTree;
+        SceneTree tree = Engine.GetMainLoop() as SceneTree;
 
         if(tree == null)
         {
@@ -44,4 +53,6 @@ public static class SceneLoader
         tree.ChangeSceneToFile(path);
         return true;
     }
+
+    #endregion
 }

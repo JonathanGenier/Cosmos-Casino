@@ -17,6 +17,8 @@ using Godot;
 /// </summary>
 public partial class AppManager : Node
 {
+    #region PROPERTIES
+
     /// <summary>
     /// Singleton instance of the application manager.
     /// Guaranteed to be available after the node enters the scene tree.
@@ -34,7 +36,9 @@ public partial class AppManager : Node
     /// </summary>
     public AppState State { get; private set; }
 
-    #region GODOT PROCESSES
+    #endregion
+
+    #region PUBLIC METHODS
 
     /// <summary>
     /// Ensures a single instance of <see cref="AppManager"/> exists and performs
@@ -54,10 +58,6 @@ public partial class AppManager : Node
         IntializeCoreServices();
     }
 
-    #endregion
-
-    #region STATE MANAGEMENT
-
     /// <summary>
     /// Convenience overload for state changes originating from UI or signals
     /// that provide the target state as an integer value.
@@ -67,7 +67,6 @@ public partial class AppManager : Node
     {
         ChangeState((AppState)newState);
     }
-
 
     /// <summary>
     /// Changes the current application state and triggers the corresponding
@@ -91,21 +90,7 @@ public partial class AppManager : Node
 
     #endregion
 
-    #region SCENE MANAGEMENT
-
-    /// <summary>
-    /// Performs the actual scene transition for the given application state.
-    /// <para>
-    /// This method isolates scene-loading logic from state management and delegates
-    /// the loading process to <see cref="SceneLoader"/>.
-    /// </para>
-    /// </summary>
-    /// <param name="state">Application state whose scene should be loaded.</param>
-    private bool ChangeScene(AppState state)
-    {
-        var path = GetScenePathForState(state);
-        return SceneLoader.Load(path);
-    }
+    #region PRIVATE METHODS
 
     /// <summary>
     /// Resolves the scene path associated with a given application state.
@@ -126,9 +111,19 @@ public partial class AppManager : Node
         };
     }
 
-    #endregion
-
-    #region CORE SERVICE MANAGEMENT
+    /// <summary>
+    /// Performs the actual scene transition for the given application state.
+    /// <para>
+    /// This method isolates scene-loading logic from state management and delegates
+    /// the loading process to <see cref="SceneLoader"/>.
+    /// </para>
+    /// </summary>
+    /// <param name="state">Application state whose scene should be loaded.</param>
+    private bool ChangeScene(AppState state)
+    {
+        var path = GetScenePathForState(state);
+        return SceneLoader.Load(path);
+    }
 
     /// <summary>
     /// Initializes all core services required by the application.
