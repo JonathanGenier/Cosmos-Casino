@@ -86,7 +86,7 @@ namespace CosmosCasino.Core.Save
             ArgumentNullException.ThrowIfNull(sections, nameof(sections));
             ArgumentException.ThrowIfNullOrWhiteSpace(key, nameof(key));
 
-            if(!sections.TryGetValue(key, out var element))
+            if (!sections.TryGetValue(key, out var element))
             {
                 value = default!;
                 return false;

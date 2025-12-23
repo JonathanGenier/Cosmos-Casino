@@ -69,7 +69,7 @@ namespace CosmosCasino.Core.Save
         {
             ArgumentNullException.ThrowIfNull(participant, nameof(participant));
 
-            if(_participants.Contains(participant))
+            if (_participants.Contains(participant))
             {
                 DevLog.Warning("Save", "Participant is already registered to SaveManager. No consequences, just a useless call.");
 #if DEBUG
@@ -92,7 +92,7 @@ namespace CosmosCasino.Core.Save
         {
             var save = new GameSaveData(SaveVersions.Current);
 
-            foreach(var participant in _participants)
+            foreach (var participant in _participants)
             {
                 participant.WriteTo(save);
             }
@@ -109,7 +109,7 @@ namespace CosmosCasino.Core.Save
         /// </summary>
         public void Load()
         {
-            if(!FileSystem.TryReadBytes(_path, out var bytes))
+            if (!FileSystem.TryReadBytes(_path, out var bytes))
             {
                 return;
             }
@@ -120,19 +120,19 @@ namespace CosmosCasino.Core.Save
             {
                 save = _serializer.Deserialize<GameSaveData>(bytes);
             }
-            catch(JsonException ex)
+            catch (JsonException ex)
             {
                 throw new InvalidDataException("Save file is invalid.", ex);
             }
 
-            if(save.Version != SaveVersions.Current)
+            if (save.Version != SaveVersions.Current)
             {
                 throw new InvalidDataException(
                     $"Unsupported save version {save.Version}. Expected {SaveVersions.Current}."
                 );
             }
 
-            foreach(var participant in _participants)
+            foreach (var participant in _participants)
             {
                 participant.ReadFrom(save);
             }

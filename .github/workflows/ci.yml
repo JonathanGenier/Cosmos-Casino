@@ -17,5 +17,6 @@ jobs:
           dotnet-version: 8.0.x
 
       - run: dotnet restore
+      - run: dotnet format CosmosCasino.sln --verify-no-changes
       - run: dotnet build -c Release -warnaserror --no-restore
       - run: dotnet test -c Release --no-build

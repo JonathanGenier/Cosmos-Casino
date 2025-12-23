@@ -46,7 +46,7 @@ public partial class AppManager : Node
     /// </summary>
     public override void _EnterTree()
     {
-        if(Instance != null)
+        if (Instance != null)
         {
             DevLog.Error("Application", "Multiple instances of AppManager detected. There should only be one instance.");
             QueueFree();
@@ -75,14 +75,14 @@ public partial class AppManager : Node
     /// <param name="newState">Target application state.</param>
     public void ChangeState(AppState newState)
     {
-        if(State == newState)
+        if (State == newState)
         {
             return;
         }
 
         var success = ChangeScene(newState);
 
-        if(success)
+        if (success)
         {
             State = newState;
         }

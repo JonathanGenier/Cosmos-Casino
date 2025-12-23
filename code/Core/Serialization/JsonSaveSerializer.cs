@@ -69,7 +69,7 @@ namespace CosmosCasino.Core.Serialization
         {
             ArgumentNullException.ThrowIfNull(bytes, nameof(bytes));
 
-            if(bytes.Length == 0)
+            if (bytes.Length == 0)
             {
                 throw new InvalidDataException("Cannot deserialize empty data.");
             }

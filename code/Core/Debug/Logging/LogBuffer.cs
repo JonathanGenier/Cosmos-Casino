@@ -72,7 +72,7 @@ namespace CosmosCasino.Core.Debug.Logging
             _entries[_nextIndex] = entry;
             _nextIndex = (_nextIndex + 1) % Capacity;
 
-            if(_count < Capacity)
+            if (_count < Capacity)
             {
                 _count++;
             }
@@ -90,7 +90,7 @@ namespace CosmosCasino.Core.Debug.Logging
         /// </returns>
         public IReadOnlyList<LogEntry> Snapshot()
         {
-            if(_count == 0)
+            if (_count == 0)
             {
                 return Array.Empty<LogEntry>();
             }
@@ -98,7 +98,7 @@ namespace CosmosCasino.Core.Debug.Logging
             var result = new LogEntry[_count];
             int start = (_nextIndex - _count + Capacity) % Capacity;
 
-            for(int i = 0; i < _count; i++)
+            for (int i = 0; i < _count; i++)
             {
                 int index = (start + i) % Capacity;
                 result[i] = _entries[index];

@@ -25,7 +25,7 @@ namespace CosmosCasino.Tests.IO
         [TearDown]
         public void TearDown()
         {
-            if(Directory.Exists(_tempDir))
+            if (Directory.Exists(_tempDir))
             {
                 Directory.Delete(_tempDir, recursive: true);
             }

@@ -39,7 +39,7 @@ namespace CosmosCasino.Core.IO
             {
                 WriteBytes(tempPath, bytes);
 
-                if(File.Exists(path))
+                if (File.Exists(path))
                 {
                     File.Replace(tempPath, path, null);
                 }
@@ -50,7 +50,7 @@ namespace CosmosCasino.Core.IO
             }
             finally
             {
-                if(File.Exists(tempPath))
+                if (File.Exists(tempPath))
                 {
                     File.Delete(tempPath);
                 }
@@ -77,7 +77,7 @@ namespace CosmosCasino.Core.IO
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
 
-            if(!File.Exists(path))
+            if (!File.Exists(path))
             {
                 bytes = Array.Empty<byte>();
                 return false;
@@ -102,7 +102,7 @@ namespace CosmosCasino.Core.IO
         {
             var dir = Path.GetDirectoryName(path);
 
-            if(!string.IsNullOrEmpty(dir))
+            if (!string.IsNullOrEmpty(dir))
             {
                 Directory.CreateDirectory(dir);
             }
