@@ -110,6 +110,8 @@ dotnet_diagnostic.SA1518.severity = none
 # Trailing commas
 dotnet_diagnostic.SA1413.severity = none
 
+# Single line comment spaces
+dotnet_diagnostic.SA1515.severity = none
 
 # ============================================================
 # StyleCop — File headers (never enforced)
