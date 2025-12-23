@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 /// </summary>
 public partial class BootController : Node
 {
-    #region GODOT PROCESSES
+    #region GODOT METHODS
 
     /// <summary>
     /// Entry point for the boot scene.
@@ -29,7 +29,7 @@ public partial class BootController : Node
 
     #endregion
 
-    #region BOOT MANAGEMENT
+    #region PRIVATE METHODS
 
     /// <summary>
     /// Executes the asynchronous boot workflow.
@@ -48,16 +48,16 @@ public partial class BootController : Node
     {
         DevLog.Info("Boot", "Loading...");
 
-        //LoadConfig();
-        //LoadUserPreferences();
-        //LoadLocalization();
-        //LoadFeatureFlags();
-        //CheckBuildVersion();
+        // LoadConfig();
+        // LoadUserPreferences();
+        // LoadLocalization();
+        // LoadFeatureFlags();
+        // CheckBuildVersion();
 
-        //await WarmUpShaders();
-        //await PreloadResources();
+        // await WarmUpShaders();
+        // await PreloadResources();
 
-        //InitializeCaches();
+        // InitializeCaches();
 
         DevLog.Info("Boot", "Loading complete.");
 

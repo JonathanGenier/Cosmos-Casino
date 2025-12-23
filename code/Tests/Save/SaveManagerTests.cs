@@ -1,8 +1,6 @@
 using CosmosCasino.Core.Save;
 using CosmosCasino.Core.Serialization;
 using NUnit.Framework;
-using System;
-using System.IO;
 using System.Text.Json;
 
 namespace CosmosCasino.Tests.Save
@@ -11,38 +9,13 @@ namespace CosmosCasino.Tests.Save
     [TestFixture]
     internal class SaveManagerTests
     {
+        #region FIELDS
+        
         private string? _tempPath;
         private JsonSaveSerializer? _serializer;
         private SaveManager? _saveManager;
 
-        private sealed class TestSaveParticipant : ISaveParticipant
-        {
-            private readonly string _key;
-
-            public int Value;
-
-            public bool IsWriteCalled { get; private set; }
-            public bool IsReadCalled { get; private set; }
-
-            public TestSaveParticipant(string key)
-            {
-                _key = key;
-                IsWriteCalled = false;
-                IsReadCalled = false;
-            }
-
-            public void WriteTo(GameSaveData save)
-            {
-                IsWriteCalled = true;
-                save.Sections.Write(_key, Value);
-            }
-
-            public void ReadFrom(GameSaveData save)
-            {
-                IsReadCalled = true;
-                Value = save.Sections.Read<int>(_key);
-            }
-        }
+        #endregion
 
         #region SETUP & TEARDOWN
 
@@ -79,7 +52,7 @@ namespace CosmosCasino.Tests.Save
         {
             // Act & Assert
             Assert.That(() => new SaveManager(_serializer!, null!), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => new SaveManager(_serializer!, ""), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => new SaveManager(_serializer!, string.Empty), Throws.TypeOf<ArgumentException>());
             Assert.That(() => new SaveManager(_serializer!, "   "), Throws.TypeOf<ArgumentException>());
         }
 
@@ -241,6 +214,38 @@ namespace CosmosCasino.Tests.Save
             // Assert
             Assert.That(p1.Value, Is.EqualTo(1));
             Assert.That(p2.Value, Is.EqualTo(2));
+        }
+
+        #endregion
+
+        #region CLASSES
+
+        private sealed class TestSaveParticipant : ISaveParticipant
+        {
+            private readonly string _key;
+
+            public TestSaveParticipant(string key)
+            {
+                _key = key;
+                IsWriteCalled = false;
+                IsReadCalled = false;
+            }
+
+            public int Value { get; set; }
+            public bool IsWriteCalled { get; private set; }
+            public bool IsReadCalled { get; private set; }
+
+            public void WriteTo(GameSaveData save)
+            {
+                IsWriteCalled = true;
+                save.Sections.Write(_key, Value);
+            }
+
+            public void ReadFrom(GameSaveData save)
+            {
+                IsReadCalled = true;
+                Value = save.Sections.Read<int>(_key);
+            }
         }
 
         #endregion

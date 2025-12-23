@@ -8,12 +8,11 @@ namespace CosmosCasino.Tests.Serialization
     [TestFixture]
     internal class JsonSaveSerializerTests
     {
-        JsonSaveSerializer? _serializer;
+        #region FIELDS
 
-        private sealed class TestData
-        {
-            public int Value { get; set; }
-        }
+        private JsonSaveSerializer? _serializer;
+
+        #endregion
 
         #region SETUP & TEARDOWN
 
@@ -106,6 +105,15 @@ namespace CosmosCasino.Tests.Serialization
             var result = _serializer!.Deserialize<TestData>(bytes);
 
             Assert.That(result.Value, Is.EqualTo(original.Value));
+        }
+
+        #endregion
+
+        #region CLASSES
+
+        private sealed class TestData
+        {
+            public int Value { get; set; }
         }
 
         #endregion

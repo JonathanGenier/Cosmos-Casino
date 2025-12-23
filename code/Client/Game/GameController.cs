@@ -14,7 +14,7 @@ using Godot;
 /// </summary>
 public partial class GameController : Node
 {
-    #region GODOT PROCESSES
+    #region GODOT METHODS
 
     /// <summary>
     /// Called when the gameplay scene has finished loading and is ready.

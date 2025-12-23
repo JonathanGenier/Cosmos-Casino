@@ -17,5 +17,5 @@ jobs:
           dotnet-version: 8.0.x
 
       - run: dotnet restore
-      - run: dotnet build -c Release --no-restore
+      - run: dotnet build -c Release -warnaserror --no-restore
       - run: dotnet test -c Release --no-build

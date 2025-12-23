@@ -5,7 +5,14 @@ namespace CosmosCasino.Core.Debug.Environment
     /// </summary>
     public enum EnvironmentType
     {
+        /// <summary>
+        /// Development environment with debugging and diagnostic features enabled.
+        /// </summary>
         Dev,
-        Prod
+
+        /// <summary>
+        /// Production environment optimized for release behavior.
+        /// </summary>
+        Prod,
     }
 }

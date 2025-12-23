@@ -3,23 +3,30 @@ using CosmosCasino.Core.Debug.Environment;
 namespace CosmosCasino.Core.Debug.Logging
 {
     /// <summary>
+    /// INTERNAL CORE LOGIC
     /// Central logging API used by all systems.
     /// Applies environment safety rules and routes log entries
     /// into a fixed-size in-memory buffer for diagnostics and UI.
     /// </summary>
     public static partial class DevLog
     {
-        // =========================================================================
-        // INTERNAL CORE LOGIC
-        // =========================================================================
+        #region FIELDS
 
-        private static readonly LogBuffer _buffer = new LogBuffer(capacity: 500);
+        private static readonly LogBuffer _buffer = new (capacity: 500);
+
+        #endregion
+
+        #region PROPERTIES
 
         /// <summary>
         /// Exposes the internal log buffer for read-only consumers
         /// such as debug UI and diagnostic tools.
         /// </summary>
         public static LogBuffer Buffer => _buffer;
+
+        #endregion
+
+        #region PRIVATE METHOD
 
         /// <summary>
         /// Core logging implementation.
@@ -83,5 +90,6 @@ namespace CosmosCasino.Core.Debug.Logging
             );
         }
 #endif
+        #endregion
     }
 }

@@ -10,6 +10,8 @@ namespace CosmosCasino.Core.IO
     /// </summary>
     public static class FileSystem
     {
+        #region PUBLIC METHODS
+
         /// <summary>
         /// Writes the provided bytes to disk atomically.
         /// The data is first written to a temporary file and then safely
@@ -85,6 +87,10 @@ namespace CosmosCasino.Core.IO
             return true;
         }
 
+        #endregion
+
+        #region PRIVATE METHODS
+
         /// <summary>
         /// Writes bytes to the specified path, creating the parent directory
         /// if it does not already exist.
@@ -103,5 +109,7 @@ namespace CosmosCasino.Core.IO
 
             File.WriteAllBytes(path, bytes);
         }
+
+        #endregion
     }
 }
