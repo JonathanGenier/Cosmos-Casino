@@ -28,8 +28,19 @@ public partial class AppManager : Node
     /// <summary>
     /// Container for all core services used by the application.
     /// Initialized once during application startup and shared across scenes.
+    /// This container is instantiated once during application startup and
+    /// remains alive for the duration of the application.
     /// </summary>
     public CoreServices CoreServices { get; private set; }
+
+    /// <summary>
+    /// Container for all client-side services and presentation-layer systems.
+    /// <see cref="ClientServices"/> owns the lifecycle of client-only components
+    /// such as input, UI, camera, and other Godot-dependent systems.
+    /// This container is instantiated once during application startup and
+    /// remains alive for the duration of the application.
+    /// </summary>
+    public ClientServices ClientServices { get; private set; }
 
     /// <summary>
     /// Current high-level application state.
@@ -55,7 +66,8 @@ public partial class AppManager : Node
 
         Instance = this;
         State = AppState.Boot;
-        IntializeCoreServices();
+        InitializeCoreServices();
+        InitializeClientServices();
     }
 
     /// <summary>
@@ -132,11 +144,23 @@ public partial class AppManager : Node
     /// application startup.
     /// </para>
     /// </summary>
-    private void IntializeCoreServices()
+    private void InitializeCoreServices()
     {
         JsonSaveSerializer serializer = new();
         string savePath = OS.GetUserDataDir();
         CoreServices = new CoreServices(serializer, savePath);
+    }
+
+    /// <summary>
+    /// Initializes all client-side services and presentation-layer systems.
+    /// Client services are initialized after core services to ensure the client
+    /// layer can safely reference core functionality without creating reverse
+    /// dependencies.
+    /// </summary>
+    private void InitializeClientServices()
+    {
+        ClientServices = new ClientServices();
+        AddChild(ClientServices);
     }
 
     #endregion
