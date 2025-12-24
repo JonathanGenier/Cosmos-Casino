@@ -46,6 +46,8 @@ namespace CosmosCasino.Core.Save
 
             _serializer = serializer;
             _path = path;
+
+            DevLog.System("SaveManager", "Ready");
         }
 
         #endregion

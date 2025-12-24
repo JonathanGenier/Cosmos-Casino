@@ -41,8 +41,9 @@ namespace CosmosCasino.Core.Services
         {
             ArgumentNullException.ThrowIfNull(serializer);
             ArgumentException.ThrowIfNullOrWhiteSpace(savePath);
-
+            DevLog.System("CoreServices", "Setting up...");
             SaveManager = new SaveManager(serializer, savePath);
+            DevLog.System("CoreServices", "Ready");
         }
 
         #endregion

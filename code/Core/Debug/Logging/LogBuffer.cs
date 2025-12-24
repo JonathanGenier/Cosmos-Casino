@@ -38,6 +38,16 @@ namespace CosmosCasino.Core.Debug.Logging
 
         #endregion
 
+        #region EVENTS
+
+        /// <summary>
+        /// Invoked whenever a new log entry is added to the buffer.
+        /// Intended for reactive consumers such as debug UI or diagnostics.
+        /// </summary>
+        public event Action<LogEntry>? EntryAdded;
+
+        #endregion
+
         #region PROPERTIES
 
         /// <summary>
@@ -78,6 +88,7 @@ namespace CosmosCasino.Core.Debug.Logging
             }
 
             Version++;
+            EntryAdded?.Invoke(entry);
         }
 
         /// <summary>

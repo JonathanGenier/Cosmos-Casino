@@ -137,6 +137,29 @@ namespace CosmosCasino.Core.Debug.Logging
             Write(LogLevel.Info, safety, LogKind.Command, category, message);
         }
 
+
+        /// <summary>
+        /// Writes a system-level diagnostic log entry.
+        /// System logs are intended for low-level application and infrastructure
+        /// lifecycle events such as boot sequencing, service initialization,
+        /// and internal state transitions.
+        /// These entries are marked as unsafe by default and are therefore
+        /// stripped from production builds.
+        /// </summary>
+        /// <param name="category">
+        /// Logical subsystem producing the log entry
+        /// (e.g. BootController, AppManager, ClientServices).
+        /// </param>
+        /// <param name="message">
+        /// Human-readable diagnostic message describing the system action.
+        /// </param>
+        public static void System(
+            string category,
+            string message)
+        {
+            Write(LogLevel.Info, LogSafety.Unsafe, LogKind.System, category, message);
+        }
+
         #endregion
     }
 }
