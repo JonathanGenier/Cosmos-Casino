@@ -41,9 +41,9 @@ public partial class UiManager : Node
     /// Handles a request to toggle the visibility of the debug log console UI.
     /// Invoked in response to a debug-related input intent.
     /// </summary>
-    private void OnToggleLogConsoleUi()
+    private void OnToggleConsoleUi()
     {
-        // _logConsole.Toggle();
+        _logConsole.Toggle();
     }
 
     #endregion
@@ -60,9 +60,10 @@ public partial class UiManager : Node
     {
         _logConsole = GD.Load<PackedScene>(UiPaths.LogConsole).Instantiate<LogConsoleUiController>();
         AddChild(_logConsole);
+        _logConsole.Toggle();
 
         var input = AppManager.Instance.ClientServices.Input;
-        // input.ToggleDebug += OnToggleLogConsoleUi;
+        input.ToggleConsoleUi += OnToggleConsoleUi;
     }
 
     #endregion
