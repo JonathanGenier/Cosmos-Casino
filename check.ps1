@@ -1,18 +1,45 @@
+Clear-Host
 $ErrorActionPreference = "Stop"
 
-Write-Host "Verifying formatting..." -ForegroundColor Black -BackgroundColor Yellow
-dotnet format CosmosCasino.sln
+function Run-Step {
+    param (
+        [string]$Name,
+        [ScriptBlock]$Action
+    )
 
-Write-Host "Building (Debug) (Style analyzer)..." -ForegroundColor Black -BackgroundColor Yellow
-dotnet build CosmosCasino.sln -c Debug -warnaserror:SA
+    Write-Host ">> $Name" -ForegroundColor Black -BackgroundColor Yellow
 
-Write-Host "Building (Release) (Style analyzer)..." -ForegroundColor Black -BackgroundColor Yellow
-dotnet build CosmosCasino.sln -c Release -warnaserror:SA
+    try {
+        & $Action
+        Write-Host "$Name succeeded" -ForegroundColor Black -BackgroundColor Green
+    }
+    catch {
+        Write-Host "$Name failed" -ForegroundColor Black -BackgroundColor Red
+        Write-Host $_.Exception.Message -ForegroundColor Black -BackgroundColor Yellow
+        exit 1
+    }
 
-Write-Host "Running tests (Debug)..." -ForegroundColor Black -BackgroundColor Yellow
-dotnet test CosmosCasino.sln -c Debug --no-build
+    Write-Host ""
+}
 
-Write-Host "Running tests (Release)..." -ForegroundColor Black -BackgroundColor Yellow
-dotnet test CosmosCasino.sln -c Release --no-build
+Run-Step "Formatting verification" {
+    dotnet format CosmosCasino.sln
+}
+
+Run-Step "Building & Analyzing Style (Debug)" {
+    dotnet build CosmosCasino.sln -c Debug -warnaserror:SA
+}
+
+Run-Step "Building & Analyzing Style (Release)" {
+    dotnet build CosmosCasino.sln -c Release -warnaserror:SA
+}
+
+Run-Step "Running tests (Debug)" {
+    dotnet test CosmosCasino.sln -c Debug --no-build
+}
+
+Run-Step "Running tests (Release)" {
+    dotnet test CosmosCasino.sln -c Release --no-build
+}
 
 Write-Host "All checks passed." -ForegroundColor Black -BackgroundColor Green
