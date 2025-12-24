@@ -7,18 +7,31 @@ namespace CosmosCasino.Core.Debug.Logging
     public enum LogKind
     {
         /// <summary>
-        /// General-purpose log entry. This is the default kind.
+        /// General-purpose log entry.
+        /// This is the default kind used for normal application flow
+        /// and informational diagnostics.
         /// </summary>
         General,
 
         /// <summary>
         /// Indicates that a discrete, meaningful event occurred.
+        /// Events typically represent game transitions,
+        /// state changes, or notable world actions.
         /// </summary>
         Event,
 
         /// <summary>
-        /// Indicates that a user command was entered or executed.
+        /// Indicates that a user or developer command was entered or executed.
+        /// Commands usually originate from debug tools, consoles,
+        /// or explicit user actions.
         /// </summary>
-        Command
+        Command,
+
+        /// <summary>
+        /// Indicates a low-level system or infrastructure log entry.
+        /// Used for engine, application lifecycle, and service-level
+        /// diagnostics that are not part of normal gameplay flow.
+        /// </summary>
+        System,
     }
 }

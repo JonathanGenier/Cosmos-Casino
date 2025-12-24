@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Debug.Logging;
 using Godot;
 
 /// <summary>
@@ -16,6 +17,7 @@ public partial class MainMenuController : Node
     {
         var playButton = GetNode<Button>("Button_Play");
         playButton.Pressed += OnPlayPressed;
+        DevLog.System("MainMenuController", "Ready");
     }
 
     #endregion

@@ -25,6 +25,7 @@ public partial class BootController : Node
     public override void _Ready()
     {
         _ = BootAsync();
+        DevLog.System("BootController", "Ready");
     }
 
     #endregion
@@ -46,7 +47,7 @@ public partial class BootController : Node
     /// </summary>
     private async Task BootAsync()
     {
-        DevLog.Info("Boot", "Loading...");
+        DevLog.System("BootController", "Loading...");
 
         // LoadConfig();
         // LoadUserPreferences();
@@ -59,7 +60,7 @@ public partial class BootController : Node
 
         // InitializeCaches();
 
-        DevLog.Info("Boot", "Loading complete.");
+        DevLog.System("BootController", "Loading complete.");
 
         // Deferred to avoid scene tree modification during initialization
         AppManager.Instance.CallDeferred(

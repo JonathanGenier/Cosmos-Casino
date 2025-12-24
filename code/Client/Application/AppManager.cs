@@ -59,15 +59,17 @@ public partial class AppManager : Node
     {
         if (Instance != null)
         {
-            DevLog.Error("Application", "Multiple instances of AppManager detected. There should only be one instance.");
+            DevLog.Warning("Application", "Multiple instances of AppManager detected. There should only be one instance. No consequences. Deplicate is QueueFree.");
             QueueFree();
             return;
         }
 
+        DevLog.System("AppManager", "Setting up...");
         Instance = this;
         State = AppState.Boot;
         InitializeCoreServices();
         InitializeClientServices();
+        DevLog.System("AppManager", "Ready");
     }
 
     /// <summary>

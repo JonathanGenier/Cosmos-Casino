@@ -2,13 +2,14 @@
 
 [ext_resource type="Script" uid="uid://brp5b4h10nata" path="res://code/Client/Ui/Debug/LogConsoleUiController.cs" id="1_ayppw"]
 
-[node name="LogConsoleUi" type="Control"]
+[node name="LogConsoleUi" type="Control" node_paths=PackedStringArray("_textLog")]
 layout_mode = 3
 anchor_right = 1.0
 anchor_bottom = 0.25
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ayppw")
+_textLog = NodePath("PanelContainer/RichTextLabel")
 
 [node name="PanelContainer" type="PanelContainer" parent="."]
 layout_mode = 1
@@ -18,33 +19,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer"]
+[node name="RichTextLabel" type="RichTextLabel" parent="PanelContainer"]
 layout_mode = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/ScrollContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="RichTextLabel" type="RichTextLabel" parent="PanelContainer/ScrollContainer/VBoxContainer"]
-layout_mode = 2
-text = "This is a test 1
-This is a test 2
-This is a test 3
-This is a test 4
-This is a test 5
-This is a test 6
-This is a test 7
-This is a test 8
-This is a test 9
-This is a test 10
-This is a test 11
-This is a test 12
-This is a test 13
-This is a test 14
-This is a test 15
-This is a test 16
-This is a test 17
-This is a test 18"
-fit_content = true
-scroll_active = false
+scroll_following = true

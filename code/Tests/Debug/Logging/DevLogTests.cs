@@ -62,15 +62,16 @@ namespace CosmosCasino.Tests.Debug.Logging
             DevLog.Event("Test", "Safe");
             DevLog.Command("Test", "Safe");
             DevLog.Verbose("Test", "Unsafe");
+            DevLog.System("Test", "Unsafe");
 
             var snapshot = DevLog.Buffer.Snapshot();
 
             // Assert
             // In prod, unsafe logs are dropped.
 #if DEBUG
-            Assert.That(snapshot.Count, Is.EqualTo(6));
+            Assert.That(snapshot.Count, Is.EqualTo(7));
             Assert.That(snapshot.Count(e => e.Safety == LogSafety.Safe), Is.EqualTo(5));
-            Assert.That(snapshot.Count(e => e.Safety == LogSafety.Unsafe), Is.EqualTo(1));
+            Assert.That(snapshot.Count(e => e.Safety == LogSafety.Unsafe), Is.EqualTo(2));
 #else
             Assert.That(snapshot.Count, Is.EqualTo(5));
             Assert.That(snapshot.All(e => e.Safety == LogSafety.Safe));
@@ -78,7 +79,7 @@ namespace CosmosCasino.Tests.Debug.Logging
         }
 
         [Test]
-        public void DevLog_AllowsExplicitSafetyOverride_ExceptForWarningAndError()
+        public void DevLog_AllowsExplicitSafetyOverride_ExceptForWarningErrorAndSystem()
         {
             // Act
             DevLog.Info("Test", "Info", LogSafety.Unsafe);
@@ -115,15 +116,24 @@ namespace CosmosCasino.Tests.Debug.Logging
             DevLog.Error("Test", "Error");
             DevLog.Event("Test", "Info");
             DevLog.Command("Test", "Info");
+            DevLog.System("Test", "Info");
 
             var snapshot = DevLog.Buffer.Snapshot();
 
             // Assert
+#if DEBUG
+            Assert.That(snapshot.Count, Is.EqualTo(7));
+            Assert.That(snapshot.Count(e => e.Level == LogLevel.Info), Is.EqualTo(4));
+            Assert.That(snapshot.Count(e => e.Level == LogLevel.Verbose), Is.EqualTo(1));
+            Assert.That(snapshot.Count(e => e.Level == LogLevel.Warning), Is.EqualTo(1));
+            Assert.That(snapshot.Count(e => e.Level == LogLevel.Error), Is.EqualTo(1));
+#else
             Assert.That(snapshot.Count, Is.EqualTo(6));
             Assert.That(snapshot.Count(e => e.Level == LogLevel.Info), Is.EqualTo(3));
             Assert.That(snapshot.Count(e => e.Level == LogLevel.Verbose), Is.EqualTo(1));
             Assert.That(snapshot.Count(e => e.Level == LogLevel.Warning), Is.EqualTo(1));
             Assert.That(snapshot.Count(e => e.Level == LogLevel.Error), Is.EqualTo(1));
+#endif
         }
 
         #endregion
@@ -141,14 +151,23 @@ namespace CosmosCasino.Tests.Debug.Logging
             DevLog.Error("Test", "General");
             DevLog.Event("Test", "Event");
             DevLog.Command("Test", "Command");
+            DevLog.System("Test", "Info");
 
             var snapshot = DevLog.Buffer.Snapshot();
 
             // Assert
+#if DEBUG
+            Assert.That(snapshot.Count, Is.EqualTo(7));
+            Assert.That(snapshot.Count(e => e.Kind == LogKind.General), Is.EqualTo(4));
+            Assert.That(snapshot.Count(e => e.Kind == LogKind.Event), Is.EqualTo(1));
+            Assert.That(snapshot.Count(e => e.Kind == LogKind.Command), Is.EqualTo(1));
+            Assert.That(snapshot.Count(e => e.Kind == LogKind.System), Is.EqualTo(1));
+#else
             Assert.That(snapshot.Count, Is.EqualTo(6));
             Assert.That(snapshot.Count(e => e.Kind == LogKind.General), Is.EqualTo(4));
             Assert.That(snapshot.Count(e => e.Kind == LogKind.Event), Is.EqualTo(1));
             Assert.That(snapshot.Count(e => e.Kind == LogKind.Command), Is.EqualTo(1));
+#endif
         }
 
         #endregion

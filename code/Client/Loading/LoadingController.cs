@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 /// </summary>
 public partial class LoadingController : Node
 {
-    #region GODOT PROCESSES
+    #region PUBLIC METHODS
 
     /// <summary>
     /// Entry point for the loading scene.
@@ -27,6 +27,7 @@ public partial class LoadingController : Node
     public override void _Ready()
     {
         _ = LoadAsync();
+        DevLog.System("LoadingController", "Ready");
     }
 
     #endregion
@@ -50,7 +51,7 @@ public partial class LoadingController : Node
     {
         var coreServices = AppManager.Instance.CoreServices;
 
-        DevLog.Info("Loading", "Loading...");
+        DevLog.System("LoadingController", "Loading...");
 
         // Decide new game vs load game
         StartNewGame(coreServices);
@@ -59,7 +60,7 @@ public partial class LoadingController : Node
         // core.Game.LoadSave(...)
         // core.Game.InitializeWorld()
 
-        DevLog.Info("Loading", "Loading complete");
+        DevLog.System("LoadingController", "Loading complete");
 
         AppManager.Instance.CallDeferred(
             nameof(AppManager.ChangeState),

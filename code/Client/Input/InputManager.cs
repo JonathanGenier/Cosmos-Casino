@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Debug.Logging;
 using Godot;
 using System.Collections.Generic;
 
@@ -47,8 +48,10 @@ public partial class InputManager : Node
     /// </summary>
     public override void _Ready()
     {
+        DevLog.System("InputManager", "Setting up...");
         RegisterModules();
         SortModules();
+        DevLog.System("InputManager", "Ready");
     }
 
     /// <summary>
