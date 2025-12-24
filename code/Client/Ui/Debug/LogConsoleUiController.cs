@@ -8,7 +8,15 @@ using Godot;
 /// logic directly; it reacts to coordination decisions made by higher-level
 /// systems such as <see cref="UiManager"/>.
 /// </summary>
-public partial class LogConsoleUiController : Node
+public partial class LogConsoleUiController : Control
 {
-
+    /// <summary>
+    /// Toggles the visibility of the log console.
+    /// This method updates the presentation state only and does not
+    /// perform any input handling or coordination logic.
+    /// </summary>
+    public void Toggle()
+    {
+        Visible = !Visible;
+    }
 }

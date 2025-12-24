@@ -29,12 +29,12 @@ public partial class InputManager : Node
     #region SIGNALS
 
     /// <summary>
-    /// Emitted when the debug toggle input intent is detected.
+    /// Emitted when the debug console input intent is detected.
     /// This signal represents a semantic input decision and does not imply
     /// any specific UI or gameplay behavior.
     /// </summary>
     [Signal]
-    public delegate void ToggleDebugEventHandler();
+    public delegate void ToggleConsoleUiEventHandler();
 
     #endregion
 
@@ -47,7 +47,6 @@ public partial class InputManager : Node
     /// </summary>
     public override void _Ready()
     {
-        GD.Print("Input ready");
         RegisterModules();
         SortModules();
     }
@@ -77,7 +76,7 @@ public partial class InputManager : Node
     /// </summary>
     private void RegisterModules()
     {
-        // _modules.Add();
+        _modules.Add(new DebugInputModule(this));
     }
 
     /// <summary>
