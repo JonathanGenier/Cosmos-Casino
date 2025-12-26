@@ -12,21 +12,65 @@ namespace CosmosCasino.Core.Debug.Logging
     {
         #region FIELDS
 
-        private static readonly LogBuffer _buffer = new(capacity: 500);
+        private static List<LogEntry>? _earlyLogs = new();
+        private static bool _bootstrapping = true;
 
         #endregion
 
-        #region PROPERTIES
+        #region ACTIONS
 
         /// <summary>
-        /// Exposes the internal log buffer for read-only consumers
-        /// such as debug UI and diagnostic tools.
+        /// Raised whenever a new log entry is produced by the logging system.
+        /// Intended for internal consumers such as DebugConsole to capture
+        /// and buffer log output.
         /// </summary>
-        public static LogBuffer Buffer => _buffer;
+        internal static event Action<LogEntry>? OnLog;
 
         #endregion
 
-        #region PRIVATE METHOD
+        #region INTERNAL METHODS
+
+        /// <summary>
+        /// Drains all log entries recorded during application bootstrap and
+        /// permanently disables early-log buffering.
+        /// This method is intended to be called exactly once when the
+        /// DebugConsole is initialized.
+        /// </summary>
+        /// <returns>
+        /// The collection of log entries recorded during bootstrap,
+        /// or an empty collection if buffering has already been drained.
+        /// </returns>
+        internal static IReadOnlyList<LogEntry> DrainEarlyLogs()
+        {
+            if (!_bootstrapping)
+            {
+                return Array.Empty<LogEntry>();
+            }
+
+            _bootstrapping = false;
+
+            var drained = _earlyLogs!;
+            _earlyLogs = null;
+
+            return drained;
+        }
+
+#if DEBUG
+        /// <summary>
+        /// TEST SUPPORT ONLY.
+        /// Resets static logging state to allow deterministic unit testing.
+        /// Not used in production code paths.
+        /// </summary>
+        internal static void ResetForUnitTests()
+        {
+            _earlyLogs = new List<LogEntry>();
+            _bootstrapping = true;
+            OnLog = null;
+        }
+#endif
+        #endregion
+
+        #region PRIVATE METHODS
 
         /// <summary>
         /// Core logging implementation.
@@ -70,26 +114,14 @@ namespace CosmosCasino.Core.Debug.Logging
                 message
             );
 
-            _buffer.Add(entry);
+            if (_bootstrapping)
+            {
+                _earlyLogs!.Add(entry);
+            }
 
-#if DEBUG
-            MirrorToConsole(entry);
-#endif
+            OnLog?.Invoke(entry);
         }
 
-#if DEBUG
-        /// <summary>
-        /// Mirrors log entries to the standard console in debug builds.
-        /// This is a temporary development aid and will be replaced
-        /// by the in-game debug UI.
-        /// </summary>
-        private static void MirrorToConsole(in LogEntry entry)
-        {
-            Console.WriteLine(
-                $"[{entry.TimestampMs}] [{entry.Category}] {entry.Message}"
-            );
-        }
-#endif
         #endregion
     }
 }

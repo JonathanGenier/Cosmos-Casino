@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Debug;
 using CosmosCasino.Core.Debug.Logging;
 using NUnit.Framework;
 
@@ -6,14 +7,25 @@ namespace CosmosCasino.Tests.Debug.Logging
     [TestFixture]
     internal class DevLogTests
     {
+        #region FIELDS
+
+        private DebugConsole? _debugConsole;
+
+        #endregion
+
         #region SETUP & TEARDOWN
 
         [SetUp]
         public void SetUp()
         {
-            DevLog.Buffer.Clear();
+            _debugConsole = new DebugConsole();
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            _debugConsole!.Dispose();
+        }
         #endregion
 
         #region LOG SAFETY
@@ -26,7 +38,7 @@ namespace CosmosCasino.Tests.Debug.Logging
             DevLog.Info("Unsafe", "Unsafe message", LogSafety.Unsafe);
 
             // Assert
-            Assert.That(DevLog.Buffer.Count, Is.EqualTo(1));
+            Assert.That(_debugConsole!.Count, Is.EqualTo(1));
         }
 #endif
 
@@ -38,7 +50,7 @@ namespace CosmosCasino.Tests.Debug.Logging
             DevLog.Info("Unsafe", "Unsafe message", LogSafety.Unsafe);
 
             // Assert
-            Assert.That(DevLog.Buffer.Count, Is.EqualTo(0));
+            Assert.That(_debugConsole!.Count, Is.EqualTo(0));
         }
 #endif
 
@@ -49,7 +61,7 @@ namespace CosmosCasino.Tests.Debug.Logging
             DevLog.Info("Unsafe", "Unsafe message", LogSafety.Safe);
 
             // Assert
-            Assert.That(DevLog.Buffer.Count, Is.EqualTo(1));
+            Assert.That(_debugConsole!.Count, Is.EqualTo(1));
         }
 
         [Test]
@@ -64,17 +76,17 @@ namespace CosmosCasino.Tests.Debug.Logging
             DevLog.Verbose("Test", "Unsafe");
             DevLog.System("Test", "Unsafe");
 
-            var snapshot = DevLog.Buffer.Snapshot();
+            var logs = _debugConsole!.GetLogs();
 
             // Assert
             // In prod, unsafe logs are dropped.
 #if DEBUG
-            Assert.That(snapshot.Count, Is.EqualTo(7));
-            Assert.That(snapshot.Count(e => e.Safety == LogSafety.Safe), Is.EqualTo(5));
-            Assert.That(snapshot.Count(e => e.Safety == LogSafety.Unsafe), Is.EqualTo(2));
+            Assert.That(logs.Count, Is.EqualTo(7));
+            Assert.That(logs.Count(e => e.Safety == LogSafety.Safe), Is.EqualTo(5));
+            Assert.That(logs.Count(e => e.Safety == LogSafety.Unsafe), Is.EqualTo(2));
 #else
-            Assert.That(snapshot.Count, Is.EqualTo(5));
-            Assert.That(snapshot.All(e => e.Safety == LogSafety.Safe));
+            Assert.That(logs.Count, Is.EqualTo(5));
+            Assert.That(logs.All(e => e.Safety == LogSafety.Safe));
 #endif
         }
 
@@ -87,17 +99,17 @@ namespace CosmosCasino.Tests.Debug.Logging
             DevLog.Event("Test", "Event", LogSafety.Unsafe);
             DevLog.Command("Test", "Command", LogSafety.Unsafe);
 
-            var snapshot = DevLog.Buffer.Snapshot();
+            var logs = _debugConsole!.GetLogs();
 
             // Assert
             // In prod, unsafe logs are dropped.
 #if DEBUG
-            Assert.That(snapshot.Count, Is.EqualTo(4));
-            Assert.That(snapshot.Count(e => e.Safety == LogSafety.Safe), Is.EqualTo(1));
-            Assert.That(snapshot.Count(e => e.Safety == LogSafety.Unsafe), Is.EqualTo(3));
+            Assert.That(logs.Count, Is.EqualTo(4));
+            Assert.That(logs.Count(e => e.Safety == LogSafety.Safe), Is.EqualTo(1));
+            Assert.That(logs.Count(e => e.Safety == LogSafety.Unsafe), Is.EqualTo(3));
 #else
-            Assert.That(snapshot.Count, Is.EqualTo(1));
-            Assert.That(snapshot.All(e => e.Safety == LogSafety.Safe));
+            Assert.That(logs.Count, Is.EqualTo(1));
+            Assert.That(logs.All(e => e.Safety == LogSafety.Safe));
 #endif
         }
 
@@ -118,21 +130,21 @@ namespace CosmosCasino.Tests.Debug.Logging
             DevLog.Command("Test", "Info");
             DevLog.System("Test", "Info");
 
-            var snapshot = DevLog.Buffer.Snapshot();
+            var logs = _debugConsole!.GetLogs();
 
             // Assert
 #if DEBUG
-            Assert.That(snapshot.Count, Is.EqualTo(7));
-            Assert.That(snapshot.Count(e => e.Level == LogLevel.Info), Is.EqualTo(4));
-            Assert.That(snapshot.Count(e => e.Level == LogLevel.Verbose), Is.EqualTo(1));
-            Assert.That(snapshot.Count(e => e.Level == LogLevel.Warning), Is.EqualTo(1));
-            Assert.That(snapshot.Count(e => e.Level == LogLevel.Error), Is.EqualTo(1));
+            Assert.That(logs.Count, Is.EqualTo(7));
+            Assert.That(logs.Count(e => e.Level == LogLevel.Info), Is.EqualTo(4));
+            Assert.That(logs.Count(e => e.Level == LogLevel.Verbose), Is.EqualTo(1));
+            Assert.That(logs.Count(e => e.Level == LogLevel.Warning), Is.EqualTo(1));
+            Assert.That(logs.Count(e => e.Level == LogLevel.Error), Is.EqualTo(1));
 #else
-            Assert.That(snapshot.Count, Is.EqualTo(6));
-            Assert.That(snapshot.Count(e => e.Level == LogLevel.Info), Is.EqualTo(3));
-            Assert.That(snapshot.Count(e => e.Level == LogLevel.Verbose), Is.EqualTo(1));
-            Assert.That(snapshot.Count(e => e.Level == LogLevel.Warning), Is.EqualTo(1));
-            Assert.That(snapshot.Count(e => e.Level == LogLevel.Error), Is.EqualTo(1));
+            Assert.That(logs.Count, Is.EqualTo(6));
+            Assert.That(logs.Count(e => e.Level == LogLevel.Info), Is.EqualTo(3));
+            Assert.That(logs.Count(e => e.Level == LogLevel.Verbose), Is.EqualTo(1));
+            Assert.That(logs.Count(e => e.Level == LogLevel.Warning), Is.EqualTo(1));
+            Assert.That(logs.Count(e => e.Level == LogLevel.Error), Is.EqualTo(1));
 #endif
         }
 
@@ -153,21 +165,41 @@ namespace CosmosCasino.Tests.Debug.Logging
             DevLog.Command("Test", "Command");
             DevLog.System("Test", "Info");
 
-            var snapshot = DevLog.Buffer.Snapshot();
+            var logs = _debugConsole!.GetLogs();
 
             // Assert
 #if DEBUG
-            Assert.That(snapshot.Count, Is.EqualTo(7));
-            Assert.That(snapshot.Count(e => e.Kind == LogKind.General), Is.EqualTo(4));
-            Assert.That(snapshot.Count(e => e.Kind == LogKind.Event), Is.EqualTo(1));
-            Assert.That(snapshot.Count(e => e.Kind == LogKind.Command), Is.EqualTo(1));
-            Assert.That(snapshot.Count(e => e.Kind == LogKind.System), Is.EqualTo(1));
+            Assert.That(logs.Count, Is.EqualTo(7));
+            Assert.That(logs.Count(e => e.Kind == LogKind.General), Is.EqualTo(4));
+            Assert.That(logs.Count(e => e.Kind == LogKind.Event), Is.EqualTo(1));
+            Assert.That(logs.Count(e => e.Kind == LogKind.Command), Is.EqualTo(1));
+            Assert.That(logs.Count(e => e.Kind == LogKind.System), Is.EqualTo(1));
 #else
-            Assert.That(snapshot.Count, Is.EqualTo(6));
-            Assert.That(snapshot.Count(e => e.Kind == LogKind.General), Is.EqualTo(4));
-            Assert.That(snapshot.Count(e => e.Kind == LogKind.Event), Is.EqualTo(1));
-            Assert.That(snapshot.Count(e => e.Kind == LogKind.Command), Is.EqualTo(1));
+            Assert.That(logs.Count, Is.EqualTo(6));
+            Assert.That(logs.Count(e => e.Kind == LogKind.General), Is.EqualTo(4));
+            Assert.That(logs.Count(e => e.Kind == LogKind.Event), Is.EqualTo(1));
+            Assert.That(logs.Count(e => e.Kind == LogKind.Command), Is.EqualTo(1));
 #endif
+        }
+
+        #endregion
+
+        #region ON LOG
+
+        [Test]
+        public void OnLog_IsInvoked_ExactlyOnce_PerLog()
+        {
+            // Assemble
+            int count = 0;
+            void Handler(LogEntry logEntry) => count++;
+            DevLog.OnLog += Handler;
+
+            // Act
+            DevLog.Info("Test", "Hello");
+            DevLog.OnLog -= Handler;
+
+            // Assert
+            Assert.That(count, Is.EqualTo(1));
         }
 
         #endregion
