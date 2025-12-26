@@ -153,10 +153,10 @@ namespace CosmosCasino.Tests.Debug.Command
         {
             // Arrange
             var command = new UnsafeTestCommand();
-            RegisterCommandToRegistry(_registry, command);
+            RegisterCommandToRegistry(_registry!, command);
 
             // Act
-            var result = _registry.Execute("unsafe");
+            var result = _registry!.Execute("unsafe");
 
             // Assert
             Assert.That(result.Success, Is.False);
