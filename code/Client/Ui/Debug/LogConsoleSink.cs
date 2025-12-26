@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Debug;
 using CosmosCasino.Core.Debug.Logging;
 using System;
 
@@ -6,12 +7,12 @@ using System;
 /// to the in-game debug log console.
 /// This sink subscribes to the core log buffer, formats incoming
 /// log entries for presentation, and forwards them to the
-/// <see cref="LogConsoleUiController"/>.
+/// <see cref="LogConsoleUi"/>.
 /// This class contains no logging logic of its own and does not
 /// influence log filtering, safety, or persistence. Its sole
 /// responsibility is presentation adaptation.
 /// </summary>
-public sealed class LogConsoleUiSink
+public sealed class LogConsoleSink
 {
     #region FIELDS
 
@@ -19,7 +20,7 @@ public sealed class LogConsoleUiSink
     /// Reference to the log console UI controller that receives
     /// formatted log output for display.
     /// </summary>
-    private readonly LogConsoleUiController _console;
+    private readonly LogConsoleUi _console;
 
     #endregion
 
@@ -32,19 +33,25 @@ public sealed class LogConsoleUiSink
     /// the UI with historical output, after which the sink subscribes
     /// to receive new log entries as they are added.
     /// </summary>
-    /// <param name="console">
+    /// <param name="logConsole">
     /// Log console UI controller that will receive formatted log output.
     /// </param>
-    public LogConsoleUiSink(LogConsoleUiController console)
+    /// <param name="debugConsole">
+    /// Debug console instance that acts as the authoritative source of
+    /// structured log entries. The sink replays its existing buffered
+    /// logs on initialization and subscribes to its <see cref="DebugConsole.EntryAdded"/>
+    /// event to receive new log entries in real time.
+    /// </param>
+    public LogConsoleSink(LogConsoleUi logConsole, DebugConsole debugConsole)
     {
-        _console = console;
+        _console = logConsole;
 
-        foreach (var entry in DevLog.Buffer.Snapshot())
+        foreach (var entry in debugConsole.GetLogs())
         {
             OnEntryAdded(entry);
         }
 
-        DevLog.Buffer.EntryAdded += OnEntryAdded;
+        debugConsole.EntryAdded += OnEntryAdded;
     }
 
     #endregion

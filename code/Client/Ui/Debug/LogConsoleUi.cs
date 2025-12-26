@@ -9,7 +9,7 @@ using Godot;
 /// logic directly; it reacts to coordination decisions made by higher-level
 /// systems such as <see cref="UiManager"/>.
 /// </summary>
-public partial class LogConsoleUiController : Control
+public partial class LogConsoleUi : Control
 {
     #region NODES
 

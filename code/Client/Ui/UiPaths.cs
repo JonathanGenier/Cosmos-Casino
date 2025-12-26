@@ -12,5 +12,5 @@ public static class UiPaths
     /// <summary>
     /// Scene path for the debug log console UI.
     /// </summary>
-    public const string LogConsole = "res://ui/debug/logConsoleUi.tscn";
+    public const string LogConsole = "res://ui/debug/log_console_ui.tscn";
 }

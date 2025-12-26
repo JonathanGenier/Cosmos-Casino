@@ -4,7 +4,7 @@ using Godot;
 /// <summary>
 /// Entry point for the gameplay scene.
 /// <para>
-/// <see cref="GameController"/> is responsible for wiring the gameplay scene
+/// <see cref="GameScene"/> is responsible for wiring the gameplay scene
 /// to the core game logic once a game session has been initialized.
 /// </para>
 /// <para>
@@ -13,7 +13,7 @@ using Godot;
 /// events to the core <c>GameManager</c>.
 /// </para>
 /// </summary>
-public partial class GameController : Node
+internal partial class GameScene : SceneController
 {
     #region GODOT METHODS
 

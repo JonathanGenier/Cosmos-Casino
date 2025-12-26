@@ -4,7 +4,7 @@ namespace CosmosCasino.Core.Debug.Logging
     /// Stores recent log entries in a fixed-size circular buffer.
     /// Oldest entries are discarded when capacity is exceeded.
     /// </summary>
-    public sealed class LogBuffer
+    internal sealed class LogBuffer
     {
         #region FIELDS
 
@@ -26,7 +26,7 @@ namespace CosmosCasino.Core.Debug.Logging
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="capacity"/> is less than or equal to zero.
         /// </exception>
-        public LogBuffer(int capacity)
+        internal LogBuffer(int capacity)
         {
             ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(capacity, 0, nameof(capacity));
 
@@ -38,33 +38,23 @@ namespace CosmosCasino.Core.Debug.Logging
 
         #endregion
 
-        #region EVENTS
-
-        /// <summary>
-        /// Invoked whenever a new log entry is added to the buffer.
-        /// Intended for reactive consumers such as debug UI or diagnostics.
-        /// </summary>
-        public event Action<LogEntry>? EntryAdded;
-
-        #endregion
-
         #region PROPERTIES
 
         /// <summary>
         /// The fixed maximum number of log entries retained by the buffer.
         /// </summary>
-        public int Capacity { get; }
+        internal int Capacity { get; }
 
         /// <summary>
         /// Monotonic counter incremented on every log write.
         /// Used for change detection by consumers.
         /// </summary>
-        public long Version { get; private set; }
+        internal long Version { get; private set; }
 
         /// <summary>
         /// Number of log entries currently stored.
         /// </summary>
-        public int Count => _count;
+        internal int Count => _count;
 
         #endregion
 
@@ -77,7 +67,7 @@ namespace CosmosCasino.Core.Debug.Logging
         /// <param name="entry">
         /// Log entry to add to the buffer.
         /// </param>
-        public void Add(in LogEntry entry)
+        internal void Add(in LogEntry entry)
         {
             _entries[_nextIndex] = entry;
             _nextIndex = (_nextIndex + 1) % Capacity;
@@ -88,7 +78,6 @@ namespace CosmosCasino.Core.Debug.Logging
             }
 
             Version++;
-            EntryAdded?.Invoke(entry);
         }
 
         /// <summary>
@@ -99,7 +88,7 @@ namespace CosmosCasino.Core.Debug.Logging
         /// A read-only collection containing the current log entries
         /// in chronological order.
         /// </returns>
-        public IReadOnlyList<LogEntry> Snapshot()
+        internal IReadOnlyList<LogEntry> Snapshot()
         {
             if (_count == 0)
             {
@@ -121,7 +110,7 @@ namespace CosmosCasino.Core.Debug.Logging
         /// <summary>
         /// Clears all stored log entries.
         /// </summary>
-        public void Clear()
+        internal void Clear()
         {
             _nextIndex = 0;
             _count = 0;

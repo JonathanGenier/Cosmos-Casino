@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cuywyvf5yx14o"]
 
-[ext_resource type="Script" uid="uid://brp5b4h10nata" path="res://code/Client/Ui/Debug/LogConsoleUiController.cs" id="1_ayppw"]
+[ext_resource type="Script" uid="uid://qu7cp26hhf4s" path="res://code/Client/Ui/Debug/LogConsoleUi.cs" id="1_ayppw"]
 
 [node name="LogConsoleUi" type="Control" node_paths=PackedStringArray("_textLog")]
 layout_mode = 3

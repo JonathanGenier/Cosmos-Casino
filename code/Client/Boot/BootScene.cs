@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 /// <summary>
 /// Controls the application boot sequence.
 /// <para>
-/// <see cref="BootController"/> is attached to the boot scene and is responsible
+/// <see cref="BootScene"/> is attached to the boot scene and is responsible
 /// for executing one-time startup tasks such as configuration loading,
 /// resource warm-up, and cache initialization.
 /// </para>
@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 /// <see cref="AppManager"/> to transition the application to the next state.
 /// </para>
 /// </summary>
-public partial class BootController : Node
+internal partial class BootScene : SceneController
 {
     #region GODOT METHODS
 

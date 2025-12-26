@@ -5,6 +5,7 @@
 
     <!-- Enforce namespace -->
     <RootNamespace>CosmosCasino.Tests</RootNamespace>
+    <AssemblyName>CosmosCasino.Tests</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
