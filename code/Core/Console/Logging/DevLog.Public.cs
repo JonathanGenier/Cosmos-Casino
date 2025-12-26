@@ -115,30 +115,6 @@ namespace CosmosCasino.Core.Debug.Logging
         }
 
         /// <summary>
-        /// Writes a command log entry.
-        /// Commands represent user or developer-initiated actions
-        /// such as console input or debug commands.
-        /// </summary>
-        /// <param name="category">
-        /// Logical subsystem producing the log (e.g. AI, World, Save).
-        /// </param>
-        /// <param name="message">
-        /// Human-readable diagnostic message.
-        /// </param>
-        /// <param name="safety">
-        /// Controls whether the entry is allowed in production builds.
-        /// Unsafe entries are stripped in production.
-        /// </param>
-        public static void Command(
-            string category,
-            string message,
-            LogSafety safety = LogSafety.Safe)
-        {
-            Write(LogLevel.Info, safety, LogKind.Command, category, message);
-        }
-
-
-        /// <summary>
         /// Writes a system-level diagnostic log entry.
         /// System logs are intended for low-level application and infrastructure
         /// lifecycle events such as boot sequencing, service initialization,

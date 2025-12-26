@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3 uid="uid://cuywyvf5yx14o"]
+
+[ext_resource type="Script" uid="uid://ba82em046eywp" path="res://code/Client/Ui/Debug/ConsoleUi.cs" id="1_s12t8"]
+
+[node name="ConsoleUi" type="Control" node_paths=PackedStringArray("_textLog", "_lineEdit")]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 0.25
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_s12t8")
+_textLog = NodePath("PanelContainer/VBoxContainer/RichTextLabel")
+_lineEdit = NodePath("PanelContainer/VBoxContainer/LineEdit")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+layout_mode = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+scroll_following = true
+
+[node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Enter command here..."

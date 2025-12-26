@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Debug;
+using CosmosCasino.Core.Debug.Command;
 using CosmosCasino.Core.Debug.Logging;
 using System;
 
@@ -7,12 +8,12 @@ using System;
 /// to the in-game debug log console.
 /// This sink subscribes to the core log buffer, formats incoming
 /// log entries for presentation, and forwards them to the
-/// <see cref="LogConsoleUi"/>.
+/// <see cref="ConsoleUi"/>.
 /// This class contains no logging logic of its own and does not
 /// influence log filtering, safety, or persistence. Its sole
 /// responsibility is presentation adaptation.
 /// </summary>
-public sealed class LogConsoleSink
+public sealed class ConsoleAdapter
 {
     #region FIELDS
 
@@ -20,7 +21,7 @@ public sealed class LogConsoleSink
     /// Reference to the log console UI controller that receives
     /// formatted log output for display.
     /// </summary>
-    private readonly LogConsoleUi _console;
+    private readonly ConsoleUi _consoleUi;
 
     #endregion
 
@@ -33,43 +34,68 @@ public sealed class LogConsoleSink
     /// the UI with historical output, after which the sink subscribes
     /// to receive new log entries as they are added.
     /// </summary>
-    /// <param name="logConsole">
+    /// <param name="consoleUi">
     /// Log console UI controller that will receive formatted log output.
     /// </param>
-    /// <param name="debugConsole">
-    /// Debug console instance that acts as the authoritative source of
+    /// <param name="consoleManager">
+    /// Console Manager (core) instance that acts as the authoritative source of
     /// structured log entries. The sink replays its existing buffered
-    /// logs on initialization and subscribes to its <see cref="DebugConsole.EntryAdded"/>
+    /// logs on initialization and subscribes to its <see cref="ConsoleManager.EntryAdded"/>
     /// event to receive new log entries in real time.
     /// </param>
-    public LogConsoleSink(LogConsoleUi logConsole, DebugConsole debugConsole)
+    internal ConsoleAdapter(ConsoleUi consoleUi, ConsoleManager consoleManager)
     {
-        _console = logConsole;
+        _consoleUi = consoleUi;
 
-        foreach (var entry in debugConsole.GetLogs())
+        foreach (var entry in consoleManager.GetLogs())
         {
             OnEntryAdded(entry);
         }
 
-        debugConsole.EntryAdded += OnEntryAdded;
+        consoleManager.EntryAdded += OnEntryAdded;
+        consoleManager.Cleared += OnCleared;
     }
 
     #endregion
 
-    #region CALLBACKS
+    #region INTERNAL METHODS
 
     /// <summary>
-    /// Callback invoked when a new log entry is added to the core
-    /// log buffer.
-    /// Formats the entry for UI presentation and forwards it to
-    /// the log console controller.
+    /// Appends a raw command line entered by the user to the console output.
+    /// This represents the echo of user input prior to command execution
+    /// and is displayed distinctly from command results or log entries.
     /// </summary>
-    /// <param name="entry">
-    /// Newly added log entry from the core logging buffer.
+    /// <param name="command">
+    /// Raw command string entered by the user.
     /// </param>
-    private void OnEntryAdded(LogEntry entry)
+    internal void AppendCommand(string command)
     {
-        _console.AppendLog(Format(entry));
+        _consoleUi.AppendLog($" > {command}");
+    }
+
+    /// <summary>
+    /// Appends the result of a command execution to the console output.
+    /// Output visibility is controlled by the <see cref="CommandResult.ShowInConsole"/>
+    /// flag, allowing commands to opt out of visual feedback when appropriate
+    /// (e.g. commands with implicit visual side effects).
+    /// </summary>
+    /// <param name="result">
+    /// Result returned by the executed command.
+    /// </param>
+    internal void AppendCommandResult(CommandResult result)
+    {
+        if (!result.ShowInConsole)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(result.Message))
+        {
+            return;
+        }
+
+        string color = result.Success ? "#9cff9c" : "#ff6b6b";
+        _consoleUi.AppendLog($"[color={color}] {result.Message}[/color]");
     }
 
     #endregion
@@ -149,7 +175,6 @@ public sealed class LogConsoleSink
         {
             LogKind.General => "#ffffff",
             LogKind.Event => "#38e1ff",
-            LogKind.Command => "#74ff38",
             LogKind.System => "#f58d42",
             _ => throw new ArgumentOutOfRangeException(
                 nameof(kind),
@@ -157,6 +182,30 @@ public sealed class LogConsoleSink
                 "Log kind color not implemented"
             ),
         };
+    }
+
+    /// <summary>
+    /// Callback invoked when a new log entry is added to the core
+    /// log buffer.
+    /// Formats the entry for UI presentation and forwards it to
+    /// the log console controller.
+    /// </summary>
+    /// <param name="entry">
+    /// Newly added log entry from the core logging buffer.
+    /// </param>
+    private void OnEntryAdded(LogEntry entry)
+    {
+        _consoleUi.AppendLog(Format(entry));
+    }
+
+    /// <summary>
+    /// Callback invoked when the core console buffer is cleared.
+    /// Clears all visible log output from the console UI to ensure
+    /// presentation state remains consistent with core state.
+    /// </summary>
+    private void OnCleared()
+    {
+        _consoleUi.Clear();
     }
 
     #endregion

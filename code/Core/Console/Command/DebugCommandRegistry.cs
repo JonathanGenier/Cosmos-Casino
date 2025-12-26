@@ -22,7 +22,7 @@ namespace CosmosCasino.Core.Debug.Command
         /// <param name="debugConsole">
         /// The debug console providing dependencies required by commands.
         /// </param>
-        internal DebugCommandRegistry(DebugConsole debugConsole)
+        internal DebugCommandRegistry(ConsoleManager debugConsole)
         {
             ArgumentNullException.ThrowIfNull(debugConsole);
 

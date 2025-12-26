@@ -16,12 +16,6 @@ namespace CosmosCasino.Core.Services
     /// </summary>
     public sealed class CoreServices
     {
-        #region FIELDS
-
-        private DebugManager _debugManager;
-
-        #endregion
-
         #region CONSTRUCTORS
 
         /// <summary>
@@ -50,9 +44,8 @@ namespace CosmosCasino.Core.Services
             ArgumentException.ThrowIfNullOrWhiteSpace(savePath);
 
             DevLog.System("CoreServices", "Setting up...");
-            _debugManager = new DebugManager();
             SaveManager = new SaveManager(serializer, savePath);
-            DebugConsole = _debugManager.DebugConsole;
+            ConsoleManager = new ConsoleManager();
             DevLog.System("CoreServices", "Ready");
         }
 
@@ -83,7 +76,7 @@ namespace CosmosCasino.Core.Services
         /// The active debug console instance used to collect log output
         /// and execute debug commands.
         /// </summary>
-        public DebugConsole DebugConsole { get; private set; }
+        public ConsoleManager ConsoleManager { get; private set; }
 
         #endregion
 

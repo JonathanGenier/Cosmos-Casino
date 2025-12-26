@@ -4,11 +4,11 @@ using NUnit.Framework;
 
 namespace CosmosCasino.Tests.Debug
 {
-    internal sealed class DebugConsoleTests
+    internal sealed class ConsoleTests
     {
         #region FIELDS
 
-        private DebugConsole? _console;
+        private ConsoleManager? _console;
 
         #endregion
 
@@ -17,7 +17,7 @@ namespace CosmosCasino.Tests.Debug
         [SetUp]
         public void Setup()
         {
-            _console = new DebugConsole(10);
+            _console = new ConsoleManager(10);
         }
 
         [TearDown]
@@ -62,7 +62,7 @@ namespace CosmosCasino.Tests.Debug
         public void ExecuteCommand_DelegatesToRegistry()
         {
             // Act
-            var result = _console!.ExecuteCommand("log.clear");
+            var result = _console!.ExecuteCommand("clear");
 
             // Assert
             Assert.That(result.Success, Is.True);

@@ -4,7 +4,7 @@ namespace CosmosCasino.Core.Debug.Command.Commands.Log
     /// Debug command that clears all log entries from the active
     /// debug console.
     /// </summary>
-    public sealed class LogClearCommand : IDebugCommand
+    public sealed class ConsoleClearCommand : IDebugCommand
     {
         #region FIELDS
 
@@ -23,7 +23,7 @@ namespace CosmosCasino.Core.Debug.Command.Commands.Log
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="tryClearLogs"/> is <c>null</c>.
         /// </exception>
-        public LogClearCommand(Func<bool> tryClearLogs)
+        public ConsoleClearCommand(Func<bool> tryClearLogs)
         {
             _tryClearLogs = tryClearLogs ?? throw new ArgumentNullException(nameof(tryClearLogs));
         }
@@ -33,7 +33,7 @@ namespace CosmosCasino.Core.Debug.Command.Commands.Log
         #region PUBLIC METHODS
 
         /// <inheritdoc/>
-        public string Command => "log.clear";
+        public string Command => "clear";
 
         /// <inheritdoc/>
         public string Description => "Clear the console logs.";
@@ -48,7 +48,7 @@ namespace CosmosCasino.Core.Debug.Command.Commands.Log
             bool success = _tryClearLogs();
 
             return success
-                ? CommandResult.Ok("Logs cleared")
+                ? CommandResult.Ok("Logs cleared", false)
                 : CommandResult.Failed("Failed to clear logs");
         }
 

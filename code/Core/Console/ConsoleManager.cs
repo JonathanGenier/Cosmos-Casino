@@ -8,7 +8,7 @@ namespace CosmosCasino.Core.Debug
     /// Collects log output, exposes buffered log data for inspection,
     /// and provides a command execution surface for developer tooling.
     /// </summary>
-    public sealed class DebugConsole : IDisposable
+    public sealed class ConsoleManager : IDisposable
     {
         #region FIELDS
 
@@ -30,7 +30,7 @@ namespace CosmosCasino.Core.Debug
         /// Maximum number of log entries retained in memory.
         /// Older entries are discarded when capacity is exceeded.
         /// </param>
-        internal DebugConsole(int logCapacity = 500)
+        internal ConsoleManager(int logCapacity = 500)
         {
             TryClearLogs = ClearLogs;
             _commands = new DebugCommandRegistry(this);
@@ -55,6 +55,13 @@ namespace CosmosCasino.Core.Debug
         /// Intended for reactive consumers such as debug UI or diagnostics.
         /// </summary>
         public event Action<LogEntry>? EntryAdded;
+
+        /// <summary>
+        /// Raised when the console log buffer is cleared.
+        /// Intended for presentation-layer consumers to react
+        /// to a full reset of console state (e.g. clearing UI output).
+        /// </summary>
+        public event Action? Cleared;
 
         #endregion
 
@@ -144,6 +151,7 @@ namespace CosmosCasino.Core.Debug
         private bool ClearLogs()
         {
             _buffer.Clear();
+            Cleared?.Invoke();
             return true;
         }
 
