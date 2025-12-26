@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Services;
 using Godot;
 
 /// <summary>
@@ -9,6 +10,28 @@ using Godot;
 /// </summary>
 public partial class ClientServices : Node
 {
+    #region FIELDS
+
+    private ClientBootstrap _bootstrap;
+
+    #endregion
+
+    #region CONSTRUCTORS
+
+    /// <summary>
+    /// Creates the client services container and prepares the bootstrap
+    /// context used by client-side managers.
+    /// </summary>
+    /// <param name="core">
+    /// Core services shared across all application layers.
+    /// </param>
+    internal ClientServices(CoreServices core)
+    {
+        _bootstrap = new(core, this);
+    }
+
+    #endregion
+
     #region PROPERTIES
 
     /// <summary>
@@ -16,14 +39,14 @@ public partial class ClientServices : Node
     /// Provides a single entry point for input intent detection and dispatch,
     /// while delegating input logic to registered input modules.
     /// </summary>
-    public InputManager Input { get; private set; }
+    internal InputManager InputManager { get; private set; }
 
     /// <summary>
     /// Central coordinator for all client-side UI systems.
     /// Responsible for instantiating, owning, and coordinating UI controllers
     /// such as debug overlays, menus, and HUD elements.
     /// </summary>
-    public UiManager Ui { get; private set; }
+    internal UiManager UiManager { get; private set; }
 
     #endregion
 
@@ -37,8 +60,8 @@ public partial class ClientServices : Node
     public override void _Ready()
     {
         DevLog.System("ClientServices", "Setting up...");
-        Input = AddService(new InputManager());
-        Ui = AddService(new UiManager());
+        InputManager = AddService(new InputManager(_bootstrap));
+        UiManager = AddService(new UiManager(_bootstrap));
         DevLog.System("ClientServices", "Ready");
     }
 

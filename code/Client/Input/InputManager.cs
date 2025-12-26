@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Services;
 using Godot;
 using System.Collections.Generic;
 
@@ -14,7 +15,7 @@ using System.Collections.Generic;
 /// declared <see cref="InputPhase"/>.
 /// </para>
 /// </summary>
-public partial class InputManager : Node
+internal partial class InputManager(ClientBootstrap bootstrap) : ClientManager(bootstrap)
 {
     #region FIELDS
 

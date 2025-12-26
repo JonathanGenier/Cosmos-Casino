@@ -1,13 +1,11 @@
 using CosmosCasino.Core.Debug.Logging;
 using CosmosCasino.Core.Services;
-using Godot;
 using System.Threading.Tasks;
-
 
 /// <summary>
 /// Controls the loading phase between the main menu and gameplay.
 /// <para>
-/// <see cref="LoadingController"/> is responsible for preparing a game session,
+/// <see cref="LoadingScene"/> is responsible for preparing a game session,
 /// such as starting a new game or loading an existing save, before transitioning
 /// to the gameplay scene.
 /// </para>
@@ -16,7 +14,7 @@ using System.Threading.Tasks;
 /// <see cref="CoreServices"/> during the loading phase only.
 /// </para>
 /// </summary>
-public partial class LoadingController : Node
+internal partial class LoadingScene : SceneController
 {
     #region PUBLIC METHODS
 
@@ -49,12 +47,9 @@ public partial class LoadingController : Node
     /// </summary>
     private async Task LoadAsync()
     {
-        var coreServices = AppManager.Instance.CoreServices;
-
         DevLog.System("LoadingController", "Loading...");
 
         // Decide new game vs load game
-        StartNewGame(coreServices);
 
         // Later:
         // core.Game.LoadSave(...)
@@ -71,12 +66,9 @@ public partial class LoadingController : Node
     /// <summary>
     /// Starts a new game session using the provided core services.
     /// </summary>
-    /// <param name="coreServices">
-    /// Core services container used to initialize game-level systems.
-    /// </param>
-    private void StartNewGame(CoreServices coreServices)
+    private void StartNewGame()
     {
-        var success = coreServices.StartNewGame();
+        var success = CoreServices.StartNewGame();
 
         if (!success)
         {

@@ -5,7 +5,7 @@ using Godot;
 /// Controls the behavior of the main menu scene and handles
 /// user input that triggers high-level application state changes.
 /// </summary>
-public partial class MainMenuController : Node
+internal partial class MainMenuScene : SceneController
 {
     #region GODOT METHODS
 

@@ -2,6 +2,7 @@ using CosmosCasino.Core.Debug.Logging;
 using CosmosCasino.Core.Serialization;
 using CosmosCasino.Core.Services;
 using Godot;
+using System;
 
 /// <summary>
 /// Central application entry point and state coordinator.
@@ -17,6 +18,13 @@ using Godot;
 /// </summary>
 public partial class AppManager : Node
 {
+    #region FIELDS
+
+    private CoreServices _core;
+    private ClientServices _client;
+
+    #endregion
+
     #region PROPERTIES
 
     /// <summary>
@@ -24,23 +32,6 @@ public partial class AppManager : Node
     /// Guaranteed to be available after the node enters the scene tree.
     /// </summary>
     public static AppManager Instance { get; private set; }
-
-    /// <summary>
-    /// Container for all core services used by the application.
-    /// Initialized once during application startup and shared across scenes.
-    /// This container is instantiated once during application startup and
-    /// remains alive for the duration of the application.
-    /// </summary>
-    public CoreServices CoreServices { get; private set; }
-
-    /// <summary>
-    /// Container for all client-side services and presentation-layer systems.
-    /// <see cref="ClientServices"/> owns the lifecycle of client-only components
-    /// such as input, UI, camera, and other Godot-dependent systems.
-    /// This container is instantiated once during application startup and
-    /// remains alive for the duration of the application.
-    /// </summary>
-    public ClientServices ClientServices { get; private set; }
 
     /// <summary>
     /// Current high-level application state.
@@ -67,6 +58,7 @@ public partial class AppManager : Node
         DevLog.System("AppManager", "Setting up...");
         Instance = this;
         State = AppState.Boot;
+
         InitializeCoreServices();
         InitializeClientServices();
         DevLog.System("AppManager", "Ready");
@@ -136,7 +128,7 @@ public partial class AppManager : Node
     private bool ChangeScene(AppState state)
     {
         var path = GetScenePathForState(state);
-        return SceneLoader.Load(path);
+        return SceneLoader.Load(path, _core, _client);
     }
 
     /// <summary>
@@ -148,9 +140,14 @@ public partial class AppManager : Node
     /// </summary>
     private void InitializeCoreServices()
     {
+        if (_core != null)
+        {
+            throw new InvalidOperationException("CoreServices already initialized.");
+        }
+
         JsonSaveSerializer serializer = new();
         string savePath = OS.GetUserDataDir();
-        CoreServices = new CoreServices(serializer, savePath);
+        _core = new CoreServices(serializer, savePath);
     }
 
     /// <summary>
@@ -161,8 +158,13 @@ public partial class AppManager : Node
     /// </summary>
     private void InitializeClientServices()
     {
-        ClientServices = new ClientServices();
-        AddChild(ClientServices);
+        if (_client != null)
+        {
+            throw new InvalidOperationException("ClientServices already initialized.");
+        }
+
+        _client = new ClientServices(_core);
+        AddChild(_client);
     }
 
     #endregion

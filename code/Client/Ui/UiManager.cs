@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Services;
 using Godot;
 
 /// <summary>
@@ -10,7 +11,7 @@ using Godot;
 /// (such as debug overlays or menus) and delegating visibility or behavior
 /// changes to their respective controllers.
 /// </summary>
-public partial class UiManager : Node
+internal partial class UiManager(ClientBootstrap bootstrap) : ClientManager(bootstrap)
 {
     #region FIELDS
 
@@ -18,14 +19,14 @@ public partial class UiManager : Node
     /// Controller for the debug log console UI.
     /// Managed and coordinated by this manager.
     /// </summary>
-    private LogConsoleUiController _logConsole;
+    private LogConsoleUi _logConsole;
 
     /// <summary>
     /// Sink responsible for forwarding log entries from the core logging system
     /// to the in-game debug log console UI.
     /// Acts as a bridge between engine-agnostic logging and client-side presentation.
     /// </summary>
-    private LogConsoleUiSink _consoleSink;
+    private LogConsoleSink _consoleSink;
 
     #endregion
 
@@ -67,12 +68,13 @@ public partial class UiManager : Node
     /// </summary>
     private void InitializeLogConsoleUi()
     {
-        _logConsole = GD.Load<PackedScene>(UiPaths.LogConsole).Instantiate<LogConsoleUiController>();
+        _logConsole = GD.Load<PackedScene>(UiPaths.LogConsole).Instantiate<LogConsoleUi>();
         AddChild(_logConsole);
         _logConsole.Toggle();
-        _consoleSink = new LogConsoleUiSink(_logConsole);
 
-        var input = AppManager.Instance.ClientServices.Input;
+        _consoleSink = new LogConsoleSink(_logConsole, CoreServices.DebugConsole);
+
+        var input = ClientServices.InputManager;
         input.ToggleConsoleUi += OnToggleConsoleUi;
     }
 

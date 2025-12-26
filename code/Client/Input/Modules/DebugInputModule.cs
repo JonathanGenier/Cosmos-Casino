@@ -25,7 +25,7 @@ public sealed class DebugInputModule : IInputModule
     /// <param name="input">
     /// Input manager through which debug intent signals are dispatched.
     /// </param>
-    public DebugInputModule(InputManager input)
+    internal DebugInputModule(InputManager input)
     {
         _input = input;
     }
