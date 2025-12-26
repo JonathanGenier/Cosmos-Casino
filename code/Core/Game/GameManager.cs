@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Save;
 
 namespace CosmosCasino.Core.Game
@@ -19,9 +19,9 @@ namespace CosmosCasino.Core.Game
         /// </param>
         public GameManager(SaveManager saveManager)
         {
-            DevLog.System("ClientServices", "Setting up...");
+            ConsoleLog.System("ClientServices", "Setting up...");
             saveManager.Register(this);
-            DevLog.System("GameManager", "Ready");
+            ConsoleLog.System("GameManager", "Ready");
         }
 
         #endregion

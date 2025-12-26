@@ -1,5 +1,5 @@
-using CosmosCasino.Core.Debug;
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console;
+using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Game;
 using CosmosCasino.Core.Save;
 using CosmosCasino.Core.Serialization;
@@ -43,10 +43,10 @@ namespace CosmosCasino.Core.Services
             ArgumentNullException.ThrowIfNull(serializer);
             ArgumentException.ThrowIfNullOrWhiteSpace(savePath);
 
-            DevLog.System("CoreServices", "Setting up...");
+            ConsoleLog.System("CoreServices", "Setting up...");
             SaveManager = new SaveManager(serializer, savePath);
             ConsoleManager = new ConsoleManager();
-            DevLog.System("CoreServices", "Ready");
+            ConsoleLog.System("CoreServices", "Ready");
         }
 
         #endregion
@@ -101,7 +101,7 @@ namespace CosmosCasino.Core.Services
         {
             if (GameManager != null)
             {
-                DevLog.Error("Game", "Cannot start a new game when a game has already started.");
+                ConsoleLog.Error("Game", "Cannot start a new game when a game has already started.");
 
 #if DEBUG
                 throw new InvalidOperationException("Cannot start a new game when a game has already started.");
@@ -135,7 +135,7 @@ namespace CosmosCasino.Core.Services
         {
             if (GameManager == null)
             {
-                DevLog.Error("Game", "Trying to end game but no game is currently running.");
+                ConsoleLog.Error("Game", "Trying to end game but no game is currently running.");
 
 #if DEBUG
                 throw new InvalidOperationException("Trying to end game but no game is currently running.");

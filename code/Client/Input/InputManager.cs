@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Services;
 using Godot;
 using System.Collections.Generic;
@@ -49,10 +49,10 @@ internal partial class InputManager(ClientBootstrap bootstrap) : ClientManager(b
     /// </summary>
     public override void _Ready()
     {
-        DevLog.System("InputManager", "Setting up...");
+        ConsoleLog.System("InputManager", "Setting up...");
         RegisterModules();
         SortModules();
-        DevLog.System("InputManager", "Ready");
+        ConsoleLog.System("InputManager", "Ready");
     }
 
     /// <summary>

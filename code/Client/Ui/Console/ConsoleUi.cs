@@ -1,4 +1,3 @@
-using CosmosCasino.Core.Debug.Logging;
 using Godot;
 using System;
 
@@ -40,7 +39,6 @@ public partial class ConsoleUi : Control
     /// </summary>
     public override void _Ready()
     {
-        DevLog.System("LogConsoleUiController", "Ready");
         _lineEdit.TextSubmitted += OnCommandSubmitted;
     }
 

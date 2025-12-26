@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Services;
 using Godot;
 using System;
@@ -38,7 +38,7 @@ public static class SceneLoader
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            DevLog.Error("Scene", "Scene path is null or empty.");
+            ConsoleLog.Error("Scene", "Scene path is null or empty.");
 #if DEBUG
             throw new ArgumentException("Scene path is null or empty.", nameof(path));
 #else
@@ -50,7 +50,7 @@ public static class SceneLoader
 
         if (tree == null)
         {
-            DevLog.Error("Scene", "SceneTree not available.");
+            ConsoleLog.Error("Scene", "SceneTree not available.");
             return false;
         }
 
@@ -58,7 +58,7 @@ public static class SceneLoader
 
         if (packedScene == null)
         {
-            DevLog.Error("Scene", $"Failed to load scene at path: {path}");
+            ConsoleLog.Error("Scene", $"Failed to load scene at path: {path}");
             return false;
         }
 
@@ -75,7 +75,7 @@ public static class SceneLoader
         }
         else
         {
-            DevLog.Warning("Scene", "Loaded scene does not inherit SceneController.");
+            ConsoleLog.Warning("Scene", "Loaded scene does not inherit SceneController.");
         }
 
         // Attach

@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.IO;
 using CosmosCasino.Core.Serialization;
 using System.Text.Json;
@@ -47,7 +47,7 @@ namespace CosmosCasino.Core.Save
             _serializer = serializer;
             _path = path;
 
-            DevLog.System("SaveManager", "Ready");
+            ConsoleLog.System("SaveManager", "Ready");
         }
 
         #endregion
@@ -73,7 +73,7 @@ namespace CosmosCasino.Core.Save
 
             if (_participants.Contains(participant))
             {
-                DevLog.Warning("Save", "Participant is already registered to SaveManager. No consequences, just a useless call.");
+                ConsoleLog.Warning("Save", "Participant is already registered to SaveManager. No consequences, just a useless call.");
 #if DEBUG
                 throw new InvalidOperationException("Participant is already registered to SaveManager.");
 #else

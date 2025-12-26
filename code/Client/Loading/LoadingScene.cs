@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Services;
 using System.Threading.Tasks;
 
@@ -25,7 +25,7 @@ internal partial class LoadingScene : SceneController
     public override void _Ready()
     {
         _ = LoadAsync();
-        DevLog.System("LoadingController", "Ready");
+        ConsoleLog.System("LoadingController", "Ready");
     }
 
     #endregion
@@ -47,7 +47,7 @@ internal partial class LoadingScene : SceneController
     /// </summary>
     private async Task LoadAsync()
     {
-        DevLog.System("LoadingController", "Loading...");
+        ConsoleLog.System("LoadingController", "Loading...");
 
         // Decide new game vs load game
 
@@ -55,7 +55,7 @@ internal partial class LoadingScene : SceneController
         // core.Game.LoadSave(...)
         // core.Game.InitializeWorld()
 
-        DevLog.System("LoadingController", "Loading complete");
+        ConsoleLog.System("LoadingController", "Loading complete");
 
         AppManager.Instance.CallDeferred(
             nameof(AppManager.ChangeState),
@@ -72,7 +72,7 @@ internal partial class LoadingScene : SceneController
 
         if (!success)
         {
-            DevLog.Error("Game", "Could not start a new game,");
+            ConsoleLog.Error("Game", "Could not start a new game,");
             return;
         }
 

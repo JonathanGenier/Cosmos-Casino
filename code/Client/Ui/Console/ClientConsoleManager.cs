@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console.Logging;
 using Godot;
 
 /// <summary>
@@ -37,9 +37,9 @@ internal sealed partial class ClientConsoleManager(ClientBootstrap bootstrap) : 
     /// </summary>
     public override void _Ready()
     {
-        DevLog.System("UiManager", "Setting up...");
+        ConsoleLog.System("UiManager", "Setting up...");
         InitializeConsoleUi();
-        DevLog.System("UiManager", "Ready");
+        ConsoleLog.System("UiManager", "Ready");
     }
 
     #endregion

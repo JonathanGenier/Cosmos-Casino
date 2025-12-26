@@ -1,6 +1,6 @@
-using CosmosCasino.Core.Debug;
-using CosmosCasino.Core.Debug.Command;
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console;
+using CosmosCasino.Core.Console.Command;
+using CosmosCasino.Core.Console.Logging;
 using System;
 
 /// <summary>
@@ -75,14 +75,14 @@ public sealed class ConsoleAdapter
 
     /// <summary>
     /// Appends the result of a command execution to the console output.
-    /// Output visibility is controlled by the <see cref="CommandResult.ShowInConsole"/>
+    /// Output visibility is controlled by the <see cref="ConsoleCommandResult.ShowInConsole"/>
     /// flag, allowing commands to opt out of visual feedback when appropriate
     /// (e.g. commands with implicit visual side effects).
     /// </summary>
     /// <param name="result">
     /// Result returned by the executed command.
     /// </param>
-    internal void AppendCommandResult(CommandResult result)
+    internal void AppendCommandResult(ConsoleCommandResult result)
     {
         if (!result.ShowInConsole)
         {
@@ -114,7 +114,7 @@ public sealed class ConsoleAdapter
     /// <returns>
     /// BBCode-formatted string representing the log entry.
     /// </returns>
-    private string Format(LogEntry entry)
+    private string Format(ConsoleLogEntry entry)
     {
         string color = GetColorByLogLevel(entry);
         string timeColor = "#888888";
@@ -139,14 +139,14 @@ public sealed class ConsoleAdapter
     /// Thrown when a log level is encountered that has no defined
     /// color mapping.
     /// </exception>
-    private string GetColorByLogLevel(LogEntry entry)
+    private string GetColorByLogLevel(ConsoleLogEntry entry)
     {
         return entry.Level switch
         {
-            LogLevel.Error => "#eb2323",
-            LogLevel.Warning => "#f5f542",
-            LogLevel.Verbose => "#8c00ff",
-            LogLevel.Info => GetInfoColorByLogKind(entry.Kind),
+            ConsoleLogLevel.Error => "#eb2323",
+            ConsoleLogLevel.Warning => "#f5f542",
+            ConsoleLogLevel.Verbose => "#8c00ff",
+            ConsoleLogLevel.Info => GetInfoColorByLogKind(entry.Kind),
             _ => throw new ArgumentOutOfRangeException(
                 nameof(entry.Level),
                 entry.Level,
@@ -169,13 +169,13 @@ public sealed class ConsoleAdapter
     /// Thrown when a log kind is encountered that has no defined
     /// color mapping.
     /// </exception>
-    private string GetInfoColorByLogKind(LogKind kind)
+    private string GetInfoColorByLogKind(ConsoleLogKind kind)
     {
         return kind switch
         {
-            LogKind.General => "#ffffff",
-            LogKind.Event => "#38e1ff",
-            LogKind.System => "#f58d42",
+            ConsoleLogKind.General => "#ffffff",
+            ConsoleLogKind.Event => "#38e1ff",
+            ConsoleLogKind.System => "#f58d42",
             _ => throw new ArgumentOutOfRangeException(
                 nameof(kind),
                 kind,
@@ -193,7 +193,7 @@ public sealed class ConsoleAdapter
     /// <param name="entry">
     /// Newly added log entry from the core logging buffer.
     /// </param>
-    private void OnEntryAdded(LogEntry entry)
+    private void OnEntryAdded(ConsoleLogEntry entry)
     {
         _consoleUi.AppendLog(Format(entry));
     }
