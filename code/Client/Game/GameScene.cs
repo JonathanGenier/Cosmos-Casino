@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console.Logging;
 using Godot;
 
 /// <summary>
@@ -22,7 +22,7 @@ internal partial class GameScene : SceneController
     /// </summary>
     public override void _Ready()
     {
-        DevLog.System("GameController", "Ready");
+        ConsoleLog.System("GameController", "Ready");
     }
 
     #endregion

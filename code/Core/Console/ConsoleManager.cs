@@ -1,7 +1,7 @@
-using CosmosCasino.Core.Debug.Command;
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console.Command;
+using CosmosCasino.Core.Console.Logging;
 
-namespace CosmosCasino.Core.Debug
+namespace CosmosCasino.Core.Console
 {
     /// <summary>
     /// Central runtime debug console.
@@ -12,8 +12,8 @@ namespace CosmosCasino.Core.Debug
     {
         #region FIELDS
 
-        private readonly DebugCommandRegistry _commands;
-        private readonly LogBuffer _buffer;
+        private readonly ConsoleCommandRegistry _commands;
+        private readonly ConsoleLogBuffer _buffer;
         private bool _disposed;
 
         #endregion
@@ -33,17 +33,17 @@ namespace CosmosCasino.Core.Debug
         internal ConsoleManager(int logCapacity = 500)
         {
             TryClearLogs = ClearLogs;
-            _commands = new DebugCommandRegistry(this);
-            _buffer = new LogBuffer(logCapacity);
+            _commands = new ConsoleCommandRegistry(this);
+            _buffer = new ConsoleLogBuffer(logCapacity);
             _disposed = false;
 
             // Logs that have been registered before the console is set is stored temporarily in DevLog.
-            foreach (var entry in DevLog.DrainEarlyLogs())
+            foreach (var entry in ConsoleLog.DrainEarlyLogs())
             {
                 AddLog(entry);
             }
 
-            DevLog.OnLog += AddLog;
+            ConsoleLog.OnLog += AddLog;
         }
 
         #endregion
@@ -54,7 +54,7 @@ namespace CosmosCasino.Core.Debug
         /// Invoked whenever a new log entry is added to the buffer.
         /// Intended for reactive consumers such as debug UI or diagnostics.
         /// </summary>
-        public event Action<LogEntry>? EntryAdded;
+        public event Action<ConsoleLogEntry>? EntryAdded;
 
         /// <summary>
         /// Raised when the console log buffer is cleared.
@@ -101,7 +101,7 @@ namespace CosmosCasino.Core.Debug
         /// A read-only collection of log entries currently stored
         /// in the console buffer.
         /// </returns>
-        public IReadOnlyList<LogEntry> GetLogs()
+        public IReadOnlyList<ConsoleLogEntry> GetLogs()
         {
             return _buffer.Snapshot();
         }
@@ -117,7 +117,7 @@ namespace CosmosCasino.Core.Debug
         /// The result of command execution, including success state
         /// and optional feedback message.
         /// </returns>
-        public CommandResult ExecuteCommand(string input)
+        public ConsoleCommandResult ExecuteCommand(string input)
         {
             return _commands.Execute(input);
         }
@@ -134,7 +134,7 @@ namespace CosmosCasino.Core.Debug
                 return;
             }
 
-            DevLog.OnLog -= AddLog;
+            ConsoleLog.OnLog -= AddLog;
             _disposed = true;
         }
 
@@ -162,7 +162,7 @@ namespace CosmosCasino.Core.Debug
         /// <param name="entry">
         /// The log entry to record.
         /// </param>
-        private void AddLog(LogEntry entry)
+        private void AddLog(ConsoleLogEntry entry)
         {
             _buffer.Add(entry);
             EntryAdded?.Invoke(entry);

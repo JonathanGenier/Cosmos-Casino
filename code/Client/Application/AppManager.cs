@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Serialization;
 using CosmosCasino.Core.Services;
 using Godot;
@@ -50,18 +50,18 @@ public partial class AppManager : Node
     {
         if (Instance != null)
         {
-            DevLog.Warning("Application", "Multiple instances of AppManager detected. There should only be one instance. No consequences. Deplicate is QueueFree.");
+            ConsoleLog.Warning("Application", "Multiple instances of AppManager detected. There should only be one instance. No consequences. Deplicate is QueueFree.");
             QueueFree();
             return;
         }
 
-        DevLog.System("AppManager", "Setting up...");
+        ConsoleLog.System("AppManager", "Setting up...");
         Instance = this;
         State = AppState.Boot;
 
         InitializeCoreServices();
         InitializeClientServices();
-        DevLog.System("AppManager", "Ready");
+        ConsoleLog.System("AppManager", "Ready");
     }
 
     /// <summary>

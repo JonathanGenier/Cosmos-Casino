@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Services;
 using Godot;
 
@@ -59,10 +59,10 @@ public partial class ClientServices : Node
     /// </summary>
     public override void _Ready()
     {
-        DevLog.System("ClientServices", "Setting up...");
+        ConsoleLog.System("ClientServices", "Setting up...");
         InputManager = AddService(new InputManager(_bootstrap));
         UiManager = AddService(new UiManager(_bootstrap));
-        DevLog.System("ClientServices", "Ready");
+        ConsoleLog.System("ClientServices", "Ready");
     }
 
     #endregion

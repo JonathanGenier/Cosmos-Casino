@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Debug.Logging;
+using CosmosCasino.Core.Console.Logging;
 using Godot;
 using System.Threading.Tasks;
 
@@ -25,7 +25,7 @@ internal partial class BootScene : SceneController
     public override void _Ready()
     {
         _ = BootAsync();
-        DevLog.System("BootController", "Ready");
+        ConsoleLog.System("BootController", "Ready");
     }
 
     #endregion
@@ -47,7 +47,7 @@ internal partial class BootScene : SceneController
     /// </summary>
     private async Task BootAsync()
     {
-        DevLog.System("BootController", "Loading...");
+        ConsoleLog.System("BootController", "Loading...");
 
         // LoadConfig();
         // LoadUserPreferences();
@@ -60,7 +60,7 @@ internal partial class BootScene : SceneController
 
         // InitializeCaches();
 
-        DevLog.System("BootController", "Loading complete.");
+        ConsoleLog.System("BootController", "Loading complete.");
 
         // Deferred to avoid scene tree modification during initialization
         AppManager.Instance.CallDeferred(
