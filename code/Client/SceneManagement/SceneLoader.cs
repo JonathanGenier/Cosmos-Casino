@@ -42,7 +42,7 @@ public static class SceneLoader
 #if DEBUG
             throw new ArgumentException("Scene path is null or empty.", nameof(path));
 #else
-        return false;
+            return false;
 #endif
         }
 
