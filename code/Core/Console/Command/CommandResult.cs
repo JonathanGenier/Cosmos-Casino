@@ -16,10 +16,15 @@ namespace CosmosCasino.Core.Debug.Command
         /// <param name="message">
         /// Optional feedback message associated with the command result.
         /// </param>
-        private CommandResult(bool success, string message)
+        /// <param name="showInConsole">
+        /// Indicates whether this command result should be rendered
+        /// as feedback in the console UI.
+        /// </param>
+        private CommandResult(bool success, string message, bool showInConsole)
         {
             Success = success;
             Message = message ?? string.Empty;
+            ShowInConsole = showInConsole;
         }
 
         #region PROPERTIES
@@ -35,6 +40,14 @@ namespace CosmosCasino.Core.Debug.Command
         /// </summary>
         public string Message { get; }
 
+        /// <summary>
+        /// Indicates whether this command result should be displayed
+        /// in the debug console UI.
+        /// This allows commands to suppress redundant or purely
+        /// side-effect-driven feedback (e.g. clearing the console).
+        /// </summary>
+        public bool ShowInConsole { get; }
+
         #endregion
 
         #region PUBLIC METHODS
@@ -45,12 +58,16 @@ namespace CosmosCasino.Core.Debug.Command
         /// <param name="message">
         /// Optional feedback message to display in the debug console.
         /// </param>
+        /// <param name="showInConsole">
+        /// Indicates whether the feedback message should be rendered
+        /// in the debug console UI.
+        /// </param>
         /// <returns>
         /// A <see cref="CommandResult"/> representing successful execution.
         /// </returns>
-        public static CommandResult Ok(string? message = null)
+        public static CommandResult Ok(string? message = null, bool showInConsole = true)
         {
-            return new CommandResult(true, message ?? string.Empty);
+            return new CommandResult(true, message ?? string.Empty, showInConsole);
         }
 
         /// <summary>
@@ -64,7 +81,7 @@ namespace CosmosCasino.Core.Debug.Command
         /// </returns>
         public static CommandResult Failed(string? message = null)
         {
-            return new CommandResult(false, message ?? string.Empty);
+            return new CommandResult(false, message ?? string.Empty, true);
         }
 
         #endregion

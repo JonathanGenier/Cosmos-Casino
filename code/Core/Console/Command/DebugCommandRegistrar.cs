@@ -20,9 +20,9 @@ namespace CosmosCasino.Core.Debug.Command
         /// The active debug console used to supply required
         /// command dependencies.
         /// </param>
-        internal static void RegisterAll(Action<IDebugCommand> register, DebugConsole debugConsole)
+        internal static void RegisterAll(Action<IDebugCommand> register, ConsoleManager debugConsole)
         {
-            register(new LogClearCommand(debugConsole.TryClearLogs));
+            register(new ConsoleClearCommand(debugConsole.TryClearLogs));
         }
     }
 }

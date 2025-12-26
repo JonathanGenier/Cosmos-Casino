@@ -21,13 +21,6 @@ namespace CosmosCasino.Core.Debug.Logging
         Event,
 
         /// <summary>
-        /// Indicates that a user or developer command was entered or executed.
-        /// Commands usually originate from debug tools, consoles,
-        /// or explicit user actions.
-        /// </summary>
-        Command,
-
-        /// <summary>
         /// Indicates a low-level system or infrastructure log entry.
         /// Used for engine, application lifecycle, and service-level
         /// diagnostics that are not part of normal gameplay flow.

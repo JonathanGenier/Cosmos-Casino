@@ -27,6 +27,26 @@ namespace CosmosCasino.Tests.Debug.Command
         }
 
         [Test]
+        public void Ok_Defaults_ShowInConsole_True()
+        {
+            // Act
+            var result = CommandResult.Ok();
+
+            // Assert
+            Assert.That(result.ShowInConsole, Is.True);
+        }
+
+        [Test]
+        public void Ok_WithShowInConsoleFalse_SetsFlagCorrectly()
+        {
+            // Act
+            var result = CommandResult.Ok("cleared", showInConsole: false);
+
+            // Assert
+            Assert.That(result.ShowInConsole, Is.False);
+        }
+
+        [Test]
         public void Ok_WithNullMessage_UsesEmptyString()
         {
             // Arrange
@@ -77,5 +97,13 @@ namespace CosmosCasino.Tests.Debug.Command
             // Assert
             Assert.That(result.Message, Is.EqualTo(message));
         }
+
+        [Test]
+        public void Failed_Always_ShowsInConsole()
+        {
+            var result = CommandResult.Failed("error");
+            Assert.That(result.ShowInConsole, Is.True);
+        }
+
     }
 }

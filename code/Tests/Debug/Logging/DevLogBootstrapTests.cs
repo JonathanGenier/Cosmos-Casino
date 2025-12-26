@@ -29,7 +29,7 @@ namespace CosmosCasino.Tests.Debug.Logging
             DevLog.Info("Boot", "Early log");
 
             // Act
-            var console = new DebugConsole();
+            var console = new ConsoleManager();
 
             // Assert
             var logs = console.GetLogs();
