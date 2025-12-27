@@ -5,7 +5,7 @@ using System;
 
 /// <summary>
 /// UI log sink responsible for bridging the core logging system
-/// to the in-game debug log console.
+/// to the in-game console.
 /// This sink subscribes to the core log buffer, formats incoming
 /// log entries for presentation, and forwards them to the
 /// <see cref="ConsoleUi"/>.
@@ -43,7 +43,7 @@ public sealed class ConsoleAdapter
     /// logs on initialization and subscribes to its <see cref="ConsoleManager.EntryAdded"/>
     /// event to receive new log entries in real time.
     /// </param>
-    internal ConsoleAdapter(ConsoleUi consoleUi, ConsoleManager consoleManager)
+    public ConsoleAdapter(ConsoleUi consoleUi, ConsoleManager consoleManager)
     {
         _consoleUi = consoleUi;
 
@@ -58,7 +58,7 @@ public sealed class ConsoleAdapter
 
     #endregion
 
-    #region INTERNAL METHODS
+    #region METHODS
 
     /// <summary>
     /// Appends a raw command line entered by the user to the console output.
@@ -68,7 +68,7 @@ public sealed class ConsoleAdapter
     /// <param name="command">
     /// Raw command string entered by the user.
     /// </param>
-    internal void AppendCommand(string command)
+    public void AppendCommand(string command)
     {
         _consoleUi.AppendLog($" > {command}");
     }
@@ -82,7 +82,7 @@ public sealed class ConsoleAdapter
     /// <param name="result">
     /// Result returned by the executed command.
     /// </param>
-    internal void AppendCommandResult(ConsoleCommandResult result)
+    public void AppendCommandResult(ConsoleCommandResult result)
     {
         if (!result.ShowInConsole)
         {
@@ -98,10 +98,6 @@ public sealed class ConsoleAdapter
         _consoleUi.AppendLog($"[color={color}] {result.Message}[/color]");
     }
 
-    #endregion
-
-    #region PRIVATE METHODS
-
     /// <summary>
     /// Formats a log entry into a BBCode string suitable for display
     /// in a RichTextLabel.
@@ -116,7 +112,7 @@ public sealed class ConsoleAdapter
     /// </returns>
     private string Format(ConsoleLogEntry entry)
     {
-        string color = GetColorByLogLevel(entry);
+        string color = GetConsoleLogColor(entry.DisplayKind);
         string timeColor = "#888888";
 
         var timeSpan = TimeSpan.FromMilliseconds(entry.TimestampMs);
@@ -125,62 +121,17 @@ public sealed class ConsoleAdapter
         return $"[color={timeColor}][{time}][/color] [color={color}] [{entry.Category}] {entry.Message}[/color]";
     }
 
-    /// <summary>
-    /// Resolves the display color associated with a log entry
-    /// based on its severity level.
-    /// </summary>
-    /// <param name="entry">
-    /// Log entry whose severity determines the display color.
-    /// </param>
-    /// <returns>
-    /// Hex color string representing the severity color.
-    /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// Thrown when a log level is encountered that has no defined
-    /// color mapping.
-    /// </exception>
-    private string GetColorByLogLevel(ConsoleLogEntry entry)
+    private string GetConsoleLogColor(ConsoleLogDisplayKind displayKind)
     {
-        return entry.Level switch
+        return displayKind switch
         {
-            ConsoleLogLevel.Error => "#eb2323",
-            ConsoleLogLevel.Warning => "#f5f542",
-            ConsoleLogLevel.Verbose => "#8c00ff",
-            ConsoleLogLevel.Info => GetInfoColorByLogKind(entry.Kind),
-            _ => throw new ArgumentOutOfRangeException(
-                nameof(entry.Level),
-                entry.Level,
-                "Log level color not implemented"
-            ),
-        };
-    }
-
-    /// <summary>
-    /// Resolves the display color for informational log entries
-    /// based on their semantic kind.
-    /// </summary>
-    /// <param name="kind">
-    /// Semantic kind of the log entry.
-    /// </param>
-    /// <returns>
-    /// Hex color string representing the semantic color.
-    /// </returns>
-    /// <exception cref="ArgumentOutOfRangeException">
-    /// Thrown when a log kind is encountered that has no defined
-    /// color mapping.
-    /// </exception>
-    private string GetInfoColorByLogKind(ConsoleLogKind kind)
-    {
-        return kind switch
-        {
-            ConsoleLogKind.General => "#ffffff",
-            ConsoleLogKind.Event => "#38e1ff",
-            ConsoleLogKind.System => "#f58d42",
-            _ => throw new ArgumentOutOfRangeException(
-                nameof(kind),
-                kind,
-                "Log kind color not implemented"
-            ),
+            ConsoleLogDisplayKind.General => "#ffffff",
+            ConsoleLogDisplayKind.Event => "#38e1ff",
+            ConsoleLogDisplayKind.System => "#f58d42",
+            ConsoleLogDisplayKind.Muted => "#8c00ff",
+            ConsoleLogDisplayKind.Warning => "#f5f542",
+            ConsoleLogDisplayKind.Error => "#eb2323",
+            _ => "#ffffff",
         };
     }
 

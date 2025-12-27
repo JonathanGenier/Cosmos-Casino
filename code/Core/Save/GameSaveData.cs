@@ -8,20 +8,43 @@ namespace CosmosCasino.Core.Save
     /// Acts as a shared data envelope passed between the save system and
     /// individual <see cref="ISaveParticipant"/> implementations.
     /// </summary>
-    public sealed class GameSaveData
+    internal sealed class GameSaveData
     {
         #region CONSTRUCTOR
 
         /// <summary>
-        /// Initializes a new instance of <see cref="GameSaveData"/> with the
-        /// specified save format version.
-        /// This constructor is used during both save creation and deserialization.
+        /// Initializes a new instance of <see cref="GameSaveData"/> for save creation.
+        /// Used by <see cref="SaveManager"/> to aggregate participant state
+        /// prior to serialization.
         /// </summary>
-        /// <param name="version">The version of the save data format.</param>
-        [JsonConstructor]
-        public GameSaveData(int version)
+        /// <param name="version">
+        /// The version of the save data format.
+        /// </param>
+        internal GameSaveData(int version)
         {
             Version = version;
+            Sections = new();
+        }
+
+        /// <summary>
+        /// Initializes a new <see cref="GameSaveData"/> instance from
+        /// serialized save data.
+        /// This constructor is invoked exclusively by
+        /// <see cref="System.Text.Json"/> during deserialization.
+        /// </summary>
+        /// <param name="version">
+        /// The version of the save data format.
+        /// </param>
+        /// <param name="sections">
+        /// Serialized participant data keyed by participant identifier.
+        /// </param>
+        [JsonConstructor]
+        internal GameSaveData(
+            int version,
+            Dictionary<string, JsonElement> sections)
+        {
+            Version = version;
+            Sections = sections ?? new();
         }
 
         #endregion
@@ -30,16 +53,22 @@ namespace CosmosCasino.Core.Save
 
         /// <summary>
         /// Indicates the version of the save data format.
-        /// Used to support future migrations and backward compatibility
-        /// when the structure of saved data evolves.
+        /// Used for migrations and backward compatibility.
+        /// 
+        /// NOTE:
+        /// This property is public solely to satisfy System.Text.Json
+        /// constructor binding requirements. It is not part of the Core
+        /// behavioral API.
         /// </summary>
         public int Version { get; private set; }
 
         /// <summary>
-        /// Stores per-participant save data, keyed by a unique identifier
-        /// owned by each <see cref="ISaveParticipant"/>.
-        /// Each participant is responsible for defining, writing, and
-        /// interpreting the structure of its own data.
+        /// Stores per-participant save data, keyed by participant identifier.
+        /// Each participant owns the structure of its own data.
+        /// 
+        /// NOTE:
+        /// This property is public only for serialization/deserialization.
+        /// It is not intended for direct consumption outside the save pipeline.
         /// </summary>
         public Dictionary<string, JsonElement> Sections { get; set; } = new();
 

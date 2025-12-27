@@ -3,7 +3,7 @@ namespace CosmosCasino.Core.Console.Logging
     /// <summary>
     /// Indicates whether a log entry is safe to be visible in production.
     /// </summary>
-    public enum ConsoleLogSafety
+    internal enum ConsoleLogSafety
     {
         /// <summary>
         /// Safe to include in production builds.

@@ -9,7 +9,7 @@ namespace CosmosCasino.Core.Serialization
     /// This serializer is intentionally strict and fails fast when
     /// encountering invalid or corrupt data.
     /// </summary>
-    public sealed class JsonSaveSerializer : ISerializer
+    internal sealed class JsonSaveSerializer : ISerializer
     {
         #region FIELDS
 
@@ -26,7 +26,7 @@ namespace CosmosCasino.Core.Serialization
 
         #endregion
 
-        #region PUBLIC METHODS
+        #region METHODS
 
         /// <summary>
         /// Serializes the specified object into a UTF-8 encoded JSON byte array.
@@ -40,7 +40,7 @@ namespace CosmosCasino.Core.Serialization
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="data"/> is null.
         /// </exception>
-        public byte[] Serialize<T>(T data)
+        byte[] ISerializer.Serialize<T>(T data)
         {
             ArgumentNullException.ThrowIfNull(data, "data");
 
@@ -65,7 +65,7 @@ namespace CosmosCasino.Core.Serialization
         /// Thrown when the JSON data is malformed or incompatible with the
         /// target type.
         /// </exception>
-        public T Deserialize<T>(byte[] bytes)
+        T ISerializer.Deserialize<T>(byte[] bytes)
         {
             ArgumentNullException.ThrowIfNull(bytes, nameof(bytes));
 

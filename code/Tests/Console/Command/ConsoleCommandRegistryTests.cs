@@ -19,8 +19,8 @@ namespace CosmosCasino.Tests.Console.Command
         [SetUp]
         public void Setup()
         {
-            var debugConsole = new ConsoleManager();
-            _registry = new ConsoleCommandRegistry(debugConsole);
+            var consoleManager = new ConsoleManager();
+            _registry = new ConsoleCommandRegistry(consoleManager);
         }
 
         #endregion
@@ -31,10 +31,10 @@ namespace CosmosCasino.Tests.Console.Command
         public void Constructor_ThrowArgumentNullException_WhenDebugConsoleIsNull()
         {
             // Arrange
-            ConsoleManager debugConsole = null!;
+            ConsoleManager consoleManager = null!;
 
             // Assert
-            Assert.That(() => new ConsoleCommandRegistry(debugConsole), Throws.ArgumentNullException);
+            Assert.That(() => new ConsoleCommandRegistry(consoleManager), Throws.ArgumentNullException);
         }
 
         #endregion

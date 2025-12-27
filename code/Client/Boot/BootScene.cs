@@ -14,9 +14,9 @@ using System.Threading.Tasks;
 /// <see cref="AppManager"/> to transition the application to the next state.
 /// </para>
 /// </summary>
-internal partial class BootScene : SceneController
+public sealed partial class BootScene : SceneController
 {
-    #region GODOT METHODS
+    #region METHODS
 
     /// <summary>
     /// Entry point for the boot scene.
@@ -27,10 +27,6 @@ internal partial class BootScene : SceneController
         _ = BootAsync();
         ConsoleLog.System("BootController", "Ready");
     }
-
-    #endregion
-
-    #region PRIVATE METHODS
 
     /// <summary>
     /// Executes the asynchronous boot workflow.

@@ -4,7 +4,7 @@ namespace CosmosCasino.Core.Console.Command
     /// Defines whether a debug command is permitted to run in
     /// production environments.
     /// </summary>
-    public enum ConsoleCommandSafety
+    internal enum ConsoleCommandSafety
     {
         /// <summary>
         /// The command is safe to execute in all environments,

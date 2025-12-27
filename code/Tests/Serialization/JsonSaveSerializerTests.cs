@@ -10,7 +10,7 @@ namespace CosmosCasino.Tests.Serialization
     {
         #region FIELDS
 
-        private JsonSaveSerializer? _serializer;
+        private ISerializer? _serializer;
 
         #endregion
 
@@ -109,7 +109,7 @@ namespace CosmosCasino.Tests.Serialization
 
         #endregion
 
-        #region CLASSES
+        #region HELPERS
 
         private sealed class TestData
         {

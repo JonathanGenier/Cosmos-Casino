@@ -58,7 +58,7 @@ namespace CosmosCasino.Core.Console.Logging
 
         #endregion
 
-        #region PUBLIC METHODS
+        #region METHODS
 
         /// <summary>
         /// Adds a log entry to the buffer.

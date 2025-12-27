@@ -5,7 +5,7 @@ namespace CosmosCasino.Core.Console.Command
     /// Implementations provide command metadata and execution logic
     /// for developer tooling and diagnostics.
     /// </summary>
-    public interface IConsoleCommand
+    internal interface IConsoleCommand
     {
         /// <summary>
         /// The unique identifier used to invoke the command from the

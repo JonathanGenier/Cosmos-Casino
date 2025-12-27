@@ -3,7 +3,7 @@ namespace CosmosCasino.Core.Console.Logging
     /// <summary>
     /// Represents the severity and verbosity of a log entry.
     /// </summary>
-    public enum ConsoleLogLevel
+    internal enum ConsoleLogLevel
     {
         /// <summary>
         /// Informational messages such as lifecycle events and milestones.

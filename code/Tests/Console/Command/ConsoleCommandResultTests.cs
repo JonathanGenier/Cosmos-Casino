@@ -6,6 +6,8 @@ namespace CosmosCasino.Tests.Console.Command
     [TestFixture]
     internal class ConsoleCommandResultTests
     {
+        #region OK
+
         [Test]
         public void Ok_SetsSuccessTrue()
         {
@@ -14,16 +16,6 @@ namespace CosmosCasino.Tests.Console.Command
 
             // Assert
             Assert.That(result.Success, Is.True);
-        }
-
-        [Test]
-        public void Failed_SetsSuccessFalse()
-        {
-            // Act
-            var result = ConsoleCommandResult.Failed();
-
-            // Assert
-            Assert.That(result.Success, Is.False);
         }
 
         [Test]
@@ -60,19 +52,6 @@ namespace CosmosCasino.Tests.Console.Command
         }
 
         [Test]
-        public void Failed_WithNullMessage_UsesEmptyString()
-        {
-            // Arrange
-            string? message = null;
-
-            // Act
-            var result = ConsoleCommandResult.Failed(message);
-
-            // Assert
-            Assert.That(result.Message, Is.EqualTo(string.Empty));
-        }
-
-        [Test]
         public void Ok_WithMessage_PreservesMessage()
         {
             // Arrange
@@ -83,6 +62,33 @@ namespace CosmosCasino.Tests.Console.Command
 
             // Assert
             Assert.That(result.Message, Is.EqualTo(message));
+        }
+
+        #endregion
+
+        #region FAILED
+
+        [Test]
+        public void Failed_SetsSuccessFalse()
+        {
+            // Act
+            var result = ConsoleCommandResult.Failed();
+
+            // Assert
+            Assert.That(result.Success, Is.False);
+        }
+
+        [Test]
+        public void Failed_WithNullMessage_UsesEmptyString()
+        {
+            // Arrange
+            string? message = null;
+
+            // Act
+            var result = ConsoleCommandResult.Failed(message);
+
+            // Assert
+            Assert.That(result.Message, Is.EqualTo(string.Empty));
         }
 
         [Test]
@@ -105,5 +111,6 @@ namespace CosmosCasino.Tests.Console.Command
             Assert.That(result.ShowInConsole, Is.True);
         }
 
+        #endregion
     }
 }

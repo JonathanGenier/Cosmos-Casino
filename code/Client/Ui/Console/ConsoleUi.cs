@@ -9,7 +9,7 @@ using System;
 /// logic directly; it reacts to coordination decisions made by higher-level
 /// systems such as <see cref="UiManager"/>.
 /// </summary>
-public partial class ConsoleUi : Control
+public sealed partial class ConsoleUi : Control
 {
     #region NODES
 
@@ -24,13 +24,13 @@ public partial class ConsoleUi : Control
     #region EVENTS
 
     /// <summary>
-    /// Raised when the user submits a command from the log console.
+    /// Raised when the user submits a command from the console.
     /// </summary>
-    internal event Action<string> CommandSubmitted;
+    public event Action<string> CommandSubmitted;
 
     #endregion
 
-    #region PUBLIC METHODS
+    #region METHODS
 
     /// <summary>
     /// Called when the log console UI node enters the scene tree and is ready.
@@ -42,16 +42,12 @@ public partial class ConsoleUi : Control
         _lineEdit.TextSubmitted += OnCommandSubmitted;
     }
 
-    #endregion
-
-    #region INTERNAL METHODS
-
     /// <summary>
     /// Toggles the visibility of the log console.
     /// This method updates the presentation state only and does not
     /// perform any input handling or coordination logic.
     /// </summary>
-    internal void Toggle()
+    public void Toggle()
     {
         Visible = !Visible;
     }
@@ -64,7 +60,7 @@ public partial class ConsoleUi : Control
     /// <param name="log">
     /// Preformatted log string to append to the console output.
     /// </param>
-    internal void AppendLog(string log)
+    public void AppendLog(string log)
     {
         _textLog.AppendText(log + "\n");
     }
@@ -74,14 +70,10 @@ public partial class ConsoleUi : Control
     /// This affects presentation only and does not modify the
     /// underlying log buffer or logging pipeline.
     /// </summary>
-    internal void Clear()
+    public void Clear()
     {
         _textLog.Clear();
     }
-
-    #endregion
-
-    #region PRIVATE METHODS
 
     /// <summary>
     /// Handles submission of a command entered by the user.

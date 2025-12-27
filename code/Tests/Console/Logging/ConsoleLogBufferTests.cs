@@ -192,7 +192,7 @@ namespace CosmosCasino.Tests.Console.Logging
 
         #endregion
 
-        #region HELPER FUNCTIONS
+        #region HELPER
 
         private static ConsoleLogEntry CreateLogEntry(string message = "Test")
         {

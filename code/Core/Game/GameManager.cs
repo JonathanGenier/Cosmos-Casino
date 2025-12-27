@@ -17,7 +17,7 @@ namespace CosmosCasino.Core.Game
         /// <param name="saveManager">
         /// Save manager responsible for coordinating save and load operations.
         /// </param>
-        public GameManager(SaveManager saveManager)
+        internal GameManager(SaveManager saveManager)
         {
             ConsoleLog.System("ClientServices", "Setting up...");
             saveManager.Register(this);
@@ -26,7 +26,7 @@ namespace CosmosCasino.Core.Game
 
         #endregion
 
-        #region PUBLIC METHODS
+        #region METHODS
 
         /// <summary>
         /// Restores game state from the provided save data.
@@ -34,7 +34,7 @@ namespace CosmosCasino.Core.Game
         /// <param name="save">
         /// Save data containing previously persisted game state.
         /// </param>
-        public void ReadFrom(GameSaveData save)
+        void ISaveParticipant.ReadFrom(GameSaveData save)
         {
             throw new NotImplementedException();
         }
@@ -45,7 +45,7 @@ namespace CosmosCasino.Core.Game
         /// <param name="save">
         /// Save data used to store the current game state.
         /// </param>
-        public void WriteTo(GameSaveData save)
+        void ISaveParticipant.WriteTo(GameSaveData save)
         {
             throw new NotImplementedException();
         }

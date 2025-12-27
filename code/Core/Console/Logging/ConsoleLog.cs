@@ -26,7 +26,7 @@ namespace CosmosCasino.Core.Console.Logging
 
         #endregion
 
-        #region INTERNAL METHODS
+        #region METHODS
 
         /// <summary>
         /// Drains all log entries recorded during application bootstrap and
@@ -66,9 +66,6 @@ namespace CosmosCasino.Core.Console.Logging
             OnLog = null;
         }
 #endif
-        #endregion
-
-        #region PRIVATE METHODS
 
         /// <summary>
         /// Core logging implementation.

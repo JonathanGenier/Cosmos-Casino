@@ -4,7 +4,7 @@ using CosmosCasino.Core.Services;
 /// Coordinates client-side application startup by providing access
 /// to initialized core and client service collections during bootstrap.
 /// </summary>
-internal class ClientBootstrap
+public sealed class ClientBootstrap
 {
     #region CONSTRUCTORS
 
@@ -18,7 +18,7 @@ internal class ClientBootstrap
     /// <param name="clientServices">
     /// Initialized client service container.
     /// </param>
-    internal ClientBootstrap(CoreServices coreServices, ClientServices clientServices)
+    public ClientBootstrap(CoreServices coreServices, ClientServices clientServices)
     {
         CoreServices = coreServices;
         ClientServices = clientServices;
@@ -31,12 +31,12 @@ internal class ClientBootstrap
     /// <summary>
     /// Core services required by both client and non-client systems.
     /// </summary>
-    internal CoreServices CoreServices { get; }
+    public CoreServices CoreServices { get; }
 
     /// <summary>
     /// Client-specific services used during application startup.
     /// </summary>
-    internal ClientServices ClientServices { get; }
+    public ClientServices ClientServices { get; }
 
     #endregion
 }

@@ -1,4 +1,3 @@
-using CosmosCasino.Core.Serialization;
 using CosmosCasino.Core.Services;
 using NUnit.Framework;
 
@@ -7,32 +6,38 @@ namespace CosmosCasino.Tests.Services
     [TestFixture]
     internal class CoreServicesTests
     {
-        #region CORESERVICES
+        #region FIELDS
 
-        [Test]
-        public void Constructor_SerializerIsNull_ThrowsArgumentNullException()
+        private CoreServices? _coreServices;
+
+        #endregion
+
+        #region SETUP & TEARDOWN
+
+        [SetUp]
+        public void Setup()
         {
-            // Act & Assert
-            Assert.That(() => new CoreServices(null!, "validPath"), Throws.TypeOf<ArgumentNullException>());
+            _coreServices = new CoreServices("validPath");
         }
+
+        #endregion
+
+        #region CORESERVICES
 
         [Test]
         public void Constructor_SavePathIsNullOrWhiteSpace_ThrowsArgumentException()
         {
-            // Act & Assert
-            Assert.That(() => new CoreServices(new JsonSaveSerializer(), null!), Throws.TypeOf<ArgumentNullException>());
-            Assert.That(() => new CoreServices(new JsonSaveSerializer(), string.Empty), Throws.TypeOf<ArgumentException>());
-            Assert.That(() => new CoreServices(new JsonSaveSerializer(), "   "), Throws.TypeOf<ArgumentException>());
+            // Assert
+            Assert.That(() => new CoreServices(null!), Throws.TypeOf<ArgumentNullException>());
+            Assert.That(() => new CoreServices(string.Empty), Throws.TypeOf<ArgumentException>());
+            Assert.That(() => new CoreServices("   "), Throws.TypeOf<ArgumentException>());
         }
 
         [Test]
         public void CoreServices_ShouldInitializeSaveManager()
         {
-            // Arrange & Act
-            var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
-
             // Assert
-            Assert.That(coreServices.SaveManager, Is.Not.Null);
+            Assert.That(_coreServices!.SaveManager, Is.Not.Null);
         }
 
         #endregion
@@ -42,24 +47,18 @@ namespace CosmosCasino.Tests.Services
         [Test]
         public void StartNewGame_WhenGameManagerIsNull_ShouldInitializeGameManager()
         {
-            // Arrange
-            var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
-
             // Act
-            coreServices.StartNewGame();
+            _coreServices!.StartNewGame();
 
             // Assert
-            Assert.That(coreServices.GameManager, Is.Not.Null);
+            Assert.That(_coreServices!.GameManager, Is.Not.Null);
         }
 
         [Test]
         public void StartNewGame_WhenGameManagerIsNull_ShouldReturnTrue()
         {
-            // Arrange
-            var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
-
             // Act
-            var result = coreServices.StartNewGame();
+            var result = _coreServices!.StartNewGame();
 
             // Assert
             Assert.That(result, Is.True);
@@ -70,11 +69,10 @@ namespace CosmosCasino.Tests.Services
         public void StartNewGame_WhenGameAlreadyStarted_ThrowsInvalidOperationException_InDebug()
         {
             // Arrange
-            var coreServices = new CoreServices(new JsonSaveSerializer(), "path");
-            coreServices.StartNewGame();
+            _coreServices!.StartNewGame();
 
-            // Act & Assert
-            Assert.That(() => coreServices.StartNewGame(), Throws.TypeOf<InvalidOperationException>());
+            // Assert
+            Assert.That(() => _coreServices!.StartNewGame(), Throws.TypeOf<InvalidOperationException>());
         }
 #endif
 
@@ -83,11 +81,10 @@ namespace CosmosCasino.Tests.Services
         public void StartNewGame_WhenGameAlreadyStarted_ReturnFalse_InRelease()
         {
             // Arrange
-            var coreServices = new CoreServices(new JsonSaveSerializer(), "path");
-            coreServices.StartNewGame();
+            _coreServices!.StartNewGame();
 
-            // Act & Assert
-            Assert.That(() => coreServices.StartNewGame(), Is.False);
+            // Assert
+            Assert.That(() => _coreServices!.StartNewGame(), Is.False);
         }
 #endif
 
@@ -99,25 +96,23 @@ namespace CosmosCasino.Tests.Services
         public void EndGame_WhenGameExists_ShouldSetGameManagerToNull()
         {
             // Arrange
-            var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
-            coreServices.StartNewGame();
+            _coreServices!.StartNewGame();
 
             // Act
-            coreServices.EndGame();
+            _coreServices!.EndGame();
 
             // Assert
-            Assert.That(coreServices.GameManager, Is.Null);
+            Assert.That(_coreServices!.GameManager, Is.Null);
         }
 
         [Test]
         public void EndGame_WhenGameExists_ShouldReturnTrue()
         {
             // Arrange
-            var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
-            coreServices.StartNewGame();
+            _coreServices!.StartNewGame();
 
             // Act
-            var result = coreServices.EndGame();
+            var result = _coreServices!.EndGame();
 
             // Assert
             Assert.That(result, Is.True);
@@ -127,11 +122,8 @@ namespace CosmosCasino.Tests.Services
         [Test]
         public void EndGame_WhenNoGameStarted_ThrowsInvalidOperationException_InDebug()
         {
-            // Arrange
-            var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
-
-            // Act & Assert
-            Assert.That(() => coreServices.EndGame(), Throws.TypeOf<InvalidOperationException>());
+            // Assert
+            Assert.That(() => _coreServices!.EndGame(), Throws.TypeOf<InvalidOperationException>());
         }
 #endif
 
@@ -139,11 +131,8 @@ namespace CosmosCasino.Tests.Services
         [Test]
         public void EndGame_WhenNoGameStarted_ReturnFalse_InRelease()
         {
-            // Arrange
-            var coreServices = new CoreServices(new JsonSaveSerializer(), "validPath");
-
-            // Act & Assert
-            Assert.That(coreServices.EndGame(), Is.False);
+            // Assert
+            Assert.That(_coreServices!.EndGame(), Is.False);
         }
 #endif
 

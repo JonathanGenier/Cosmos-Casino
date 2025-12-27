@@ -182,7 +182,7 @@ namespace CosmosCasino.Tests.Save
 
         #endregion
 
-        #region CLASSES
+        #region HELPERS
 
         private sealed class TestData
         {

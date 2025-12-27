@@ -20,5 +20,5 @@ public interface IInputModule
     /// performing expensive operations.
     /// </summary>
     /// <param name="delta">Frame delta time in seconds.</param>
-    public void Process(double delta);
+    void Process(double delta);
 }

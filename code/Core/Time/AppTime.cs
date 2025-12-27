@@ -5,7 +5,7 @@ namespace CosmosCasino.Core.Time
     /// <summary>
     /// Provides monotonic application time.
     /// </summary>
-    public static class AppTime
+    internal static class AppTime
     {
         #region FIELDS
 
@@ -19,7 +19,7 @@ namespace CosmosCasino.Core.Time
         /// Milliseconds elapsed since application start.
         /// Guaranteed to be monotonic.
         /// </summary>
-        public static long ElapsedMs => _stopwatch.ElapsedMilliseconds;
+        internal static long ElapsedMs => _stopwatch.ElapsedMilliseconds;
 
         #endregion
     }

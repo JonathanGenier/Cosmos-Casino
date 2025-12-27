@@ -4,7 +4,7 @@ namespace CosmosCasino.Core.Console.Logging
     /// Describes the semantic intent of a log entry.
     /// Used primarily for presentation and grouping.
     /// </summary>
-    public enum ConsoleLogKind
+    internal enum ConsoleLogKind
     {
         /// <summary>
         /// General-purpose log entry.
