@@ -29,10 +29,10 @@ namespace CosmosCasino.Tests.Console.Logging
             ConsoleLog.Info("Boot", "Early log");
 
             // Act
-            var console = new ConsoleManager();
+            var consoleManager = new ConsoleManager();
 
             // Assert
-            var logs = console.GetLogs();
+            var logs = consoleManager.GetLogs();
             Assert.That(logs.Count, Is.EqualTo(1));
             Assert.That(logs[0].Category, Is.EqualTo("Boot"));
         }

@@ -1,5 +1,4 @@
 using CosmosCasino.Core.Console.Logging;
-using CosmosCasino.Core.Serialization;
 using CosmosCasino.Core.Services;
 using Godot;
 using System;
@@ -16,7 +15,7 @@ using System;
 /// core (engine-agnostic) services.
 /// </para>
 /// </summary>
-public partial class AppManager : Node
+public sealed partial class AppManager : Node
 {
     #region FIELDS
 
@@ -40,7 +39,7 @@ public partial class AppManager : Node
 
     #endregion
 
-    #region PUBLIC METHODS
+    #region METHODS
 
     /// <summary>
     /// Ensures a single instance of <see cref="AppManager"/> exists and performs
@@ -94,10 +93,6 @@ public partial class AppManager : Node
         }
     }
 
-    #endregion
-
-    #region PRIVATE METHODS
-
     /// <summary>
     /// Resolves the scene path associated with a given application state.
     /// </summary>
@@ -145,9 +140,8 @@ public partial class AppManager : Node
             throw new InvalidOperationException("CoreServices already initialized.");
         }
 
-        JsonSaveSerializer serializer = new();
         string savePath = OS.GetUserDataDir();
-        _core = new CoreServices(serializer, savePath);
+        _core = new CoreServices(savePath);
     }
 
     /// <summary>

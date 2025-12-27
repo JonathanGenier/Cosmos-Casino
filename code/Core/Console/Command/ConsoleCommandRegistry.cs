@@ -31,7 +31,7 @@ namespace CosmosCasino.Core.Console.Command
 
         #endregion
 
-        #region INTERNAL METHODS
+        #region METHODS
 
         /// <summary>
         /// Parses and executes a debug command input string.
@@ -75,10 +75,6 @@ namespace CosmosCasino.Core.Console.Command
 
             return result;
         }
-
-        #endregion
-
-        #region PRIVATE METHODS
 
         /// <summary>
         /// Registers a debug command with the registry.

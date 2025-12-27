@@ -1,5 +1,4 @@
 using CosmosCasino.Core.Console.Logging;
-using CosmosCasino.Core.Services;
 using Godot;
 using System.Collections.Generic;
 
@@ -15,7 +14,7 @@ using System.Collections.Generic;
 /// declared <see cref="InputPhase"/>.
 /// </para>
 /// </summary>
-internal partial class InputManager(ClientBootstrap bootstrap) : ClientManager(bootstrap)
+public sealed partial class InputManager(ClientBootstrap bootstrap) : ClientManager(bootstrap)
 {
     #region FIELDS
 
@@ -28,7 +27,7 @@ internal partial class InputManager(ClientBootstrap bootstrap) : ClientManager(b
 
     #endregion
 
-    #region SIGNALS
+    #region EVENTS
 
     /// <summary>
     /// Emitted when the debug console input intent is detected.
@@ -40,7 +39,7 @@ internal partial class InputManager(ClientBootstrap bootstrap) : ClientManager(b
 
     #endregion
 
-    #region PUBLIC METHODS
+    #region METHODS
 
     /// <summary>
     /// Initializes the input pipeline.
@@ -69,10 +68,6 @@ internal partial class InputManager(ClientBootstrap bootstrap) : ClientManager(b
         }
     }
 
-    #endregion
-
-    #region PRIVATE METHODS
-
     /// <summary>
     /// Registers all input modules used by the application.
     /// Module registration is intentionally centralized and occurs only once
@@ -80,7 +75,7 @@ internal partial class InputManager(ClientBootstrap bootstrap) : ClientManager(b
     /// </summary>
     private void RegisterModules()
     {
-        _modules.Add(new DebugInputModule(this));
+        _modules.Add(new ConsoleInputModule(this));
     }
 
     /// <summary>

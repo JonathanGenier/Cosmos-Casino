@@ -10,6 +10,7 @@ namespace CosmosCasino.Tests.Console.Command.Commands
         #region FIELDS
 
         private const string CommandName = "clear";
+
         #endregion
 
         #region CONSTRUCTOR
@@ -28,8 +29,8 @@ namespace CosmosCasino.Tests.Console.Command.Commands
         [Test]
         public void Command_Metadata_IsCorrect()
         {
-            // Assemmble
-            var command = new ClearConsoleCommand(() => true);
+            // Assemble
+            IConsoleCommand command = new ClearConsoleCommand(() => true);
 
             // Assert
             Assert.That(command.Command, Is.EqualTo(CommandName));
@@ -45,7 +46,7 @@ namespace CosmosCasino.Tests.Console.Command.Commands
         public void Execute_WhenClearSucceeds_ReturnsOk()
         {
             // Assemble
-            var command = new ClearConsoleCommand(() => true);
+            IConsoleCommand command = new ClearConsoleCommand(() => true);
 
             // Act
             var result = command.Execute(Array.Empty<string>());
@@ -59,7 +60,7 @@ namespace CosmosCasino.Tests.Console.Command.Commands
         public void Execute_WhenClearFails_ReturnsFailed()
         {
             // Assemble
-            var command = new ClearConsoleCommand(() => false);
+            IConsoleCommand command = new ClearConsoleCommand(() => false);
 
             // Act
             var result = command.Execute(Array.Empty<string>());

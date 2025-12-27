@@ -11,7 +11,7 @@ namespace CosmosCasino.Core.Save
     /// Ensures save operations are atomic and never corrupt existing save data.
     /// Does not interpret game state, apply policy, or attempt recovery.
     /// </summary>
-    public sealed class SaveManager
+    internal sealed class SaveManager
     {
         #region FIELDS
 
@@ -39,7 +39,7 @@ namespace CosmosCasino.Core.Save
         /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="path"/> is null, empty, or whitespace.
         /// </exception>
-        public SaveManager(ISerializer serializer, string path)
+        internal SaveManager(ISerializer serializer, string path)
         {
             ArgumentNullException.ThrowIfNull(serializer, nameof(serializer));
             ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
@@ -52,7 +52,7 @@ namespace CosmosCasino.Core.Save
 
         #endregion
 
-        #region PUBLIC METHODS
+        #region METHODS
 
         /// <summary>
         /// Registers a participant that contributes data to save and load operations.
@@ -67,7 +67,7 @@ namespace CosmosCasino.Core.Save
         /// <exception cref="InvalidOperationException">
         /// Thrown in debug builds when the participant has already been registered.
         /// </exception>
-        public void Register(ISaveParticipant participant)
+        internal void Register(ISaveParticipant participant)
         {
             ArgumentNullException.ThrowIfNull(participant, nameof(participant));
 
@@ -90,7 +90,7 @@ namespace CosmosCasino.Core.Save
         /// If a save file already exists, it is replaced safely.
         /// If no participants are registered, an empty but valid save is written.
         /// </summary>
-        public void Save()
+        internal void Save()
         {
             var save = new GameSaveData(SaveVersions.Current);
 
@@ -109,7 +109,7 @@ namespace CosmosCasino.Core.Save
         /// participants.
         /// If no save file exists, the operation completes without effect.
         /// </summary>
-        public void Load()
+        internal void Load()
         {
             if (!FileSystem.TryReadBytes(_path, out var bytes))
             {

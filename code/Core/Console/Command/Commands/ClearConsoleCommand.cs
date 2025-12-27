@@ -1,10 +1,9 @@
 namespace CosmosCasino.Core.Console.Command.Commands
 {
     /// <summary>
-    /// Debug command that clears all log entries from the active
-    /// debug console.
+    /// Console command that clears all log entries from the active console.
     /// </summary>
-    public sealed class ClearConsoleCommand : IConsoleCommand
+    internal sealed class ClearConsoleCommand : IConsoleCommand
     {
         #region FIELDS
 
@@ -12,7 +11,7 @@ namespace CosmosCasino.Core.Console.Command.Commands
 
         #endregion
 
-        #region CONSTRUCTOR
+        #region CONSTRUCTORS
 
         /// <summary>
         /// Initializes a new instance of the log clear command.
@@ -23,26 +22,30 @@ namespace CosmosCasino.Core.Console.Command.Commands
         /// <exception cref="ArgumentNullException">
         /// Thrown when <paramref name="tryClearLogs"/> is <c>null</c>.
         /// </exception>
-        public ClearConsoleCommand(Func<bool> tryClearLogs)
+        internal ClearConsoleCommand(Func<bool> tryClearLogs)
         {
             _tryClearLogs = tryClearLogs ?? throw new ArgumentNullException(nameof(tryClearLogs));
         }
 
         #endregion
 
-        #region PUBLIC METHODS
+        #region PROPERTIES
 
         /// <inheritdoc/>
-        public string Command => "clear";
+        string IConsoleCommand.Command => "clear";
 
         /// <inheritdoc/>
-        public string Description => "Clear the console logs.";
+        string IConsoleCommand.Description => "Clear the console logs.";
 
         /// <inheritdoc/>
-        public ConsoleCommandSafety Safety => ConsoleCommandSafety.Safe;
+        ConsoleCommandSafety IConsoleCommand.Safety => ConsoleCommandSafety.Safe;
+
+        #endregion
+
+        #region METHODS
 
         /// <inheritdoc/>
-        public ConsoleCommandResult Execute(string[] args)
+        ConsoleCommandResult IConsoleCommand.Execute(string[] args)
         {
             // No args expected
             bool success = _tryClearLogs();

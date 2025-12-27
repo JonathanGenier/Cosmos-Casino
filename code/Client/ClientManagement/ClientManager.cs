@@ -7,7 +7,7 @@ using System;
 /// Provides access to core and client service collections during
 /// client runtime initialization.
 /// </summary>
-internal abstract partial class ClientManager : Node
+public abstract partial class ClientManager : Node
 {
     #region CONSTRUCTORS
 
@@ -51,7 +51,7 @@ internal abstract partial class ClientManager : Node
 
     #endregion
 
-    #region PROTECTED METHODS
+    #region METHODS
 
     /// <summary>
     /// Adds a node owned by this manager to the scene tree and

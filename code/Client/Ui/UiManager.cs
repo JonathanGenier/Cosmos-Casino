@@ -7,13 +7,21 @@
 /// (such as debug overlays or menus) and delegating visibility or behavior
 /// changes to their respective controllers.
 /// </summary>
-internal partial class UiManager(ClientBootstrap bootstrap) : ClientManager(bootstrap)
+public sealed partial class UiManager(ClientBootstrap bootstrap) : ClientManager(bootstrap)
 {
+    #region FIELDS
+
     private ClientConsoleManager _clientConsoleManager;
+
+    #endregion
+
+    #region METHODS
 
     /// <inheritdoc/>
     public override void _Ready()
     {
         _clientConsoleManager = AddOwnedNode(new ClientConsoleManager(Bootstrap));
     }
+
+    #endregion
 }

@@ -8,7 +8,7 @@ namespace CosmosCasino.Tests.Console
     {
         #region FIELDS
 
-        private ConsoleManager? _console;
+        private ConsoleManager? _consoleManager;
 
         #endregion
 
@@ -17,13 +17,13 @@ namespace CosmosCasino.Tests.Console
         [SetUp]
         public void Setup()
         {
-            _console = new ConsoleManager(10);
+            _consoleManager = new ConsoleManager(10);
         }
 
         [TearDown]
         public void TearDown()
         {
-            _console!.Dispose();
+            ((IDisposable)_consoleManager!).Dispose();
         }
 
         #endregion
@@ -31,13 +31,13 @@ namespace CosmosCasino.Tests.Console
         #region LOG ENTRY
 
         [Test]
-        public void Console_ReceivesLogs_FromDevLog()
+        public void Console_ReceivesLogs_FromConsoleLog()
         {
             // Act
             ConsoleLog.Info("Test", "Hello");
 
             // Assert
-            Assert.That(_console!.Count, Is.EqualTo(1));
+            Assert.That(_consoleManager!.Count, Is.EqualTo(1));
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace CosmosCasino.Tests.Console
         {
             // Assemble
             ConsoleLogEntry? received = null;
-            _console!.EntryAdded += e => received = e;
+            _consoleManager!.EntryAdded += e => received = e;
 
             // Act
             ConsoleLog.Info("Test", "Hello");
@@ -62,7 +62,7 @@ namespace CosmosCasino.Tests.Console
         public void ExecuteCommand_DelegatesToRegistry()
         {
             // Act
-            var result = _console!.ExecuteCommand("clear");
+            var result = _consoleManager!.ExecuteCommand("clear");
 
             // Assert
             Assert.That(result.Success, Is.True);
@@ -74,13 +74,13 @@ namespace CosmosCasino.Tests.Console
         {
             // Act
             ConsoleLog.Info("Test", "Hello");
-            Assert.That(_console!.Count, Is.EqualTo(1));
+            Assert.That(_consoleManager!.Count, Is.EqualTo(1));
 
-            var success = _console.TryClearLogs();
+            var success = _consoleManager.TryClearLogs();
 
             // Assert
             Assert.That(success, Is.True);
-            Assert.That(_console.Count, Is.EqualTo(0));
+            Assert.That(_consoleManager.Count, Is.EqualTo(0));
         }
 
         #endregion

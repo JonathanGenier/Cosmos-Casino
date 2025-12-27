@@ -2,14 +2,14 @@ using CosmosCasino.Core.Console.Logging;
 using Godot;
 
 /// <summary>
-/// Coordinates the client-side debug console, including command submission
+/// Coordinates the client-side debug console, including console command submission
 /// and log presentation, and bridges UI interactions with the core console.
 /// </summary>
 /// <param name="bootstrap">
 /// Bootstrap context providing access to core and client service collections
 /// required for console initialization.
 /// </param>
-internal sealed partial class ClientConsoleManager(ClientBootstrap bootstrap) : ClientManager(bootstrap)
+public sealed partial class ClientConsoleManager(ClientBootstrap bootstrap) : ClientManager(bootstrap)
 {
     #region FIELDS
 
@@ -28,23 +28,15 @@ internal sealed partial class ClientConsoleManager(ClientBootstrap bootstrap) : 
 
     #endregion
 
-    #region PUBLIC METHODS
+    #region METHODS
 
-    /// <summary>
-    /// Initializes UI systems owned by this manager.
-    /// UI elements created here are guaranteed to exist before any
-    /// input-driven UI coordination occurs.
-    /// </summary>
+    /// <inheritdoc/>
     public override void _Ready()
     {
         ConsoleLog.System("UiManager", "Setting up...");
         InitializeConsoleUi();
         ConsoleLog.System("UiManager", "Ready");
     }
-
-    #endregion
-
-    #region CALLBACKS
 
     /// <summary>
     /// Handles a request to toggle the visibility of the debug log console UI.
@@ -61,10 +53,6 @@ internal sealed partial class ClientConsoleManager(ClientBootstrap bootstrap) : 
         var result = CoreServices.ConsoleManager.ExecuteCommand(command);
         _consoleAdapter.AppendCommandResult(result);
     }
-
-    #endregion
-
-    #region PRIVATE METHODS
 
     /// <summary>
     /// Instantiates and attaches the debug log console UI to the scene tree.

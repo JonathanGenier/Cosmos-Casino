@@ -6,9 +6,9 @@ namespace CosmosCasino.Core.Serialization
     /// format (e.g. JSON, binary, compressed, encrypted) while preserving
     /// round-trip integrity.
     /// </summary>
-    public interface ISerializer
+    internal interface ISerializer
     {
-        #region PUBLIC METHODS
+        #region METHODS
 
         /// <summary>
         /// Serializes the specified object into a byte array representation.
@@ -18,7 +18,7 @@ namespace CosmosCasino.Core.Serialization
         /// <returns>
         /// A byte array containing the serialized representation of the object.
         /// </returns>
-        public byte[] Serialize<T>(T data);
+        internal byte[] Serialize<T>(T data);
 
         /// <summary>
         /// Deserializes the specified byte array into an object instance.
@@ -26,7 +26,7 @@ namespace CosmosCasino.Core.Serialization
         /// <typeparam name="T">The expected type of the deserialized object.</typeparam>
         /// <param name="bytes">The serialized byte data.</param>
         /// <returns>The deserialized object instance.</returns>
-        public T Deserialize<T>(byte[] bytes);
+        internal T Deserialize<T>(byte[] bytes);
 
         #endregion
     }

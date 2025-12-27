@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-
 namespace CosmosCasino.Core.IO
 {
     /// <summary>
@@ -8,9 +5,9 @@ namespace CosmosCasino.Core.IO
     /// Encapsulates safe atomic writes and controlled read operations while
     /// leaving error handling decisions to higher layers.
     /// </summary>
-    public static class FileSystem
+    internal static class FileSystem
     {
-        #region PUBLIC METHODS
+        #region METHODS
 
         /// <summary>
         /// Writes the provided bytes to disk atomically.
@@ -28,7 +25,7 @@ namespace CosmosCasino.Core.IO
         /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="path"/> is null, empty, or whitespace.
         /// </exception>
-        public static void AtomicSave(string path, byte[] bytes)
+        internal static void AtomicSave(string path, byte[] bytes)
         {
             ArgumentNullException.ThrowIfNull(bytes, nameof(bytes));
             ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
@@ -73,7 +70,7 @@ namespace CosmosCasino.Core.IO
         /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="path"/> is null, empty, or whitespace.
         /// </exception>
-        public static bool TryReadBytes(string path, out byte[] bytes)
+        internal static bool TryReadBytes(string path, out byte[] bytes)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
 
@@ -86,10 +83,6 @@ namespace CosmosCasino.Core.IO
             bytes = File.ReadAllBytes(path);
             return true;
         }
-
-        #endregion
-
-        #region PRIVATE METHODS
 
         /// <summary>
         /// Writes bytes to the specified path, creating the parent directory

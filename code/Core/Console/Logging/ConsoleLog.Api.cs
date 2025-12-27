@@ -2,11 +2,11 @@ namespace CosmosCasino.Core.Console.Logging
 {
     /// <summary>
     /// PUBLIC API
-    /// Internal implementation of the DevLog logging pipeline.
+    /// Internal implementation of the ConsoleLog logging pipeline.
     /// </summary>
     public static partial class ConsoleLog
     {
-        #region PUBLIC METHODS
+        #region METHODS
 
         /// <summary>
         /// Writes a general informational log entry.
@@ -18,16 +18,11 @@ namespace CosmosCasino.Core.Console.Logging
         /// <param name="message">
         /// Human-readable diagnostic message.
         /// </param>
-        /// <param name="safety">
-        /// Controls whether the entry is allowed in production builds.
-        /// Unsafe entries are stripped in production.
-        /// </param>
         public static void Info(
             string category,
-            string message,
-            ConsoleLogSafety safety = ConsoleLogSafety.Safe)
+            string message)
         {
-            Write(ConsoleLogLevel.Info, safety, ConsoleLogKind.General, category, message);
+            Write(ConsoleLogLevel.Info, ConsoleLogSafety.Safe, ConsoleLogKind.General, category, message);
         }
 
         /// <summary>
@@ -41,16 +36,11 @@ namespace CosmosCasino.Core.Console.Logging
         /// <param name="message">
         /// Human-readable diagnostic message.
         /// </param>
-        /// <param name="safety">
-        /// Controls whether the entry is allowed in production builds.
-        /// Unsafe entries are stripped in production.
-        /// </param>
         public static void Verbose(
             string category,
-            string message,
-            ConsoleLogSafety safety = ConsoleLogSafety.Unsafe)
+            string message)
         {
-            Write(ConsoleLogLevel.Verbose, safety, ConsoleLogKind.General, category, message);
+            Write(ConsoleLogLevel.Verbose, ConsoleLogSafety.Unsafe, ConsoleLogKind.General, category, message);
         }
 
         /// <summary>
@@ -102,16 +92,11 @@ namespace CosmosCasino.Core.Console.Logging
         /// <param name="message">
         /// Human-readable diagnostic message.
         /// </param>
-        /// <param name="safety">
-        /// Controls whether the entry is allowed in production builds.
-        /// Unsafe entries are stripped in production.
-        /// </param>
         public static void Event(
             string category,
-            string message,
-            ConsoleLogSafety safety = ConsoleLogSafety.Safe)
+            string message)
         {
-            Write(ConsoleLogLevel.Info, safety, ConsoleLogKind.Event, category, message);
+            Write(ConsoleLogLevel.Info, ConsoleLogSafety.Safe, ConsoleLogKind.Event, category, message);
         }
 
         /// <summary>

@@ -6,7 +6,7 @@ using Godot;
 /// debug intent signals through the <see cref="InputManager"/> without
 /// performing any UI or gameplay logic directly.
 /// </summary>
-public sealed class DebugInputModule : IInputModule
+public sealed class ConsoleInputModule : IInputModule
 {
     #region FIELDS
 
@@ -20,12 +20,12 @@ public sealed class DebugInputModule : IInputModule
     #region CONSTRUCTORS
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DebugInputModule"/>.
+    /// Initializes a new instance of the <see cref="ConsoleInputModule"/>.
     /// </summary>
     /// <param name="input">
     /// Input manager through which debug intent signals are dispatched.
     /// </param>
-    internal DebugInputModule(InputManager input)
+    public ConsoleInputModule(InputManager input)
     {
         _input = input;
     }
@@ -43,7 +43,7 @@ public sealed class DebugInputModule : IInputModule
 
     #endregion
 
-    #region PUBLIC METHODS
+    #region METHODS
 
     /// <summary>
     /// Processes debug-related input for the current frame.

@@ -1,46 +1,12 @@
 namespace CosmosCasino.Core.Console.Logging
 {
     /// <summary>
+    /// INTERNAL CODE
     /// Represents a single immutable, structured log entry
-    /// produced by the DevLog logging system.
+    /// produced by the ConsoleLog logging system.
     /// </summary>
-    public readonly struct ConsoleLogEntry
+    public sealed partial class ConsoleLogEntry
     {
-        #region FIELDS
-
-        /// <summary>
-        /// Timestamp in milliseconds since application start.
-        /// </summary>
-        public readonly long TimestampMs;
-
-        /// <summary>
-        /// Severity level of the log entry.
-        /// </summary>
-        public readonly ConsoleLogLevel Level;
-
-        /// <summary>
-        /// Indicates whether the log entry is allowed to appear
-        /// in production environments.
-        /// </summary>
-        public readonly ConsoleLogSafety Safety;
-
-        /// <summary>
-        /// Semantic classification of the log entry
-        /// </summary>
-        public readonly ConsoleLogKind Kind;
-
-        /// <summary>
-        /// Logical subsystem or feature that produced the log
-        /// </summary>
-        public readonly string Category;
-
-        /// <summary>
-        /// Human-readable diagnostic message.
-        /// </summary>
-        public readonly string Message;
-
-        #endregion
-
         #region CONSTRUCTORS
 
         /// <summary>
@@ -66,7 +32,7 @@ namespace CosmosCasino.Core.Console.Logging
         /// <param name="message">
         /// Human-readable log message.
         /// </param>
-        public ConsoleLogEntry(
+        internal ConsoleLogEntry(
             long timestampMs,
             ConsoleLogLevel level,
             ConsoleLogSafety safety,
@@ -80,6 +46,54 @@ namespace CosmosCasino.Core.Console.Logging
             Kind = kind;
             Category = category ?? "Undefined";
             Message = message ?? string.Empty;
+            DisplayKind = MapDisplayKind(Level, Kind);
+        }
+
+        #endregion
+
+        #region PROPERTIES
+
+        /// <summary>
+        /// Severity level of the log entry.
+        /// </summary>
+        internal ConsoleLogLevel Level { get; }
+
+        /// <summary>
+        /// Indicates whether the log entry is allowed to appear
+        /// in production environments.
+        /// </summary>
+        internal ConsoleLogSafety Safety { get; }
+
+        /// <summary>
+        /// Semantic classification of the log entry
+        /// </summary>
+        internal ConsoleLogKind Kind { get; }
+
+        #endregion
+
+        #region METHODS
+
+        private static ConsoleLogDisplayKind MapDisplayKind(ConsoleLogLevel level, ConsoleLogKind kind)
+        {
+            return level switch
+            {
+                ConsoleLogLevel.Error => ConsoleLogDisplayKind.Error,
+                ConsoleLogLevel.Warning => ConsoleLogDisplayKind.Warning,
+                ConsoleLogLevel.Verbose => ConsoleLogDisplayKind.Muted,
+                ConsoleLogLevel.Info => MapByLogKind(kind),
+                _ => ConsoleLogDisplayKind.General
+            };
+        }
+
+        private static ConsoleLogDisplayKind MapByLogKind(ConsoleLogKind kind)
+        {
+            return kind switch
+            {
+                ConsoleLogKind.General => ConsoleLogDisplayKind.General,
+                ConsoleLogKind.Event => ConsoleLogDisplayKind.Event,
+                ConsoleLogKind.System => ConsoleLogDisplayKind.System,
+                _ => ConsoleLogDisplayKind.General
+            };
         }
 
         #endregion

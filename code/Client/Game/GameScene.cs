@@ -1,5 +1,4 @@
 using CosmosCasino.Core.Console.Logging;
-using Godot;
 
 /// <summary>
 /// Entry point for the gameplay scene.
@@ -13,9 +12,9 @@ using Godot;
 /// events to the core <c>GameManager</c>.
 /// </para>
 /// </summary>
-internal partial class GameScene : SceneController
+public sealed partial class GameScene : SceneController
 {
-    #region GODOT METHODS
+    #region METHODS
 
     /// <summary>
     /// Called when the gameplay scene has finished loading and is ready.

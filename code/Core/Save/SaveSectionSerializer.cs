@@ -9,9 +9,9 @@ namespace CosmosCasino.Core.Save
     /// save participants do not need to manually handle JsonElement
     /// conversion.
     /// </summary>
-    public static class SaveSectionSerializer
+    internal static class SaveSectionSerializer
     {
-        #region PUBLIC METHODS
+        #region METHODS
 
         /// <summary>
         /// Writes a value into the save sections dictionary under the specified key.
@@ -28,7 +28,7 @@ namespace CosmosCasino.Core.Save
         /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="key"/> is null, empty, or whitespace.
         /// </exception>
-        public static void Write<T>(this Dictionary<string, JsonElement> sections, string key, T value)
+        internal static void Write<T>(this Dictionary<string, JsonElement> sections, string key, T value)
         {
             ArgumentNullException.ThrowIfNull(sections, nameof(sections));
             ArgumentException.ThrowIfNullOrWhiteSpace(key, nameof(key));
@@ -53,7 +53,7 @@ namespace CosmosCasino.Core.Save
         /// <exception cref="KeyNotFoundException">
         /// Thrown when the specified key does not exist in the dictionary.
         /// </exception>
-        public static T Read<T>(this Dictionary<string, JsonElement> sections, string key)
+        internal static T Read<T>(this Dictionary<string, JsonElement> sections, string key)
         {
             ArgumentNullException.ThrowIfNull(sections, nameof(sections));
             ArgumentException.ThrowIfNullOrWhiteSpace(key, nameof(key));
@@ -81,7 +81,7 @@ namespace CosmosCasino.Core.Save
         /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="key"/> is null, empty, or whitespace.
         /// </exception>
-        public static bool TryRead<T>(this Dictionary<string, JsonElement> sections, string key, out T value)
+        internal static bool TryRead<T>(this Dictionary<string, JsonElement> sections, string key, out T value)
         {
             ArgumentNullException.ThrowIfNull(sections, nameof(sections));
             ArgumentException.ThrowIfNullOrWhiteSpace(key, nameof(key));

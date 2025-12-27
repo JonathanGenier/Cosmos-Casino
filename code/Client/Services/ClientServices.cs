@@ -8,7 +8,7 @@ using Godot;
 /// Godot-dependent systems such as input, UI, camera control, audio, and 
 /// debug tooling.
 /// </summary>
-public partial class ClientServices : Node
+public sealed partial class ClientServices : Node
 {
     #region FIELDS
 
@@ -25,7 +25,7 @@ public partial class ClientServices : Node
     /// <param name="core">
     /// Core services shared across all application layers.
     /// </param>
-    internal ClientServices(CoreServices core)
+    public ClientServices(CoreServices core)
     {
         _bootstrap = new(core, this);
     }
@@ -39,18 +39,18 @@ public partial class ClientServices : Node
     /// Provides a single entry point for input intent detection and dispatch,
     /// while delegating input logic to registered input modules.
     /// </summary>
-    internal InputManager InputManager { get; private set; }
+    public InputManager InputManager { get; private set; }
 
     /// <summary>
     /// Central coordinator for all client-side UI systems.
     /// Responsible for instantiating, owning, and coordinating UI controllers
     /// such as debug overlays, menus, and HUD elements.
     /// </summary>
-    internal UiManager UiManager { get; private set; }
+    public UiManager UiManager { get; private set; }
 
     #endregion
 
-    #region PUBLIC METHODS
+    #region METHODS
 
     /// <summary>
     /// Initializes client-side systems owned by this container.
@@ -64,10 +64,6 @@ public partial class ClientServices : Node
         UiManager = AddService(new UiManager(_bootstrap));
         ConsoleLog.System("ClientServices", "Ready");
     }
-
-    #endregion
-
-    #region PRIVATE METHODS
 
     /// <summary>
     /// Adds a client-side service node to the scene tree and returns it.

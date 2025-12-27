@@ -5,9 +5,9 @@ using Godot;
 /// Controls the behavior of the main menu scene and handles
 /// user input that triggers high-level application state changes.
 /// </summary>
-internal partial class MainMenuScene : SceneController
+public sealed partial class MainMenuScene : SceneController
 {
-    #region GODOT METHODS
+    #region METHODS
 
     /// <summary>
     /// Initializes the main menu scene and wires up user interface
@@ -19,10 +19,6 @@ internal partial class MainMenuScene : SceneController
         playButton.Pressed += OnPlayPressed;
         ConsoleLog.System("MainMenuController", "Ready");
     }
-
-    #endregion
-
-    #region CALLBACKS
 
     /// <summary>
     /// Handles the Play button action and transitions the application

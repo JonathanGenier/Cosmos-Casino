@@ -9,6 +9,8 @@ namespace CosmosCasino.Core.Console.Command
     /// </summary>
     internal static class ConsoleCommandRegistrar
     {
+        #region METHODS
+
         /// <summary>
         /// Registers all available debug commands.
         /// </summary>
@@ -24,5 +26,7 @@ namespace CosmosCasino.Core.Console.Command
         {
             register(new ClearConsoleCommand(debugConsole.TryClearLogs));
         }
+
+        #endregion
     }
 }

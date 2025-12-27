@@ -13,7 +13,7 @@ using System;
 /// </summary>
 public static class SceneLoader
 {
-    #region PUBLIC METHODS
+    #region METHODS
 
     /// <summary>
     /// Loads and transitions to a new scene at the specified path.

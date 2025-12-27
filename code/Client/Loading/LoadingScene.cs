@@ -14,9 +14,9 @@ using System.Threading.Tasks;
 /// <see cref="CoreServices"/> during the loading phase only.
 /// </para>
 /// </summary>
-internal partial class LoadingScene : SceneController
+public sealed partial class LoadingScene : SceneController
 {
-    #region PUBLIC METHODS
+    #region METHODS
 
     /// <summary>
     /// Entry point for the loading scene.
@@ -27,10 +27,6 @@ internal partial class LoadingScene : SceneController
         _ = LoadAsync();
         ConsoleLog.System("LoadingController", "Ready");
     }
-
-    #endregion
-
-    #region PRIVATE METHODS
 
     /// <summary>
     /// Executes the asynchronous loading workflow.
