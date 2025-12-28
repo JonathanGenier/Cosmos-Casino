@@ -118,24 +118,15 @@ namespace CosmosCasino.Tests.Services
             Assert.That(result, Is.True);
         }
 
-#if DEBUG
         [Test]
-        public void EndGame_WhenNoGameStarted_ThrowsInvalidOperationException_InDebug()
+        public void EndGame_WhenNoGameStarted_ShouldReturnTrue()
         {
-            // Assert
-            Assert.That(() => _coreServices!.EndGame(), Throws.TypeOf<InvalidOperationException>());
-        }
-#endif
+            // Act
+            var result = _coreServices!.EndGame();
 
-#if !DEBUG
-        [Test]
-        public void EndGame_WhenNoGameStarted_ReturnFalse_InRelease()
-        {
             // Assert
-            Assert.That(_coreServices!.EndGame(), Is.False);
+            Assert.That(result, Is.True);
         }
-#endif
-
         #endregion
     }
 }

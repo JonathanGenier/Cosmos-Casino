@@ -12,6 +12,14 @@ namespace CosmosCasino.Core.Services
     /// </summary>
     public sealed partial class CoreServices
     {
+        #region FIELDS
+
+        private IDisposable _consoleManagerDisposable;
+        private bool _isDisposed;
+        private bool _isShutdown;
+
+        #endregion
+
         #region PROPERTIES
 
         /// <summary>

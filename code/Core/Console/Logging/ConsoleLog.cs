@@ -11,7 +11,7 @@ namespace CosmosCasino.Core.Console.Logging
         #region FIELDS
 
         private static List<ConsoleLogEntry>? _earlyLogs = new();
-        private static bool _bootstrapping = true;
+        private static bool _isBootstrapping = true;
 
         #endregion
 
@@ -40,12 +40,12 @@ namespace CosmosCasino.Core.Console.Logging
         /// </returns>
         internal static IReadOnlyList<ConsoleLogEntry> DrainEarlyLogs()
         {
-            if (!_bootstrapping)
+            if (!_isBootstrapping)
             {
                 return Array.Empty<ConsoleLogEntry>();
             }
 
-            _bootstrapping = false;
+            _isBootstrapping = false;
 
             var drained = _earlyLogs!;
             _earlyLogs = null;
@@ -62,7 +62,7 @@ namespace CosmosCasino.Core.Console.Logging
         internal static void ResetForUnitTests()
         {
             _earlyLogs = new List<ConsoleLogEntry>();
-            _bootstrapping = true;
+            _isBootstrapping = true;
             OnLog = null;
         }
 #endif
@@ -111,7 +111,7 @@ namespace CosmosCasino.Core.Console.Logging
                 message
             );
 
-            if (_bootstrapping)
+            if (_isBootstrapping)
             {
                 _earlyLogs!.Add(entry);
             }

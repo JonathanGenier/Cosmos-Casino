@@ -7,6 +7,12 @@ using Godot;
 /// </summary>
 public sealed partial class MainMenuScene : SceneController
 {
+    #region FIELDS
+
+    private Button _playButton;
+
+    #endregion
+
     #region METHODS
 
     /// <summary>
@@ -15,9 +21,15 @@ public sealed partial class MainMenuScene : SceneController
     /// </summary>
     public override void _Ready()
     {
-        var playButton = GetNode<Button>("Button_Play");
-        playButton.Pressed += OnPlayPressed;
+        _playButton = GetNode<Button>("Button_Play");
+        _playButton.Pressed += OnPlayPressed;
         ConsoleLog.System("MainMenuController", "Ready");
+    }
+
+    /// <inheritdoc/>
+    public override void _ExitTree()
+    {
+        _playButton.Pressed -= OnPlayPressed;
     }
 
     /// <summary>

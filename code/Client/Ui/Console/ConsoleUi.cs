@@ -37,9 +37,24 @@ public sealed partial class ConsoleUi : Control
     /// Used to perform final UI-side initialization and emit diagnostic
     /// readiness information for debugging purposes.
     /// </summary>
+    /// <inheritdoc/>
     public override void _Ready()
     {
         _lineEdit.TextSubmitted += OnCommandSubmitted;
+    }
+
+    /// <summary>
+    /// Cleans up UI event subscriptions owned by the console UI.
+    /// <para>
+    /// Detaches input callbacks associated with the command input field
+    /// to ensure no dangling references remain after the UI node
+    /// leaves the scene tree.
+    /// </para>
+    /// </summary>
+    /// <inheritdoc/>
+    public override void _ExitTree()
+    {
+        _lineEdit.TextSubmitted -= OnCommandSubmitted;
     }
 
     /// <summary>
