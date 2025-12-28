@@ -55,13 +55,13 @@ public sealed partial class AppManager : Node
             return;
         }
 
-        ConsoleLog.System("AppManager", "Setting up...");
-        Instance = this;
-        State = AppState.Boot;
-
-        InitializeCoreServices();
-        InitializeClientServices();
-        ConsoleLog.System("AppManager", "Ready");
+        using (ConsoleLog.SystemScope(nameof(AppManager)))
+        {
+            Instance = this;
+            State = AppState.Boot;
+            InitializeCoreServices();
+            InitializeClientServices();
+        }
     }
 
 

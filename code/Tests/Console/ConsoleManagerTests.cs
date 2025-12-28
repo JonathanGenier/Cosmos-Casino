@@ -18,6 +18,7 @@ namespace CosmosCasino.Tests.Console
         public void Setup()
         {
             _consoleManager = new ConsoleManager(10);
+            _consoleManager.TryClearLogs(); // ConsoleManager emits 2 logs (Setting up, Ready)
         }
 
         [TearDown]

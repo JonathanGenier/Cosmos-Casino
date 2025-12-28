@@ -1,3 +1,6 @@
+using CosmosCasino.Core.Console.Logging;
+
+
 /// <summary>
 /// Central coordinator for client-side user interface systems.
 /// <see cref="UiManager"/> acts as the composition root for UI controllers,
@@ -20,7 +23,10 @@ public sealed partial class UiManager(ClientBootstrap bootstrap) : ClientManager
     /// <inheritdoc/>
     public override void _Ready()
     {
-        _clientConsoleManager = AddOwnedNode(new ClientConsoleManager(Bootstrap));
+        using (ConsoleLog.SystemScope("UiManager"))
+        {
+            _clientConsoleManager = AddOwnedNode(new ClientConsoleManager(Bootstrap));
+        }
     }
 
     #endregion

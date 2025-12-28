@@ -32,17 +32,20 @@ namespace CosmosCasino.Core.Console
         /// </param>
         internal ConsoleManager(int logCapacity = 500)
         {
-            TryClearLogs = ClearLogs;
-            _commands = new ConsoleCommandRegistry(this);
-            _buffer = new ConsoleLogBuffer(logCapacity);
-
-            // Logs that have been registered before the console is set is stored temporarily in ConsoleLog.
-            foreach (var entry in ConsoleLog.DrainEarlyLogs())
+            using (ConsoleLog.SystemScope(nameof(ConsoleManager)))
             {
-                AddLog(entry);
-            }
+                TryClearLogs = ClearLogs;
+                _commands = new ConsoleCommandRegistry(this);
+                _buffer = new ConsoleLogBuffer(logCapacity);
 
-            ConsoleLog.OnLog += AddLog;
+                // Logs that have been registered before the console is set is stored temporarily in ConsoleLog.
+                foreach (var entry in ConsoleLog.DrainEarlyLogs())
+                {
+                    AddLog(entry);
+                }
+
+                ConsoleLog.OnLog += AddLog;
+            }
         }
 
         #endregion
