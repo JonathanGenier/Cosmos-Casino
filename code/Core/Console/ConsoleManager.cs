@@ -14,7 +14,7 @@ namespace CosmosCasino.Core.Console
 
         private readonly ConsoleCommandRegistry _commands;
         private readonly ConsoleLogBuffer _buffer;
-        private bool _disposed;
+        private bool _isDisposed;
 
         #endregion
 
@@ -35,7 +35,6 @@ namespace CosmosCasino.Core.Console
             TryClearLogs = ClearLogs;
             _commands = new ConsoleCommandRegistry(this);
             _buffer = new ConsoleLogBuffer(logCapacity);
-            _disposed = false;
 
             // Logs that have been registered before the console is set is stored temporarily in ConsoleLog.
             foreach (var entry in ConsoleLog.DrainEarlyLogs())
@@ -67,13 +66,13 @@ namespace CosmosCasino.Core.Console
         /// </summary>
         void IDisposable.Dispose()
         {
-            if (_disposed)
+            if (_isDisposed)
             {
                 return;
             }
 
             ConsoleLog.OnLog -= AddLog;
-            _disposed = true;
+            _isDisposed = true;
         }
 
         /// <summary>

@@ -13,29 +13,43 @@ public sealed partial class ClientConsoleManager(ClientBootstrap bootstrap) : Cl
 {
     #region FIELDS
 
-    /// <summary>
-    /// Controller for the debug log console UI.
-    /// Managed and coordinated by this manager.
-    /// </summary>
     private ConsoleUi _consoleUi;
-
-    /// <summary>
-    /// Sink responsible for forwarding log entries from the core logging system
-    /// to the in-game debug log console UI.
-    /// Acts as a bridge between engine-agnostic logging and client-side presentation.
-    /// </summary>
     private ConsoleAdapter _consoleAdapter;
 
     #endregion
 
     #region METHODS
 
+    /// <summary>
+    /// Initializes the client-side debug console.
+    /// Instantiates and attaches the console UI, wires it to the core
+    /// console manager via a presentation adapter, and subscribes to
+    /// debug input intents required to toggle console visibility.
+    /// </summary>
     /// <inheritdoc/>
     public override void _Ready()
     {
         ConsoleLog.System("UiManager", "Setting up...");
-        InitializeConsoleUi();
+        _consoleUi = AddOwnedNode(GD.Load<PackedScene>(UiPaths.Console).Instantiate<ConsoleUi>());
+        _consoleUi.Toggle();
+        _consoleAdapter = new ConsoleAdapter(_consoleUi, CoreServices.ConsoleManager);
+
+        var input = ClientServices.InputManager;
+        input.ToggleConsoleUi += OnToggleConsoleUi;
         ConsoleLog.System("UiManager", "Ready");
+    }
+
+    /// <summary>
+    /// Cleans up client-side debug console resources.
+    /// Unsubscribes from input intent signals and disposes the console
+    /// adapter to release event subscriptions bridging core and UI layers.
+    /// </summary>
+    /// <inheritdoc/>
+    public override void _ExitTree()
+    {
+        var input = ClientServices.InputManager;
+        input.ToggleConsoleUi -= OnToggleConsoleUi;
+        _consoleAdapter.Dispose();
     }
 
     /// <summary>
@@ -45,29 +59,6 @@ public sealed partial class ClientConsoleManager(ClientBootstrap bootstrap) : Cl
     private void OnToggleConsoleUi()
     {
         _consoleUi.Toggle();
-    }
-
-    private void OnCommandSubmitted(string command)
-    {
-        _consoleAdapter.AppendCommand(command);
-        var result = CoreServices.ConsoleManager.ExecuteCommand(command);
-        _consoleAdapter.AppendCommandResult(result);
-    }
-
-    /// <summary>
-    /// Instantiates and attaches the debug log console UI to the scene tree.
-    /// The console is created once and retained for the lifetime of the client
-    /// layer, with visibility managed independently of its existence.
-    /// </summary>
-    private void InitializeConsoleUi()
-    {
-        _consoleUi = AddOwnedNode(GD.Load<PackedScene>(UiPaths.Console).Instantiate<ConsoleUi>());
-        _consoleUi.Toggle();
-        _consoleAdapter = new ConsoleAdapter(_consoleUi, CoreServices.ConsoleManager);
-
-        var input = ClientServices.InputManager;
-        input.ToggleConsoleUi += OnToggleConsoleUi;
-        _consoleUi.CommandSubmitted += OnCommandSubmitted;
     }
 
     #endregion

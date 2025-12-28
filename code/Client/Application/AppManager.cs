@@ -21,6 +21,7 @@ public sealed partial class AppManager : Node
 
     private CoreServices _core;
     private ClientServices _client;
+    private bool _isShutdown;
 
     #endregion
 
@@ -61,6 +62,39 @@ public sealed partial class AppManager : Node
         InitializeCoreServices();
         InitializeClientServices();
         ConsoleLog.System("AppManager", "Ready");
+    }
+
+
+    /// <summary>
+    /// Performs final application teardown when the manager leaves the scene tree.
+    /// This method releases all core-owned disposable resources to ensure
+    /// that event subscriptions and other mechanical resources are cleaned
+    /// up before the application fully exits.
+    /// </summary>
+    /// <inheritdoc/>
+    public override void _ExitTree()
+    {
+        _core.Dispose();
+        base._ExitTree();
+    }
+
+    /// <summary>
+    /// Initiates a controlled application shutdown.
+    /// This method performs a graceful logical shutdown of core systems
+    /// before requesting termination of the Godot scene tree.
+    /// Safe to call multiple times.
+    /// </summary>
+    public void Shutdown()
+    {
+        if (_isShutdown)
+        {
+            return;
+        }
+
+        _isShutdown = true;
+        _core.Shutdown();
+
+        GetTree().Quit();
     }
 
     /// <summary>

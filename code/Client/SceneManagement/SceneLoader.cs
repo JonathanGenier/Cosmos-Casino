@@ -69,9 +69,9 @@ public static class SceneLoader
         var instance = packedScene.Instantiate<Node>();
 
         // Inject dependencies
-        if (instance is SceneController controller)
+        if (instance is SceneController sceneController)
         {
-            controller.Initialize(coreServices, clientServices);
+            sceneController.Initialize(coreServices, clientServices);
         }
         else
         {

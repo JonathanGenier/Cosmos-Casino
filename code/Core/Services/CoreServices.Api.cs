@@ -14,7 +14,7 @@ namespace CosmosCasino.Core.Services
     /// only valid during an active game session.
     /// </para>
     /// </summary>
-    public sealed partial class CoreServices
+    public sealed partial class CoreServices : IDisposable
     {
         #region CONSTRUCTORS
 
@@ -40,6 +40,7 @@ namespace CosmosCasino.Core.Services
             JsonSaveSerializer serializer = new();
             SaveManager = new SaveManager(serializer, savePath);
             ConsoleManager = new ConsoleManager();
+            _consoleManagerDisposable = ConsoleManager;
             ConsoleLog.System("CoreServices", "Ready");
         }
 
@@ -66,6 +67,46 @@ namespace CosmosCasino.Core.Services
         #endregion
 
         #region METHODS
+
+        /// <summary>
+        /// Initiates a graceful shutdown of core runtime state.
+        /// This method performs logical teardown only, ensuring that any
+        /// active game session is properly ended and that core services
+        /// transition into a safe, inactive state.
+        /// This method is idempotent and may be called multiple times.
+        /// </summary>
+        public void Shutdown()
+        {
+            if (_isShutdown)
+            {
+                return;
+            }
+
+            _isShutdown = true;
+
+            EndGame();
+        }
+
+        /// <summary>
+        /// Releases all disposable core-owned resources.
+        /// This method guarantees that shutdown logic is executed first,
+        /// then disposes of any core services that require explicit cleanup
+        /// (such as event subscriptions or unmanaged resources).
+        /// Safe to call multiple times.
+        /// </summary>
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+
+            Shutdown(); // ALWAYS first
+            _consoleManagerDisposable.Dispose();
+        }
 
         /// <summary>
         /// Starts a new game session and initializes all game-scoped core services.
@@ -120,13 +161,7 @@ namespace CosmosCasino.Core.Services
         {
             if (GameManager == null)
             {
-                ConsoleLog.Error("Game", "Trying to end game but no game is currently running.");
-
-#if DEBUG
-                throw new InvalidOperationException("Trying to end game but no game is currently running.");
-#else
-                return false;
-#endif
+                return true;
             }
 
             GameManager = null;

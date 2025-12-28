@@ -1,6 +1,7 @@
 using CosmosCasino.Core.Console;
 using CosmosCasino.Core.Console.Command;
 using CosmosCasino.Core.Console.Logging;
+using CosmosCasino.Core.Services;
 using System;
 
 /// <summary>
@@ -13,15 +14,13 @@ using System;
 /// influence log filtering, safety, or persistence. Its sole
 /// responsibility is presentation adaptation.
 /// </summary>
-public sealed class ConsoleAdapter
+public sealed class ConsoleAdapter : IDisposable
 {
     #region FIELDS
 
-    /// <summary>
-    /// Reference to the log console UI controller that receives
-    /// formatted log output for display.
-    /// </summary>
     private readonly ConsoleUi _consoleUi;
+    private readonly ConsoleManager _consoleManager;
+    private bool _isDisposed;
 
     #endregion
 
@@ -46,14 +45,16 @@ public sealed class ConsoleAdapter
     public ConsoleAdapter(ConsoleUi consoleUi, ConsoleManager consoleManager)
     {
         _consoleUi = consoleUi;
+        _consoleManager = consoleManager;
 
-        foreach (var entry in consoleManager.GetLogs())
+        foreach (var entry in _consoleManager.GetLogs())
         {
             OnEntryAdded(entry);
         }
 
-        consoleManager.EntryAdded += OnEntryAdded;
-        consoleManager.Cleared += OnCleared;
+        _consoleManager.EntryAdded += OnEntryAdded;
+        _consoleManager.Cleared += OnCleared;
+        _consoleUi.CommandSubmitted += OnCommandSubmitted;
     }
 
     #endregion
@@ -99,6 +100,27 @@ public sealed class ConsoleAdapter
     }
 
     /// <summary>
+    /// Detaches the adapter from all subscribed core and UI events.
+    /// This method releases cross-layer event subscriptions bridging
+    /// the core console manager and the UI console, ensuring that no
+    /// dangling references or callbacks remain after the adapter
+    /// is no longer in use.
+    /// </summary>
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (_isDisposed)
+        {
+            return;
+        }
+
+        _isDisposed = true;
+        _consoleManager.EntryAdded -= OnEntryAdded;
+        _consoleManager.Cleared -= OnCleared;
+        _consoleUi.CommandSubmitted -= OnCommandSubmitted;
+    }
+
+    /// <summary>
     /// Formats a log entry into a BBCode string suitable for display
     /// in a RichTextLabel.
     /// This includes timestamp formatting, category labeling,
@@ -121,6 +143,19 @@ public sealed class ConsoleAdapter
         return $"[color={timeColor}][{time}][/color] [color={color}] [{entry.Category}] {entry.Message}[/color]";
     }
 
+    /// <summary>
+    /// Resolves the display color associated with a log entry’s semantic kind.
+    /// Colors are chosen to provide immediate visual distinction between
+    /// general output, system diagnostics, events, warnings, and errors
+    /// within the console UI.
+    /// </summary>
+    /// <param name="displayKind">
+    /// Semantic classification of the log entry used for color selection.
+    /// </param>
+    /// <returns>
+    /// A BBCode-compatible color string representing the visual style
+    /// for the specified log display kind.
+    /// </returns>
     private string GetConsoleLogColor(ConsoleLogDisplayKind displayKind)
     {
         return displayKind switch
@@ -157,6 +192,22 @@ public sealed class ConsoleAdapter
     private void OnCleared()
     {
         _consoleUi.Clear();
+    }
+
+    /// <summary>
+    /// Handles submission of a console command entered by the user.
+    /// Echoes the raw command to the console UI, delegates execution
+    /// to the core console manager, and appends the resulting feedback
+    /// to the console output when appropriate.
+    /// </summary>
+    /// <param name="command">
+    /// Raw command string entered by the user.
+    /// </param>
+    private void OnCommandSubmitted(string command)
+    {
+        AppendCommand(command);
+        var result = _consoleManager.ExecuteCommand(command);
+        AppendCommandResult(result);
     }
 
     #endregion

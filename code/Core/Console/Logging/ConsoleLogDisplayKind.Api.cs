@@ -17,6 +17,7 @@ namespace CosmosCasino.Core.Console.Logging
         /// Display style for gameplay or runtime events of interest.
         /// </summary>
         Event,
+
         /// <summary>
         /// Display style for system-level or engine-related messages.
         /// </summary>
