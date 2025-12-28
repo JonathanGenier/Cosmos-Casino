@@ -121,6 +121,23 @@ namespace CosmosCasino.Core.Console.Logging
             Write(ConsoleLogLevel.Info, ConsoleLogSafety.Unsafe, ConsoleLogKind.System, category, message);
         }
 
+        /// <summary>
+        /// Creates a scoped system log context that automatically emits
+        /// standardized "Setting up" and "Ready" system messages for the
+        /// specified category when entered and exited.
+        /// </summary>
+        /// <param name="category">
+        /// Logical system or service name used to group lifecycle log output.
+        /// </param>
+        /// <returns>
+        /// A disposable scope that completes the lifecycle log when disposed.
+        /// </returns>
+        public static IDisposable SystemScope(string category)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(category);
+            return new SystemLogScope(category);
+        }
+
         #endregion
     }
 }

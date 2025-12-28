@@ -33,7 +33,7 @@ namespace CosmosCasino.Tests.Console.Logging
 
             // Assert
             var logs = consoleManager.GetLogs();
-            Assert.That(logs.Count, Is.EqualTo(1));
+            Assert.That(logs.Count, Is.EqualTo(3)); // ConsoleManager init emit 2 logs.
             Assert.That(logs[0].Category, Is.EqualTo("Boot"));
         }
 

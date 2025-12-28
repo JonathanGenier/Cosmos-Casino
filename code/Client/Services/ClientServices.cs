@@ -59,10 +59,11 @@ public sealed partial class ClientServices : Node
     /// </summary>
     public override void _Ready()
     {
-        ConsoleLog.System("ClientServices", "Setting up...");
-        InputManager = AddService(new InputManager(_bootstrap));
-        UiManager = AddService(new UiManager(_bootstrap));
-        ConsoleLog.System("ClientServices", "Ready");
+        using (ConsoleLog.SystemScope(nameof(ClientServices)))
+        {
+            InputManager = AddService(new InputManager(_bootstrap));
+            UiManager = AddService(new UiManager(_bootstrap));
+        }
     }
 
     /// <summary>

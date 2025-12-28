@@ -24,8 +24,10 @@ public sealed partial class BootScene : SceneController
     /// </summary>
     public override void _Ready()
     {
-        _ = BootAsync();
-        ConsoleLog.System("BootController", "Ready");
+        using (ConsoleLog.SystemScope(nameof(BootScene)))
+        {
+            _ = BootAsync();
+        }
     }
 
     /// <summary>
@@ -43,20 +45,14 @@ public sealed partial class BootScene : SceneController
     /// </summary>
     private async Task BootAsync()
     {
-        ConsoleLog.System("BootController", "Loading...");
-
         // LoadConfig();
         // LoadUserPreferences();
         // LoadLocalization();
         // LoadFeatureFlags();
         // CheckBuildVersion();
-
         // await WarmUpShaders();
         // await PreloadResources();
-
         // InitializeCaches();
-
-        ConsoleLog.System("BootController", "Loading complete.");
 
         // Deferred to avoid scene tree modification during initialization
         AppManager.Instance.CallDeferred(

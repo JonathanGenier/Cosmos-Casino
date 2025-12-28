@@ -29,14 +29,15 @@ public sealed partial class ClientConsoleManager(ClientBootstrap bootstrap) : Cl
     /// <inheritdoc/>
     public override void _Ready()
     {
-        ConsoleLog.System("UiManager", "Setting up...");
-        _consoleUi = AddOwnedNode(GD.Load<PackedScene>(UiPaths.Console).Instantiate<ConsoleUi>());
-        _consoleUi.Toggle();
-        _consoleAdapter = new ConsoleAdapter(_consoleUi, CoreServices.ConsoleManager);
+        using (ConsoleLog.SystemScope(nameof(ClientConsoleManager)))
+        {
+            _consoleUi = AddOwnedNode(GD.Load<PackedScene>(UiPaths.Console).Instantiate<ConsoleUi>());
+            _consoleUi.Toggle();
+            _consoleAdapter = new ConsoleAdapter(_consoleUi, CoreServices.ConsoleManager);
 
-        var input = ClientServices.InputManager;
-        input.ToggleConsoleUi += OnToggleConsoleUi;
-        ConsoleLog.System("UiManager", "Ready");
+            var input = ClientServices.InputManager;
+            input.ToggleConsoleUi += OnToggleConsoleUi;
+        }
     }
 
     /// <summary>

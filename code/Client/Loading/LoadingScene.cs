@@ -24,8 +24,10 @@ public sealed partial class LoadingScene : SceneController
     /// </summary>
     public override void _Ready()
     {
-        _ = LoadAsync();
-        ConsoleLog.System("LoadingController", "Ready");
+        using (ConsoleLog.SystemScope(nameof(LoadingScene)))
+        {
+            _ = LoadAsync();
+        }
     }
 
     /// <summary>
@@ -43,15 +45,10 @@ public sealed partial class LoadingScene : SceneController
     /// </summary>
     private async Task LoadAsync()
     {
-        ConsoleLog.System("LoadingController", "Loading...");
-
         // Decide new game vs load game
-
         // Later:
         // core.Game.LoadSave(...)
         // core.Game.InitializeWorld()
-
-        ConsoleLog.System("LoadingController", "Loading complete");
 
         AppManager.Instance.CallDeferred(
             nameof(AppManager.ChangeState),

@@ -19,9 +19,10 @@ namespace CosmosCasino.Core.Game
         /// </param>
         internal GameManager(SaveManager saveManager)
         {
-            ConsoleLog.System("ClientServices", "Setting up...");
-            saveManager.Register(this);
-            ConsoleLog.System("GameManager", "Ready");
+            using (ConsoleLog.SystemScope(nameof(GameManager)))
+            {
+                saveManager.Register(this);
+            }
         }
 
         #endregion

@@ -21,9 +21,11 @@ public sealed partial class MainMenuScene : SceneController
     /// </summary>
     public override void _Ready()
     {
-        _playButton = GetNode<Button>("Button_Play");
-        _playButton.Pressed += OnPlayPressed;
-        ConsoleLog.System("MainMenuController", "Ready");
+        using (ConsoleLog.SystemScope(nameof(MainMenuScene)))
+        {
+            _playButton = GetNode<Button>("Button_Play");
+            _playButton.Pressed += OnPlayPressed;
+        }
     }
 
     /// <inheritdoc/>

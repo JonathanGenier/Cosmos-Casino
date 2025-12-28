@@ -48,10 +48,11 @@ public sealed partial class InputManager(ClientBootstrap bootstrap) : ClientMana
     /// </summary>
     public override void _Ready()
     {
-        ConsoleLog.System("InputManager", "Setting up...");
-        RegisterModules();
-        SortModules();
-        ConsoleLog.System("InputManager", "Ready");
+        using (ConsoleLog.SystemScope(nameof(InputManager)))
+        {
+            RegisterModules();
+            SortModules();
+        }
     }
 
     /// <summary>

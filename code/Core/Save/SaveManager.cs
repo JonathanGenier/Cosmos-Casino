@@ -44,10 +44,11 @@ namespace CosmosCasino.Core.Save
             ArgumentNullException.ThrowIfNull(serializer, nameof(serializer));
             ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
 
-            _serializer = serializer;
-            _path = path;
-
-            ConsoleLog.System("SaveManager", "Ready");
+            using (ConsoleLog.SystemScope(nameof(SaveManager)))
+            {
+                _serializer = serializer;
+                _path = path;
+            }
         }
 
         #endregion

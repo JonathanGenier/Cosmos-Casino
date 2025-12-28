@@ -19,13 +19,16 @@ namespace CosmosCasino.Tests.Console.Logging
         public void SetUp()
         {
             _consoleManager = new ConsoleManager();
+            _consoleManager.TryClearLogs(); // ConsoleManager emits 2 logs (Setting up, Ready)
         }
 
         [TearDown]
         public void TearDown()
         {
-            ((IDisposable)_consoleManager!).Dispose();
+            IDisposable consoleManagerDisposable = _consoleManager!;
+            consoleManagerDisposable.Dispose();
         }
+
         #endregion
 
         #region LOG SAFETY

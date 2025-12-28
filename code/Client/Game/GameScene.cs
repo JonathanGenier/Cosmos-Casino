@@ -21,7 +21,10 @@ public sealed partial class GameScene : SceneController
     /// </summary>
     public override void _Ready()
     {
-        ConsoleLog.System("GameController", "Ready");
+        using (ConsoleLog.SystemScope(nameof(GameScene)))
+        {
+
+        }
     }
 
     #endregion
