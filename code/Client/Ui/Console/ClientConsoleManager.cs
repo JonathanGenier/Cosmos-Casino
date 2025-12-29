@@ -31,7 +31,7 @@ public sealed partial class ClientConsoleManager(ClientBootstrap bootstrap) : Cl
     {
         using (ConsoleLog.SystemScope(nameof(ClientConsoleManager)))
         {
-            _consoleUi = AddOwnedNode(GD.Load<PackedScene>(UiPaths.Console).Instantiate<ConsoleUi>());
+            _consoleUi = AddOwnedNode(GD.Load<PackedScene>(UiPaths.Console).Instantiate<ConsoleUi>(), nameof(ConsoleUi));
             _consoleUi.Toggle();
             _consoleAdapter = new ConsoleAdapter(_consoleUi, CoreServices.ConsoleManager);
 

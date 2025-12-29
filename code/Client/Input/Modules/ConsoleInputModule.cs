@@ -6,7 +6,7 @@ using Godot;
 /// debug intent signals through the <see cref="InputManager"/> without
 /// performing any UI or gameplay logic directly.
 /// </summary>
-public sealed class ConsoleInputModule : IInputModule
+public sealed class ConsoleInputModule : IProcessInputModule
 {
     #region FIELDS
 

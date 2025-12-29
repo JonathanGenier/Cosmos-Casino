@@ -1,6 +1,7 @@
 using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Services;
 using Godot;
+using System;
 
 /// <summary>
 /// Container for all client-side services and presentation-layer systems.
@@ -48,6 +49,16 @@ public sealed partial class ClientServices : Node
     /// </summary>
     public UiManager UiManager { get; private set; }
 
+    /// <summary>
+    /// Scene-scoped camera coordination manager.
+    /// <see cref="CameraManager"/> is instantiated only while a game session
+    /// is active and is attached directly to the active game scene.
+    /// This manager bridges high-level camera input intent to the
+    /// scene-level <see cref="CameraRig"/>, without owning camera
+    /// infrastructure or scene hierarchy.
+    /// </summary>
+    public CameraManager CameraManager { get; private set; }
+
     #endregion
 
     #region METHODS
@@ -57,36 +68,120 @@ public sealed partial class ClientServices : Node
     /// Child nodes created here are guaranteed to be part of the scene tree
     /// before other client systems begin processing.
     /// </summary>
+    /// <inheritdoc/>
     public override void _Ready()
     {
         using (ConsoleLog.SystemScope(nameof(ClientServices)))
         {
-            InputManager = AddService(new InputManager(_bootstrap));
-            UiManager = AddService(new UiManager(_bootstrap));
+            InputManager = AddService(new InputManager(_bootstrap), nameof(InputManager));
+            UiManager = AddService(new UiManager(_bootstrap), nameof(UiManager));
         }
     }
 
     /// <summary>
-    /// Adds a client-side service node to the scene tree and returns it.
-    /// This helper method centralizes service attachment logic, ensuring
-    /// that all managed client systems are consistently added as children
-    /// of this node and reducing the risk of lifecycle or ownership errors.
+    /// Initializes client-side systems that are scoped to an active game session.
+    /// This method is called when the application transitions into
+    /// <see cref="AppState.Game"/> and the game scene has been instantiated
+    /// and added to the scene tree.
+    /// Scene-scoped managers created here are attached directly to the
+    /// provided scene node and are expected to be destroyed automatically
+    /// when the scene is unloaded.
+    /// </summary>
+    /// <param name="scene">
+    /// Root node of the active game scene to which scene-scoped services
+    /// should be attached.
+    /// </param>
+    public void StartGame(Node scene)
+    {
+        ConsoleLog.System(nameof(ClientServices), "Starting game...");
+
+        if (CameraManager != null)
+        {
+            ConsoleLog.Warning(nameof(ClientServices), $"{nameof(CameraManager)} already exists. Skipping creation.");
+            return;
+        }
+
+        CameraManager = AddServiceToScene(scene, new CameraManager(_bootstrap), nameof(CameraManager));
+    }
+
+    /// <summary>
+    /// Cleans up references to scene-scoped client services when a game
+    /// session ends.
+    /// This method is invoked when leaving <see cref="AppState.Game"/>.
+    /// Scene-owned nodes are expected to be freed automatically as part
+    /// of scene teardown; this method only clears internal references
+    /// held by <see cref="ClientServices"/>.
+    /// </summary>
+    public void EndGame()
+    {
+        CameraManager = null;
+    }
+
+    /// <summary>
+    /// Attaches a client-side service node to the <see cref="ClientServices"/>
+    /// container and returns the attached instance.
+    /// Services added through this method are considered application-scoped
+    /// and persist for the lifetime of the client layer, surviving scene
+    /// transitions.
     /// </summary>
     /// <typeparam name="T">
     /// Concrete type of the service node being added.
     /// </typeparam>
-    /// <param name="node">
-    /// Instance of the service node to attach to the scene tree.
+    /// <param name="service">
+    /// Instance of the service node to attach to the client services container.
+    /// </param>
+    /// <param name="name">
+    /// Node name to assign to the service within the scene tree.
     /// </param>
     /// <returns>
-    /// The same node instance after it has been added as a child.
+    /// The same service instance after it has been added as a child node.
     /// </returns>
-    private T AddService<T>(T node)
+    private T AddService<T>(T service, string name)
         where T : Node
     {
-        AddChild(node);
-        return node;
+        service.Name = name;
+        AddChild(service);
+        return service;
     }
 
+    /// <summary>
+    /// Attaches a client-side service node directly to a scene node and
+    /// returns the attached instance.
+    /// This helper is intended for services whose lifetime is bound to
+    /// a specific scene (e.g. game-session managers such as camera or
+    /// audio controllers), rather than the application as a whole.
+    /// The target scene must already be part of the scene tree at the
+    /// time of attachment; otherwise an exception is thrown.
+    /// </summary>
+    /// <typeparam name="T">
+    /// Concrete type of the service node being added.
+    /// </typeparam>
+    /// <param name="scene">
+    /// Scene node that will own the service for its lifetime.
+    /// </param>
+    /// <param name="service">
+    /// Instance of the service node to attach.
+    /// </param>
+    /// <param name="name">
+    /// Node name to assign to the service within the scene.
+    /// </param>
+    /// <returns>
+    /// The same service instance after it has been attached to the scene.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if the target scene is not yet part of the scene tree.
+    /// </exception>
+    private T AddServiceToScene<T>(Node scene, T service, string name)
+        where T : Node
+    {
+        if (!scene.IsInsideTree())
+        {
+            throw new InvalidOperationException("Scene must be in tree before attaching services.");
+        }
+
+        service.Name = name;
+        scene.AddChild(service);
+        return service;
+    }
     #endregion
 }

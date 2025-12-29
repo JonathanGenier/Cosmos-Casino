@@ -12,4 +12,14 @@ public enum InputPhase
     /// for developer tools, diagnostics, and non-gameplay controls.
     /// </summary>
     Debug = 0,
+
+    /// <summary>
+    /// Input phase reserved for camera-related input intent.
+    /// Modules in this phase are responsible for detecting player camera controls
+    /// such as movement, rotation, and zoom, and emitting semantic camera intent
+    /// without directly manipulating camera state.
+    /// Camera input is processed after debug and system-level input, but before
+    /// gameplay and UI interaction phases.
+    /// </summary>
+    Camera = 1,
 }

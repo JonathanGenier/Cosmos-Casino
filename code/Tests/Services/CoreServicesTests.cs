@@ -48,7 +48,7 @@ namespace CosmosCasino.Tests.Services
         public void StartNewGame_WhenGameManagerIsNull_ShouldInitializeGameManager()
         {
             // Act
-            _coreServices!.StartNewGame();
+            _coreServices!.StartGame();
 
             // Assert
             Assert.That(_coreServices!.GameManager, Is.Not.Null);
@@ -58,7 +58,7 @@ namespace CosmosCasino.Tests.Services
         public void StartNewGame_WhenGameManagerIsNull_ShouldReturnTrue()
         {
             // Act
-            var result = _coreServices!.StartNewGame();
+            var result = _coreServices!.StartGame();
 
             // Assert
             Assert.That(result, Is.True);
@@ -69,22 +69,22 @@ namespace CosmosCasino.Tests.Services
         public void StartNewGame_WhenGameAlreadyStarted_ThrowsInvalidOperationException_InDebug()
         {
             // Arrange
-            _coreServices!.StartNewGame();
+            _coreServices!.StartGame();
 
             // Assert
-            Assert.That(() => _coreServices!.StartNewGame(), Throws.TypeOf<InvalidOperationException>());
+            Assert.That(() => _coreServices!.StartGame(), Throws.TypeOf<InvalidOperationException>());
         }
 #endif
 
 #if !DEBUG
         [Test]
-        public void StartNewGame_WhenGameAlreadyStarted_ReturnFalse_InRelease()
+        public void StartGame_WhenGameAlreadyStarted_ReturnFalse_InRelease()
         {
             // Arrange
-            _coreServices!.StartNewGame();
+            _coreServices!.StartGame();
 
             // Assert
-            Assert.That(() => _coreServices!.StartNewGame(), Is.False);
+            Assert.That(() => _coreServices!.StartGame(), Is.False);
         }
 #endif
 
@@ -96,7 +96,7 @@ namespace CosmosCasino.Tests.Services
         public void EndGame_WhenGameExists_ShouldSetGameManagerToNull()
         {
             // Arrange
-            _coreServices!.StartNewGame();
+            _coreServices!.StartGame();
 
             // Act
             _coreServices!.EndGame();
@@ -109,7 +109,7 @@ namespace CosmosCasino.Tests.Services
         public void EndGame_WhenGameExists_ShouldReturnTrue()
         {
             // Arrange
-            _coreServices!.StartNewGame();
+            _coreServices!.StartGame();
 
             // Act
             var result = _coreServices!.EndGame();

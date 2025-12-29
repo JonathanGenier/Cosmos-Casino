@@ -4,7 +4,7 @@
 /// and reporting semantic input intent, but must not perform gameplay,
 /// UI, or application logic directly.
 /// </summary>
-public interface IInputModule
+public interface IProcessInputModule
 {
     /// <summary>
     /// Execution phase that determines when this module is processed

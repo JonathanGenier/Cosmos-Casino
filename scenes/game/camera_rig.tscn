@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://b50cildorh28g"]
+
+[ext_resource type="Script" uid="uid://djppibvolwa7q" path="res://code/Client/Camera/CameraRig.cs" id="1_ys8f4"]
+
+[node name="Camera_Rig" type="Node3D"]
+script = ExtResource("1_ys8f4")
+
+[node name="Camera_Socket" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0)
+
+[node name="Camera" type="Camera3D" parent="Camera_Socket"]

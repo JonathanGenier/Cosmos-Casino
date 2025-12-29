@@ -23,9 +23,9 @@ public sealed partial class UiManager(ClientBootstrap bootstrap) : ClientManager
     /// <inheritdoc/>
     public override void _Ready()
     {
-        using (ConsoleLog.SystemScope("UiManager"))
+        using (ConsoleLog.SystemScope(nameof(UiManager)))
         {
-            _clientConsoleManager = AddOwnedNode(new ClientConsoleManager(Bootstrap));
+            _clientConsoleManager = AddOwnedNode(new ClientConsoleManager(Bootstrap), nameof(ClientConsoleManager));
         }
     }
 

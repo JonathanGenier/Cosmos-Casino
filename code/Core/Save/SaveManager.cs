@@ -74,9 +74,9 @@ namespace CosmosCasino.Core.Save
 
             if (_participants.Contains(participant))
             {
-                ConsoleLog.Warning("Save", "Participant is already registered to SaveManager. No consequences, just a useless call.");
+                ConsoleLog.Warning(nameof(SaveManager), $"Participant is already registered to {nameof(SaveManager)}. No consequences, just a useless call.");
 #if DEBUG
-                throw new InvalidOperationException("Participant is already registered to SaveManager.");
+                throw new InvalidOperationException($"Participant is already registered to {nameof(SaveManager)}.");
 #else
                 return;
 #endif
