@@ -54,26 +54,25 @@ public abstract partial class ClientManager : Node
     #region METHODS
 
     /// <summary>
-    /// Adds a node owned by this manager to the scene tree and
-    /// returns the same instance for fluent initialization.
-    /// <para>
-    /// This helper exists to make ownership explicit and to
-    /// standardize how managers attach long-lived child nodes
-    /// such as UI controllers or sub-managers.
-    /// </para>
+    /// Adds a node as a managed child of this manager, assigns its name,
+    /// and returns the node for fluent initialization.
     /// </summary>
     /// <typeparam name="T">
-    /// Concrete node type being added.
+    /// Type of node being added.
     /// </typeparam>
     /// <param name="node">
-    /// Node instance to attach as a child of this manager.
+    /// Node instance to add as a child.
+    /// </param>
+    /// <param name="name">
+    /// Name to assign to the node in the scene tree.
     /// </param>
     /// <returns>
-    /// The same node instance after it has been added to the scene tree.
+    /// The added node instance.
     /// </returns>
-    protected T AddOwnedNode<T>(T node)
+    protected T AddOwnedNode<T>(T node, string name)
         where T : Node
     {
+        node.Name = name;
         AddChild(node);
         return node;
     }

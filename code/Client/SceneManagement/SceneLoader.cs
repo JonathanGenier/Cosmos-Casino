@@ -16,33 +16,38 @@ public static class SceneLoader
     #region METHODS
 
     /// <summary>
-    /// Loads and transitions to a new scene at the specified path.
+    /// Loads and activates a new scene at the specified path.
+    /// <para>
+    /// The current scene is safely removed, the new scene is instantiated,
+    /// and core and client service dependencies are injected before the scene
+    /// becomes active.
+    /// </para>
     /// </summary>
     /// <param name="path">
-    /// Resource path to the scene to load (e.g. <c>"res://Scenes/Game.tscn"</c>).
+    /// Resource path of the scene to load.
     /// </param>
     /// <param name="coreServices">
-    /// Core services container providing access to game-level systems.
+    /// Core services shared across all application layers.
     /// </param>
     /// <param name="clientServices">
-    /// Client services container providing access to presentation-layer systems.
+    /// Client-side services required by presentation-layer systems.
     /// </param>
     /// <returns>
-    /// <see langword="true"/> if the scene was successfully loaded and attached;
-    /// otherwise, <see langword="false"/>.
+    /// The instantiated root node of the loaded scene, or <c>null</c>
+    /// if the scene could not be loaded.
     /// </returns>
     /// <exception cref="ArgumentException">
-    /// Thrown in debug builds if <paramref name="path"/> is null or empty.
+    /// Thrown in debug builds if the scene path is null or empty.
     /// </exception>
-    public static bool Load(string path, CoreServices coreServices, ClientServices clientServices)
+    public static Node Load(string path, CoreServices coreServices, ClientServices clientServices)
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            ConsoleLog.Error("Scene", "Scene path is null or empty.");
+            ConsoleLog.Error(nameof(SceneLoader), "Scene path is null or empty.");
 #if DEBUG
             throw new ArgumentException("Scene path is null or empty.", nameof(path));
 #else
-            return false;
+            return null;
 #endif
         }
 
@@ -50,16 +55,16 @@ public static class SceneLoader
 
         if (tree == null)
         {
-            ConsoleLog.Error("Scene", "SceneTree not available.");
-            return false;
+            ConsoleLog.Error(nameof(SceneLoader), $"{nameof(SceneTree)} not available.");
+            return null;
         }
 
         var packedScene = GD.Load<PackedScene>(path);
 
         if (packedScene == null)
         {
-            ConsoleLog.Error("Scene", $"Failed to load scene at path: {path}");
-            return false;
+            ConsoleLog.Error(nameof(SceneLoader), $"Failed to load scene at {path}");
+            return null;
         }
 
         // Remove current scene
@@ -75,14 +80,14 @@ public static class SceneLoader
         }
         else
         {
-            ConsoleLog.Warning("Scene", "Loaded scene does not inherit SceneController.");
+            ConsoleLog.Warning(nameof(SceneLoader), $"Loaded scene does not inherit {nameof(SceneController)}.");
         }
 
         // Attach
         tree.Root.AddChild(instance);
         tree.CurrentScene = instance;
 
-        return true;
+        return instance;
     }
 
 

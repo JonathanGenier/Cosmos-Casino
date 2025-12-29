@@ -9,7 +9,7 @@ using System.Collections.Generic;
 /// single emission surface for all input-related signals.
 /// </para>
 /// <para>
-/// Input logic itself is delegated to registered <see cref="IInputModule"/>
+/// Input logic itself is delegated to registered <see cref="IProcessInputModule"/>
 /// implementations, which are executed in a deterministic order based on their
 /// declared <see cref="InputPhase"/>.
 /// </para>
@@ -18,12 +18,8 @@ public sealed partial class InputManager(ClientBootstrap bootstrap) : ClientMana
 {
     #region FIELDS
 
-    /// <summary>
-    /// Ordered collection of input modules executed every frame.
-    /// Modules are sorted once during initialization based on their
-    /// <see cref="IInputModule.Phase"/> value.
-    /// </summary>
-    private readonly List<IInputModule> _modules = new();
+    private readonly List<IProcessInputModule> _processModules = new();
+    private readonly List<IUnhandledInputModule> _unhandledInputModules = new();
 
     #endregion
 
@@ -36,6 +32,33 @@ public sealed partial class InputManager(ClientBootstrap bootstrap) : ClientMana
     /// </summary>
     [Signal]
     public delegate void ToggleConsoleUiEventHandler();
+
+    /// <summary>
+    /// Emitted when a camera movement intent is detected.
+    /// </summary>
+    /// <param name="direction">
+    /// Normalized directional vector describing camera translation intent.
+    /// </param>
+    [Signal]
+    public delegate void MoveCameraEventHandler(Vector2 direction);
+
+    /// <summary>
+    /// Emitted when a camera rotation intent is detected.
+    /// </summary>
+    /// <param name="direction">
+    /// Rotation direction or magnitude.
+    /// </param>
+    [Signal]
+    public delegate void RotateCameraEventHandler(float direction);
+
+    /// <summary>
+    /// Emitted when a camera zoom intent is detected.
+    /// </summary>
+    /// <param name="direction">
+    /// Zoom direction or magnitude.
+    /// </param>
+    [Signal]
+    public delegate void ZoomCameraEventHandler(float direction);
 
     #endregion
 
@@ -50,8 +73,7 @@ public sealed partial class InputManager(ClientBootstrap bootstrap) : ClientMana
     {
         using (ConsoleLog.SystemScope(nameof(InputManager)))
         {
-            RegisterModules();
-            SortModules();
+            RegisterInputModules();
         }
     }
 
@@ -63,9 +85,25 @@ public sealed partial class InputManager(ClientBootstrap bootstrap) : ClientMana
     /// <param name="delta">Frame delta time in seconds.</param>
     public override void _Process(double delta)
     {
-        foreach (var module in _modules)
+        foreach (var module in _processModules)
         {
             module.Process(delta);
+        }
+    }
+
+    /// <summary>
+    /// Dispatches unhandled input events to all registered
+    /// unhandled input modules in deterministic phase order.
+    /// </summary>
+    /// <param name="event">
+    /// The unhandled input event received from the engine.
+    /// </param>
+    /// <inheritdoc/>
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        foreach (var module in _unhandledInputModules)
+        {
+            module.UnhandledInput(@event);
         }
     }
 
@@ -74,19 +112,29 @@ public sealed partial class InputManager(ClientBootstrap bootstrap) : ClientMana
     /// Module registration is intentionally centralized and occurs only once
     /// during initialization to ensure a stable and predictable input pipeline.
     /// </summary>
-    private void RegisterModules()
+    private void RegisterInputModules()
     {
-        _modules.Add(new ConsoleInputModule(this));
-    }
+        object[] modules =
+        {
+            new ConsoleInputModule(this),
+            new CameraInputModule(this),
+        };
 
-    /// <summary>
-    /// Sorts registered input modules by execution priority.
-    /// Lower <see cref="InputPhase"/> values are executed earlier in the frame.
-    /// This ordering is fixed after initialization and is not modified at runtime.
-    /// </summary>
-    private void SortModules()
-    {
-        _modules.Sort((a, b) => a.Phase.CompareTo(b.Phase));
+        foreach (var module in modules)
+        {
+            if (module is IProcessInputModule processInputModule)
+            {
+                _processModules.Add(processInputModule);
+            }
+
+            if (module is IUnhandledInputModule unhandledInputModule)
+            {
+                _unhandledInputModules.Add(unhandledInputModule);
+            }
+        }
+
+        _processModules.Sort((a, b) => a.Phase.CompareTo(b.Phase));
+        _unhandledInputModules.Sort((a, b) => a.Phase.CompareTo(b.Phase));
     }
 
     #endregion

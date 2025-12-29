@@ -50,7 +50,7 @@ public sealed partial class AppManager : Node
     {
         if (Instance != null)
         {
-            ConsoleLog.Warning("Application", "Multiple instances of AppManager detected. There should only be one instance. No consequences. Deplicate is QueueFree.");
+            ConsoleLog.Warning(nameof(AppManager), $"Multiple instances of {nameof(AppManager)} detected. There should only be one instance. No consequences. Duplicate is QueueFree.");
             QueueFree();
             return;
         }
@@ -108,10 +108,13 @@ public sealed partial class AppManager : Node
     }
 
     /// <summary>
-    /// Changes the current application state and triggers the corresponding
-    /// scene transition.
+    /// Transitions the application to a new high-level state.
+    /// This method coordinates scene changes and triggers
+    /// lifecycle hooks when entering or leaving the game state.
     /// </summary>
-    /// <param name="newState">Target application state.</param>
+    /// <param name="newState">
+    /// Target application state.
+    /// </param>
     public void ChangeState(AppState newState)
     {
         if (State == newState)
@@ -119,12 +122,52 @@ public sealed partial class AppManager : Node
             return;
         }
 
-        var success = ChangeScene(newState);
+        Node scene = ChangeScene(newState);
 
-        if (success)
+        if (scene == null)
         {
-            State = newState;
+            return;
         }
+
+        var previousState = State;
+        State = newState;
+
+        // Leaving Game
+        if (previousState == AppState.Game && newState != AppState.Game)
+        {
+            EndGame();
+        }
+
+        // Entering Game
+        if (previousState != AppState.Game && newState == AppState.Game)
+        {
+            StartGame(scene);
+        }
+    }
+
+    /// <summary>
+    /// Signals the start of a gameplay session.
+    /// Invokes core and client startup logic associated with
+    /// entering the game state.
+    /// </summary>
+    /// <param name="scene">
+    /// Root node of the newly loaded game scene.
+    /// </param>
+    public void StartGame(Node scene)
+    {
+        _core.StartGame();
+        _client.StartGame(scene);
+    }
+
+    /// <summary>
+    /// Signals the end of a gameplay session.
+    /// Invokes core and client teardown logic associated with
+    /// leaving the game state.
+    /// </summary>
+    public void EndGame()
+    {
+        _core.EndGame();
+        _client.EndGame();
     }
 
     /// <summary>
@@ -154,7 +197,7 @@ public sealed partial class AppManager : Node
     /// </para>
     /// </summary>
     /// <param name="state">Application state whose scene should be loaded.</param>
-    private bool ChangeScene(AppState state)
+    private Node ChangeScene(AppState state)
     {
         var path = GetScenePathForState(state);
         return SceneLoader.Load(path, _core, _client);
@@ -192,6 +235,7 @@ public sealed partial class AppManager : Node
         }
 
         _client = new ClientServices(_core);
+        _client.Name = nameof(ClientServices);
         AddChild(_client);
     }
 

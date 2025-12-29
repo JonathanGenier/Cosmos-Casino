@@ -56,21 +56,5 @@ public sealed partial class LoadingScene : SceneController
         );
     }
 
-    /// <summary>
-    /// Starts a new game session using the provided core services.
-    /// </summary>
-    private void StartNewGame()
-    {
-        var success = CoreServices.StartNewGame();
-
-        if (!success)
-        {
-            ConsoleLog.Error("Game", "Could not start a new game,");
-            return;
-        }
-
-        // Do something...
-    }
-
     #endregion
 }

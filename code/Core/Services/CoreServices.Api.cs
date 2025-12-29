@@ -53,7 +53,7 @@ namespace CosmosCasino.Core.Services
         /// Manages core game logic for an active game session.
         /// <para>
         /// This property is <c>null</c> when no game is running and is initialized
-        /// by calling <see cref="StartNewGame"/>. It is cleared when
+        /// by calling <see cref="StartGame"/>. It is cleared when
         /// <see cref="EndGame"/> is called.
         /// </para>
         /// </summary>
@@ -124,11 +124,12 @@ namespace CosmosCasino.Core.Services
         /// <exception cref="InvalidOperationException">
         /// Thrown if a game session is already active.
         /// </exception>
-        public bool StartNewGame()
+        public bool StartGame()
         {
+            ConsoleLog.System(nameof(CoreServices), "Starting game...");
             if (GameManager != null)
             {
-                ConsoleLog.Error("Game", "Cannot start a new game when a game has already started.");
+                ConsoleLog.Error(nameof(CoreServices), "Cannot start a new game when a game has already started.");
 
 #if DEBUG
                 throw new InvalidOperationException("Cannot start a new game when a game has already started.");
