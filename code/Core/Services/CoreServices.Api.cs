@@ -1,6 +1,7 @@
 using CosmosCasino.Core.Console;
 using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Game;
+using CosmosCasino.Core.Map;
 using CosmosCasino.Core.Save;
 using CosmosCasino.Core.Serialization;
 
@@ -41,6 +42,7 @@ namespace CosmosCasino.Core.Services
                 JsonSaveSerializer serializer = new();
                 SaveManager = new SaveManager(serializer, savePath);
                 ConsoleManager = new ConsoleManager();
+                MapManager = new MapManager();
                 _consoleManagerDisposable = ConsoleManager;
             }
         }
