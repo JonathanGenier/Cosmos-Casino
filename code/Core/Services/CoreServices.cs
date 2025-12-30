@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Map;
 using CosmosCasino.Core.Save;
 
 namespace CosmosCasino.Core.Services
@@ -30,6 +31,14 @@ namespace CosmosCasino.Core.Services
         /// </para>
         /// </summary>
         internal SaveManager SaveManager { get; init; }
+
+        /// <summary>
+        /// Provides access to the global <see cref="MapManager"/> responsible for
+        /// managing map cells, floors, structures, and furniture during gameplay.
+        /// This reference is initialized during core service setup and remains
+        /// immutable for the lifetime of the application.
+        /// </summary>
+        internal MapManager MapManager { get; init; }
 
         #endregion
     }
