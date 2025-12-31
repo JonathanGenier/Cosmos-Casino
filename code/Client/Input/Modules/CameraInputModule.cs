@@ -1,4 +1,5 @@
 using Godot;
+using System;
 
 /// <summary>
 /// Input module responsible for translating raw player input
@@ -9,20 +10,29 @@ public sealed class CameraInputModule : IProcessInputModule, IUnhandledInputModu
     #region FIELDS
 
     private readonly InputManager _input;
+    private Func<bool> _isCursorBlockedByUi;
 
     #endregion
 
     #region CONSTRUCTORS
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CameraInputModule"/>.
+    /// Initializes a new instance of the <see cref="CameraInputModule"/> and
+    /// wires required client-side services used to evaluate UI blocking
+    /// and dispatch camera-related input intents.
     /// </summary>
-    /// <param name="input">
-    /// Input manager through which camera intent signals are dispatched.
+    /// <param name="clientService">
+    /// Client service container used to provide UI state queries required
+    /// to determine whether camera input should be blocked.
     /// </param>
-    public CameraInputModule(InputManager input)
+    /// <param name="input">
+    /// Input manager through which camera movement, rotation, and zoom
+    /// intents are emitted.
+    /// </param>
+    public CameraInputModule(ClientServices clientService, InputManager input)
     {
         _input = input;
+        _isCursorBlockedByUi = () => clientService.UiManager.IsCursorBlockedByUi;
     }
 
     #endregion
@@ -65,6 +75,11 @@ public sealed class CameraInputModule : IProcessInputModule, IUnhandledInputModu
     /// <inheritdoc/>
     public void UnhandledInput(InputEvent @event)
     {
+        if (_isCursorBlockedByUi())
+        {
+            return;
+        }
+
         if (@event.IsActionPressed("camera_zoom_in"))
         {
             _input.EmitSignal(InputManager.SignalName.ZoomCamera, -1.0f);
