@@ -75,6 +75,7 @@ public sealed partial class ClientServices : Node
         {
             InputManager = AddService(new InputManager(_bootstrap), nameof(InputManager));
             UiManager = AddService(new UiManager(_bootstrap), nameof(UiManager));
+            CursorService.Initialize(this, buildableCollisionMask: CollisionLayers.Buildable, planeHeight: 0f);
         }
     }
 

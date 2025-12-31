@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cuywyvf5yx14o"]
 
-[ext_resource type="Script" uid="uid://ba82em046eywp" path="res://code/Client/Ui/Debug/ConsoleUi.cs" id="1_s12t8"]
+[ext_resource type="Script" uid="uid://ba82em046eywp" path="res://code/Client/Ui/Console/ConsoleUi.cs" id="1_s12t8"]
 
 [node name="ConsoleUi" type="Control" node_paths=PackedStringArray("_textLog", "_lineEdit")]
 layout_mode = 3

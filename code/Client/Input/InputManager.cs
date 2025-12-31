@@ -117,7 +117,7 @@ public sealed partial class InputManager(ClientBootstrap bootstrap) : ClientMana
         object[] modules =
         {
             new ConsoleInputModule(this),
-            new CameraInputModule(this),
+            new CameraInputModule(ClientServices, this),
         };
 
         foreach (var module in modules)
