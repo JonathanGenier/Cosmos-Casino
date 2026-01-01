@@ -23,12 +23,15 @@ public sealed partial class MainMenuScene : SceneController
     {
         using (ConsoleLog.SystemScope(nameof(MainMenuScene)))
         {
-            _playButton = GetNode<Button>("Button_Play");
+            _playButton = GetNode<Button>("Menu/PlayButton");
             _playButton.Pressed += OnPlayPressed;
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Disconnects UI signal bindings when this node is removed from the
+    /// scene tree to prevent dangling references and duplicate callbacks.
+    /// </summary>
     public override void _ExitTree()
     {
         _playButton.Pressed -= OnPlayPressed;
