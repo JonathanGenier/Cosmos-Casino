@@ -60,6 +60,24 @@ public sealed partial class InputManager(ClientBootstrap bootstrap) : ClientMana
     [Signal]
     public delegate void ZoomCameraEventHandler(float direction);
 
+    /// <summary>
+    /// Emitted when the primary interaction input is pressed.
+    /// This signal represents the start of a primary interaction gesture
+    /// and is consumed by systems responsible for interpreting world
+    /// interaction intent.
+    /// </summary>
+    [Signal]
+    public delegate void PrimaryInteractionPressedEventHandler();
+
+    /// <summary>
+    /// Emitted when the primary interaction input is released.
+    /// This signal represents the end of a primary interaction gesture
+    /// and is consumed by systems responsible for finalizing world
+    /// interaction intent.
+    /// </summary>
+    [Signal]
+    public delegate void PrimaryInteractionReleasedEventHandler();
+
     #endregion
 
     #region METHODS
@@ -118,6 +136,7 @@ public sealed partial class InputManager(ClientBootstrap bootstrap) : ClientMana
         {
             new ConsoleInputModule(this),
             new CameraInputModule(ClientServices, this),
+            new InteractionInputModule(ClientServices, this),
         };
 
         foreach (var module in modules)

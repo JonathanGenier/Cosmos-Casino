@@ -64,7 +64,6 @@ public sealed class CameraInputModule : IProcessInputModule, IUnhandledInputModu
         _input.EmitSignal(InputManager.SignalName.RotateCamera, rotateDirection);
     }
 
-
     /// <summary>
     /// Processes discrete camera-related input actions that occur
     /// during the unhandled input phase, such as zooming.

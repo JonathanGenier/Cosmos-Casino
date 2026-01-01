@@ -2,6 +2,7 @@ using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Services;
 using Godot;
 using System;
+using static System.Formats.Asn1.AsnWriter;
 
 /// <summary>
 /// Container for all client-side services and presentation-layer systems.
@@ -59,6 +60,15 @@ public sealed partial class ClientServices : Node
     /// </summary>
     public CameraManager CameraManager { get; private set; }
 
+    /// <summary>
+    /// Manages primary world interaction gestures and routes them to the
+    /// currently active interaction tool (e.g. selection, build).
+    /// This manager owns the gesture lifecycle (start, update, end, cancel)
+    /// but does not interpret gameplay meaning, issue commands, or manage
+    /// global input such as right-click or escape.
+    /// </summary>
+    public InteractionManager InteractionManager { get; private set; }
+
     #endregion
 
     #region METHODS
@@ -75,7 +85,6 @@ public sealed partial class ClientServices : Node
         {
             InputManager = AddService(new InputManager(_bootstrap), nameof(InputManager));
             UiManager = AddService(new UiManager(_bootstrap), nameof(UiManager));
-            CursorService.Initialize(this, buildableCollisionMask: CollisionLayers.Buildable, planeHeight: 0f);
         }
     }
 
@@ -103,6 +112,8 @@ public sealed partial class ClientServices : Node
         }
 
         CameraManager = AddServiceToScene(scene, new CameraManager(_bootstrap), nameof(CameraManager));
+        CursorService.Initialize(this, buildableCollisionMask: CollisionLayers.Buildable, planeHeight: 0f);
+        InteractionManager = AddServiceToScene(scene, new InteractionManager(_bootstrap), nameof(InteractionManager));
     }
 
     /// <summary>

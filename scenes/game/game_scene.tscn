@@ -3,15 +3,19 @@
 [ext_resource type="Script" uid="uid://dtn2emvumr8go" path="res://code/Client/Game/GameScene.cs" id="1_uwrxv"]
 [ext_resource type="PackedScene" uid="uid://b50cildorh28g" path="res://scenes/game/camera_rig.tscn" id="2_omorx"]
 [ext_resource type="PackedScene" uid="uid://cj1ati2232xbp" path="res://scenes/debug/cursor_debug_visializer.tscn" id="3_ydf3n"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_omorx"]
+[ext_resource type="PackedScene" uid="uid://cjwavg2v71lgc" path="res://scenes/game/spaceship_template.tscn" id="4_6hqhf"]
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1_uwrxv")
 
 [node name="Camera_Rig" parent="." instance=ExtResource("2_omorx")]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_omorx")
-
 [node name="CursorDebugVisializer" parent="." instance=ExtResource("3_ydf3n")]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7071067, 0.4999999, 0.4999999, 0, 0.7071067, -0.7071067, -0.7071067, 0.4999999, 0.4999999, 0, 0, 0)
+
+[node name="Spaceship Template" parent="." instance=ExtResource("4_6hqhf")]
+
+[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.7071067, -0.4999999, -0.4999999, 0, 0.7071067, -0.7071067, 0.7071067, 0.4999999, 0.4999999, 0, 0, 0)
