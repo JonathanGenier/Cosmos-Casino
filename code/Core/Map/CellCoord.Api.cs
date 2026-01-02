@@ -4,24 +4,24 @@ namespace CosmosCasino.Core.Map
     /// Immutable value type representing a 3D grid coordinate used to
     /// identify a single cell within the map.
     /// </summary>
-    internal readonly struct CellCoord : IEquatable<CellCoord>
+    public readonly struct CellCoord : IEquatable<CellCoord>
     {
         #region FIELDS
 
         /// <summary>
         /// X-axis coordinate of the cell.
         /// </summary>
-        internal readonly int X;
+        public readonly int X;
 
         /// <summary>
         /// Y-axis coordinate of the cell.
         /// </summary>
-        internal readonly int Y;
+        public readonly int Y;
 
         /// <summary>
         /// Z-axis (layer or elevation) coordinate of the cell.
         /// </summary>
-        internal readonly int Z;
+        public readonly int Z;
 
         #endregion
 
@@ -34,7 +34,7 @@ namespace CosmosCasino.Core.Map
         /// <param name="x">X-axis coordinate.</param>
         /// <param name="y">Y-axis coordinate.</param>
         /// <param name="z">Z-axis (layer) coordinate.</param>
-        internal CellCoord(int x, int y, int z)
+        public CellCoord(int x, int y, int z)
         {
             X = x;
             Y = y;

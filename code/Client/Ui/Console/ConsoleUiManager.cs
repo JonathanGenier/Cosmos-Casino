@@ -9,7 +9,7 @@ using Godot;
 /// Bootstrap context providing access to core and client service collections
 /// required for console initialization.
 /// </param>
-public sealed partial class ClientConsoleManager(ClientBootstrap bootstrap) : ClientManager(bootstrap)
+public sealed partial class ConsoleUiManager(ClientBootstrap bootstrap) : ClientManager(bootstrap)
 {
     #region FIELDS
 
@@ -29,7 +29,7 @@ public sealed partial class ClientConsoleManager(ClientBootstrap bootstrap) : Cl
     /// <inheritdoc/>
     public override void _Ready()
     {
-        using (ConsoleLog.SystemScope(nameof(ClientConsoleManager)))
+        using (ConsoleLog.SystemScope(nameof(ConsoleUiManager)))
         {
             _consoleUi = AddOwnedNode(GD.Load<PackedScene>(UiPaths.Console).Instantiate<ConsoleUi>(), nameof(ConsoleUi));
             _consoleUi.Toggle();

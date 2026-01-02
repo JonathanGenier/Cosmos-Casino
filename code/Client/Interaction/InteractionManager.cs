@@ -22,6 +22,7 @@ public sealed partial class InteractionManager(ClientBootstrap bootstrap)
     private bool _isPrimaryHeld;
     private BuildInteractionHandler _buildHandler;
     private SelectionInteractionHandler _selectionHandler;
+    private BuildContext BuildContext => ClientServices.BuildContext;
 
     #endregion
 
@@ -53,6 +54,19 @@ public sealed partial class InteractionManager(ClientBootstrap bootstrap)
             InteractionTool.Build => _buildHandler,
             _ => throw new ArgumentOutOfRangeException(nameof(tool))
         };
+    }
+
+    /// <summary>
+    /// Resets the active interaction tool to the default selection mode.
+    /// <para>
+    /// If a primary interaction gesture is currently in progress, the
+    /// active handler is notified of cancellation before the tool switch
+    /// is applied.
+    /// </para>
+    /// </summary>
+    public void ResetTool()
+    {
+        SetTool(InteractionTool.Selection); // Default
     }
 
     /// <summary>
@@ -164,7 +178,7 @@ public sealed partial class InteractionManager(ClientBootstrap bootstrap)
     /// </summary>
     private void InitializeHandlers()
     {
-        _buildHandler = new BuildInteractionHandler();
+        _buildHandler = new BuildInteractionHandler(BuildContext);
         _selectionHandler = new SelectionInteractionHandler();
     }
 
