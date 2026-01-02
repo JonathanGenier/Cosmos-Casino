@@ -207,7 +207,7 @@ namespace CosmosCasino.Tests.Map
         public void TrySetFloor_ShouldSetFloorAndReturnTrue_WhenDifferentFloorExists()
         {
             // Arrange
-            _mapCell!.TrySetFloor(FloorType.Wood);
+            _mapCell!.TrySetFloor(FloorType.Carbon);
 
             // Act
             var result = _mapCell!.TrySetFloor(FloorType.Metal);

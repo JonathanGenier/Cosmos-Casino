@@ -13,4 +13,10 @@ public static class UiPaths
     /// Scene path for the debug log console UI.
     /// </summary>
     public const string Console = "res://scenes/ui/console_ui.tscn";
+
+    /// <summary>
+    /// Resource path to the build-mode UI scene used during active
+    /// gameplay for selecting build intents.
+    /// </summary>
+    public const string Build = "res://scenes/game/build/build_ui.tscn";
 }

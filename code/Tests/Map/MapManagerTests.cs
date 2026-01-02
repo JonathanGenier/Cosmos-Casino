@@ -144,7 +144,7 @@ namespace CosmosCasino.Tests.Map
         {
             // Arrange
             var coord = new CellCoord(1, 1, 1);
-            _mapManager!.TrySetFloor(coord, FloorType.Wood);
+            _mapManager!.TrySetFloor(coord, FloorType.Carbon);
 
             // Act
             var result = _mapManager!.TrySetFloor(coord, FloorType.Metal);

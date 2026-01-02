@@ -1,7 +1,6 @@
 using CosmosCasino.Core.Console.Logging;
 using Godot;
 
-
 /// <summary>
 /// Central coordinator for client-side user interface systems.
 /// <see cref="UiManager"/> acts as the composition root for UI controllers,
@@ -15,8 +14,9 @@ public sealed partial class UiManager(ClientBootstrap bootstrap) : ClientManager
 {
     #region FIELDS
 
-    private ClientConsoleManager _clientConsoleManager;
     private Viewport _viewport;
+    private ConsoleUiManager _consoleUiManager;
+    private BuildUiManager _buildUiManager;
 
     #endregion
 
@@ -34,6 +34,7 @@ public sealed partial class UiManager(ClientBootstrap bootstrap) : ClientManager
     public bool IsCursorBlockedByUi => _viewport.GuiGetHoveredControl() != null;
 
     #endregion
+
     #region METHODS
 
     /// <summary>
@@ -49,8 +50,22 @@ public sealed partial class UiManager(ClientBootstrap bootstrap) : ClientManager
         using (ConsoleLog.SystemScope(nameof(UiManager)))
         {
             _viewport = GetViewport();
-            _clientConsoleManager = AddOwnedNode(new ClientConsoleManager(Bootstrap), nameof(ClientConsoleManager));
+            _consoleUiManager = AddOwnedNode(new ConsoleUiManager(Bootstrap), nameof(ConsoleUiManager));
         }
+    }
+
+    /// <summary>
+    /// Instantiates and attaches UI controllers that are scoped to an
+    /// active game session.
+    /// This method is invoked when the client transitions into gameplay
+    /// and is responsible for loading UI systems that depend on an
+    /// initialized game world (such as build-mode interfaces).
+    /// Scene-scoped UI managers created here are expected to be disposed
+    /// automatically when the game session ends.
+    /// </summary>
+    public void LoadGameUI()
+    {
+        _buildUiManager = AddOwnedNode(new BuildUiManager(Bootstrap), nameof(BuildUiManager));
     }
 
     #endregion

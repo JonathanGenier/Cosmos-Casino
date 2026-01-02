@@ -69,6 +69,14 @@ public sealed partial class ClientServices : Node
     /// </summary>
     public InteractionManager InteractionManager { get; private set; }
 
+    /// <summary>
+    /// Shared client-side build context representing the currently selected
+    /// build intent.
+    /// This context is updated by UI-driven systems and consumed by
+    /// interaction handlers to derive concrete build commands.
+    /// </summary>
+    public BuildContext BuildContext { get; private set; }
+
     #endregion
 
     #region METHODS
@@ -113,7 +121,9 @@ public sealed partial class ClientServices : Node
 
         CameraManager = AddServiceToScene(scene, new CameraManager(_bootstrap), nameof(CameraManager));
         CursorService.Initialize(this, buildableCollisionMask: CollisionLayers.Buildable, planeHeight: 0f);
+        BuildContext = new BuildContext();
         InteractionManager = AddServiceToScene(scene, new InteractionManager(_bootstrap), nameof(InteractionManager));
+        UiManager.LoadGameUI();
     }
 
     /// <summary>
