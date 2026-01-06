@@ -1,11 +1,11 @@
-namespace CosmosCasino.Core.Map
+namespace CosmosCasino.Core.Structure
 {
     /// <summary>
     /// Identifies the type of structural element occupying a map cell.
     /// Structures represent permanent or semi-permanent constructions
     /// that block movement or define spaces.
     /// </summary>
-    internal enum StructureType
+    public enum StructureType
     {
         /// <summary>
         /// A solid structure that fully blocks passage.

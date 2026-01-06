@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Build;
 using CosmosCasino.Core.Console;
 using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Game;
@@ -44,6 +45,7 @@ namespace CosmosCasino.Core.Services
                 ConsoleManager = new ConsoleManager();
                 MapManager = new MapManager();
                 _consoleManagerDisposable = ConsoleManager;
+                BuildManager = new BuildManager(MapManager);
             }
         }
 
@@ -66,6 +68,13 @@ namespace CosmosCasino.Core.Services
         /// and execute debug commands.
         /// </summary>
         public ConsoleManager ConsoleManager { get; private set; }
+
+        /// <summary>
+        /// Provides access to the core build manager responsible for
+        /// validating and executing build intents against the
+        /// authoritative game state.
+        /// </summary>
+        public BuildManager BuildManager { get; private set; }
 
         #endregion
 

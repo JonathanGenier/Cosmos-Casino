@@ -1,14 +1,16 @@
-namespace CosmosCasino.Core.Map
+using CosmosCasino.Core.Map.Cell;
+
+namespace CosmosCasino.Core.Map.Grid
 {
     /// <summary>
     /// Manages a sparse collection of map cells indexed by 3D coordinates.
     /// Cells are created on demand and removed automatically when empty.
     /// </summary>
-    internal sealed class MapGrid
+    public sealed partial class MapGrid
     {
         #region FIELDS
 
-        private readonly Dictionary<CellCoord, MapCell> _cells = new();
+        private readonly Dictionary<MapCellCoord, MapCell> _cells = new();
 
         #endregion
 
@@ -30,7 +32,7 @@ namespace CosmosCasino.Core.Map
         /// <returns>
         /// The existing <see cref="MapCell"/> if found; otherwise <c>null</c>.
         /// </returns>
-        internal MapCell? GetCell(CellCoord coord)
+        internal MapCell? GetCell(MapCellCoord coord)
         {
             _cells.TryGetValue(coord, out var cell);
             return cell;
@@ -43,7 +45,7 @@ namespace CosmosCasino.Core.Map
         /// <returns>
         /// A non-null <see cref="MapCell"/> associated with the given coordinate.
         /// </returns>
-        internal MapCell GetOrCreateCell(CellCoord coord)
+        internal MapCell GetOrCreateCell(MapCellCoord coord)
         {
             if (!_cells.TryGetValue(coord, out var cell))
             {
@@ -62,7 +64,7 @@ namespace CosmosCasino.Core.Map
         /// <returns>
         /// <c>true</c> if the cell was removed; otherwise <c>false</c>.
         /// </returns>
-        internal bool TryRemoveCell(CellCoord coord)
+        internal bool TryRemoveCell(MapCellCoord coord)
         {
             if (!_cells.TryGetValue(coord, out var cell))
             {

@@ -178,7 +178,7 @@ public sealed partial class InteractionManager(ClientBootstrap bootstrap)
     /// </summary>
     private void InitializeHandlers()
     {
-        _buildHandler = new BuildInteractionHandler(BuildContext);
+        _buildHandler = new BuildInteractionHandler(ClientServices.ClientBuildManager, BuildContext);
         _selectionHandler = new SelectionInteractionHandler();
     }
 

@@ -1,6 +1,11 @@
+using CosmosCasino.Core.Build;
 using CosmosCasino.Core.Console.Logging;
-using CosmosCasino.Core.Map;
-using System.Numerics;
+using CosmosCasino.Core.Floor;
+using CosmosCasino.Core.Map.Cell;
+using CosmosCasino.Core.Map.Grid;
+using Godot;
+using System;
+using System.Collections.Generic;
 
 /// <summary>
 /// Interaction handler responsible for interpreting primary interaction
@@ -14,21 +19,26 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     #region FIELDS
 
     private BuildContext _buildContext;
+    private ClientBuildManager _clientBuildManager;
 
     #endregion
 
     #region CONSTRUCTOR
 
     /// <summary>
-    /// Initializes a new build interaction handler bound to the
-    /// specified build context.
+    /// Initializes a new interaction handler responsible for translating
+    /// player input into build-related actions using the provided client
+    /// build manager and active build context.
     /// </summary>
-    /// <param name="buildContext">
-    /// Shared build context containing the current build intent
-    /// selected by the user.
+    /// <param name="clientBuildManager">
+    /// Client-side build manager used to issue build requests.
     /// </param>
-    public BuildInteractionHandler(BuildContext buildContext)
+    /// <param name="buildContext">
+    /// Context describing the current build mode, selection, and targeting state.
+    /// </param>
+    public BuildInteractionHandler(ClientBuildManager clientBuildManager, BuildContext buildContext)
     {
+        _clientBuildManager = clientBuildManager;
         _buildContext = buildContext;
     }
 
@@ -79,38 +89,21 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// </param>
     public void OnPrimaryGestureEnded(CursorContext start, CursorContext end)
     {
-        // 1. No build intent selected → do nothing
-        if (!_buildContext.HasIntent)
+        if (!_buildContext.HasIntent || !end.IsValid)
         {
             return;
         }
 
-        // 2. Invalid cursor resolution → do nothing
-        if (!end.IsValid)
+        var cells = GetCellsBetween(start.WorldPosition, end.WorldPosition);
+
+        if (cells.Count == 0)
         {
             return;
         }
 
-        // 3. Resolve world position → cell
-        // (Replace this with your actual grid conversion logic)
-        CellCoord cell = MapGridMath.WorldToCell(
-            end.WorldPosition.X,
-            end.WorldPosition.Y,
-            end.WorldPosition.Z);
-
-        // 4. Create build intent (floor only, for now)
-        FloorType floorType = _buildContext.SelectedFloor!.Value;
-
-        var intent = BuildIntent.CreateFloor(floorType, cell);
-
-        // 5. Dispatch (for now: log it)
-        ConsoleLog.System(
-            nameof(BuildInteractionHandler),
-            $"BuildIntent created: Floor={floorType}, Cell={cell}"
-        );
-
-        // Later:
-        // _buildManager.Execute(intent);
+        var floorType = _buildContext.SelectedFloor!.Value;
+        var intent = BuildIntent.BuildFloor(cells, floorType);
+        _clientBuildManager.ExecuteBuildIntent(intent);
     }
 
     /// <summary>
@@ -125,6 +118,41 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     {
         // No-op for now.
         // Later: clear preview state.
+    }
+
+    private static IReadOnlyList<MapCellCoord> GetCellsBetween(
+    Vector3 startWorld,
+    Vector3 endWorld)
+    {
+        MapCellCoord startCell = MapGrid.WorldToCell(
+        startWorld.X,
+        startWorld.Y,
+        startWorld.Z);
+
+        MapCellCoord endCell = MapGrid.WorldToCell(
+        endWorld.X,
+        endWorld.Y,
+        endWorld.Z);
+
+        int minX = Math.Min(startCell.X, endCell.X);
+        int maxX = Math.Max(startCell.X, endCell.X);
+
+        int minY = Math.Min(startCell.Y, endCell.Y);
+        int maxY = Math.Max(startCell.Y, endCell.Y);
+
+        int z = startCell.Z; // assume same layer for now
+
+        var cells = new List<MapCellCoord>();
+
+        for (int x = minX; x <= maxX; x++)
+        {
+            for (int y = minY; y <= maxY; y++)
+            {
+                cells.Add(new MapCellCoord(x, y, z));
+            }
+        }
+
+        return cells;
     }
 
     #endregion

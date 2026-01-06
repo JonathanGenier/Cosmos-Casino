@@ -1,4 +1,4 @@
-namespace CosmosCasino.Core.Map
+namespace CosmosCasino.Core.Floor
 {
     /// <summary>
     /// Identifies the material type of a floor tile within a map cell.
