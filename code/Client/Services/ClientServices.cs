@@ -77,6 +77,13 @@ public sealed partial class ClientServices : Node
     /// </summary>
     public BuildContext BuildContext { get; private set; }
 
+    /// <summary>
+    /// Provides access to the client-side build manager responsible for
+    /// issuing build intents and reacting to build results on the client,
+    /// without directly mutating authoritative game state.
+    /// </summary>
+    public ClientBuildManager ClientBuildManager { get; private set; }
+
     #endregion
 
     #region METHODS
@@ -122,6 +129,7 @@ public sealed partial class ClientServices : Node
         CameraManager = AddServiceToScene(scene, new CameraManager(_bootstrap), nameof(CameraManager));
         CursorService.Initialize(this, buildableCollisionMask: CollisionLayers.Buildable, planeHeight: 0f);
         BuildContext = new BuildContext();
+        ClientBuildManager = AddServiceToScene(scene, new ClientBuildManager(_bootstrap), nameof(ClientBuildManager));
         InteractionManager = AddServiceToScene(scene, new InteractionManager(_bootstrap), nameof(InteractionManager));
         UiManager.LoadGameUI();
     }

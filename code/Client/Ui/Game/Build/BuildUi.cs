@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Map;
+using CosmosCasino.Core.Floor;
 using Godot;
 using System;
 

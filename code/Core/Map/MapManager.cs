@@ -1,3 +1,9 @@
+using CosmosCasino.Core.Console.Logging;
+using CosmosCasino.Core.Floor;
+using CosmosCasino.Core.Furniture;
+using CosmosCasino.Core.Map.Cell;
+using CosmosCasino.Core.Map.Grid;
+using CosmosCasino.Core.Structure;
 using System.Diagnostics.CodeAnalysis;
 
 namespace CosmosCasino.Core.Map
@@ -8,13 +14,13 @@ namespace CosmosCasino.Core.Map
     /// </summary>
     internal sealed class MapManager
     {
-        #region FIELDS
+        #region Fields
 
         private readonly MapGrid _grid = new();
 
         #endregion
 
-        #region PROPERTIES
+        #region Properties
 
         /// <summary>
         /// Gets the total number of cells currently stored in the grid.
@@ -23,25 +29,7 @@ namespace CosmosCasino.Core.Map
 
         #endregion
 
-        #region METHODS
-
-        // ===================================================================================
-        // FLOOR
-
-        /// <summary>
-        /// Determines whether the floor can be removed from the specified cell.
-        /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the cell to evaluate.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if the cell exists and its floor can be removed;
-        /// otherwise, <c>false</c>.
-        /// </returns>
-        internal bool CanRemoveFloor(CellCoord coord)
-        {
-            return TryGetCell(coord, out var cell) && cell.CanRemoveFloor();
-        }
+        #region Floor Methods
 
         /// <summary>
         /// Determines whether the specified cell currently has a floor.
@@ -53,7 +41,7 @@ namespace CosmosCasino.Core.Map
         /// <c>true</c> if the cell exists and has a floor;
         /// otherwise, <c>false</c>.
         /// </returns>
-        internal bool HasFloor(CellCoord coord)
+        internal bool HasFloor(MapCellCoord coord)
         {
             return TryGetCell(coord, out var cell) && cell.HasFloor;
         }
@@ -67,7 +55,7 @@ namespace CosmosCasino.Core.Map
         /// <returns>
         /// The floor type if the cell exists; otherwise, <c>null</c>.
         /// </returns>
-        internal FloorType? GetFloorType(CellCoord coord)
+        internal FloorType? GetFloorType(MapCellCoord coord)
         {
             if (!TryGetCell(coord, out var cell))
             {
@@ -78,97 +66,58 @@ namespace CosmosCasino.Core.Map
         }
 
         /// <summary>
-        /// Attempts to set or replace the floor for the specified cell.
+        /// Attempts to place a floor of the specified type at the given cell.
+        /// Creates the cell if it does not already exist.
         /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the target cell.
-        /// </param>
-        /// <param name="floor">
-        /// The floor type to assign.
-        /// </param>
+        /// <param name="coord">The coordinate of the target cell.</param>
+        /// <param name="floor">The floor type to place.</param>
         /// <returns>
-        /// <c>true</c> if the floor was set or replaced;
-        /// <c>false</c> if the floor type was already present.
+        /// A map operation result describing the outcome of the placement.
         /// </returns>
-        internal bool TrySetFloor(CellCoord coord, FloorType floor)
+        internal MapOperationResult TryPlaceFloor(MapCellCoord coord, FloorType floor)
         {
             var cell = _grid.GetOrCreateCell(coord);
-            return cell.TrySetFloor(floor);
+            var cellResult = cell.TryPlaceFloor(floor);
+            return MapOperationResult.FromMapCellResult(coord, cellResult);
         }
 
         /// <summary>
-        /// Attempts to remove the floor from the specified cell and
-        /// remove the cell from the grid if it becomes empty.
+        /// Attempts to replace the existing floor at the specified cell
+        /// with a new floor type.
         /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the target cell.
-        /// </param>
+        /// <param name="coord">The coordinate of the target cell.</param>
+        /// <param name="floor">The new floor type to apply.</param>
         /// <returns>
-        /// <c>true</c> if the floor and cell were removed;
-        /// otherwise, <c>false</c>.
+        /// A map operation result describing the outcome of the replacement.
         /// </returns>
-        internal bool TryRemoveFloor(CellCoord coord)
+        internal MapOperationResult TryReplaceFloor(MapCellCoord coord, FloorType floor)
         {
-            if (!TryGetCell(coord, out var cell))
+            return WithExistingCell(coord, cell => cell.TryReplaceFloor(floor));
+        }
+
+        /// <summary>
+        /// Attempts to remove the floor from the specified cell.
+        /// Automatically removes the cell from the grid if it becomes empty.
+        /// </summary>
+        /// <param name="coord">The coordinate of the target cell.</param>
+        /// <returns>
+        /// A map operation result describing the outcome of the removal.
+        /// </returns>
+        internal MapOperationResult TryRemoveFloor(MapCellCoord coord)
+        {
+            var result = WithExistingCell(coord, cell => cell.TryRemoveFloor());
+
+            if (result.Outcome == MapCellOutcome.Removed)
             {
-                return false;
+                CleanupEmptyCell(coord);
             }
 
-            if (!cell.TryRemoveFloor())
-            {
-                return false;
-            }
-
-            return _grid.TryRemoveCell(coord);
+            return result;
         }
 
-        // ===================================================================================
-        // STRUCTURE
+        #endregion
 
-        /// <summary>
-        /// Determines whether a structure can be placed in the specified cell.
-        /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the cell.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if the cell exists and can accept a structure;
-        /// otherwise, <c>false</c>.
-        /// </returns>
-        internal bool CanPlaceStructure(CellCoord coord)
-        {
-            return TryGetCell(coord, out var cell) && cell.CanPlaceStructure();
-        }
-
-        /// <summary>
-        /// Determines whether the structure in the specified cell can be replaced.
-        /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the cell.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if the cell exists and its structure can be replaced;
-        /// otherwise, <c>false</c>.
-        /// </returns>
-        internal bool CanReplaceStructure(CellCoord coord)
-        {
-            return TryGetCell(coord, out var cell) && cell.CanReplaceStructure();
-        }
-
-        /// <summary>
-        /// Determines whether the structure in the specified cell can be removed.
-        /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the cell.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if the cell exists and has a removable structure;
-        /// otherwise, <c>false</c>.
-        /// </returns>
-        internal bool CanRemoveStructure(CellCoord coord)
-        {
-            return TryGetCell(coord, out var cell) && cell.CanRemoveStructure();
-        }
+        #region Structure Methods
 
         /// <summary>
         /// Determines whether the specified cell currently has a structure.
@@ -180,7 +129,7 @@ namespace CosmosCasino.Core.Map
         /// <c>true</c> if the cell exists and has a structure;
         /// otherwise, <c>false</c>.
         /// </returns>
-        internal bool HasStructure(CellCoord coord)
+        internal bool HasStructure(MapCellCoord coord)
         {
             return TryGetCell(coord, out var cell) && cell.HasStructure;
         }
@@ -194,7 +143,7 @@ namespace CosmosCasino.Core.Map
         /// <returns>
         /// The structure type if the cell exists; otherwise, <c>null</c>.
         /// </returns>
-        internal StructureType? GetStructureType(CellCoord coord)
+        internal StructureType? GetStructureType(MapCellCoord coord)
         {
             if (!TryGetCell(coord, out var cell))
             {
@@ -205,88 +154,48 @@ namespace CosmosCasino.Core.Map
         }
 
         /// <summary>
-        /// Attempts to place a structure in the specified cell.
+        /// Attempts to place a structure of the specified type in the given cell.
+        /// The cell must already exist and contain a floor.
         /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the target cell.
-        /// </param>
-        /// <param name="structure">
-        /// The structure type to place.
-        /// </param>
+        /// <param name="coord">The coordinate of the target cell.</param>
+        /// <param name="structure">The structure type to place.</param>
         /// <returns>
-        /// <c>true</c> if the structure was placed;
-        /// otherwise, <c>false</c>.
+        /// A map operation result describing the outcome of the placement.
         /// </returns>
-        internal bool TryPlaceStructure(CellCoord coord, StructureType structure)
+        internal MapOperationResult TryPlaceStructure(MapCellCoord coord, StructureType structure)
         {
-            return TryGetCell(coord, out var cell) && cell.TryPlaceStructure(structure);
+            return WithExistingCell(coord, cell => cell.TryPlaceStructure(structure));
         }
 
         /// <summary>
-        /// Attempts to replace the structure in the specified cell.
+        /// Attempts to replace the existing structure in the given cell
+        /// with a new structure type.
         /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the target cell.
-        /// </param>
-        /// <param name="structure">
-        /// The new structure type.
-        /// </param>
+        /// <param name="coord">The coordinate of the target cell.</param>
+        /// <param name="structure">The new structure type to apply.</param>
         /// <returns>
-        /// <c>true</c> if the structure was replaced;
-        /// otherwise, <c>false</c>.
+        /// A map operation result describing the outcome of the replacement.
         /// </returns>
-        internal bool TryReplaceStructure(CellCoord coord, StructureType structure)
+        internal MapOperationResult TryReplaceStructure(MapCellCoord coord, StructureType structure)
         {
-            return TryGetCell(coord, out var cell) && cell.TryReplaceStructure(structure);
+            return WithExistingCell(coord, cell => cell.TryReplaceStructure(structure));
         }
 
         /// <summary>
         /// Attempts to remove the structure from the specified cell.
         /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the target cell.
-        /// </param>
+        /// <param name="coord">The coordinate of the target cell.</param>
         /// <returns>
-        /// <c>true</c> if the structure was removed;
-        /// otherwise, <c>false</c>.
+        /// A map operation result describing the outcome of the removal.
         /// </returns>
-        internal bool TryRemoveStructure(CellCoord coord)
+        internal MapOperationResult TryRemoveStructure(MapCellCoord coord)
         {
-            return TryGetCell(coord, out var cell) && cell.TryRemoveStructure();
+            return WithExistingCell(coord, cell => cell.TryRemoveStructure());
         }
 
-        // ===================================================================================
-        // FURNITURE
+        #endregion
 
-        /// <summary>
-        /// Determines whether furniture can be placed in the specified cell.
-        /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the cell.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if the cell exists and can accept furniture;
-        /// otherwise, <c>false</c>.
-        /// </returns>
-        internal bool CanPlaceFurniture(CellCoord coord)
-        {
-            return TryGetCell(coord, out var cell) && cell.CanPlaceFurniture();
-        }
-
-        /// <summary>
-        /// Determines whether furniture can be removed from the specified cell.
-        /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the cell.
-        /// </param>
-        /// <returns>
-        /// <c>true</c> if the cell exists and has removable furniture;
-        /// otherwise, <c>false</c>.
-        /// </returns>
-        internal bool CanRemoveFurniture(CellCoord coord)
-        {
-            return TryGetCell(coord, out var cell) && cell.CanRemoveFurniture();
-        }
+        #region Furniture Methods
 
         /// <summary>
         /// Determines whether the specified cell currently has furniture.
@@ -298,7 +207,7 @@ namespace CosmosCasino.Core.Map
         /// <c>true</c> if the cell exists and has furniture;
         /// otherwise, <c>false</c>.
         /// </returns>
-        internal bool HasFurniture(CellCoord coord)
+        internal bool HasFurniture(MapCellCoord coord)
         {
             return TryGetCell(coord, out var cell) && cell.HasFurniture;
         }
@@ -312,7 +221,7 @@ namespace CosmosCasino.Core.Map
         /// <returns>
         /// The furniture type if the cell exists; otherwise, <c>null</c>.
         /// </returns>
-        internal FurnitureType? GetFurnitureType(CellCoord coord)
+        internal FurnitureType? GetFurnitureType(MapCellCoord coord)
         {
             if (!TryGetCell(coord, out var cell))
             {
@@ -323,40 +232,46 @@ namespace CosmosCasino.Core.Map
         }
 
         /// <summary>
-        /// Attempts to place furniture in the specified cell.
+        /// Attempts to place furniture of the specified type in the given cell.
+        /// The cell must already exist, contain a floor, and be otherwise unoccupied.
         /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the target cell.
-        /// </param>
-        /// <param name="furniture">
-        /// The furniture type to place.
-        /// </param>
+        /// <param name="coord">The coordinate of the target cell.</param>
+        /// <param name="furniture">The furniture type to place.</param>
         /// <returns>
-        /// <c>true</c> if the furniture was placed;
-        /// otherwise, <c>false</c>.
+        /// A map operation result describing the outcome of the placement.
         /// </returns>
-        internal bool TryPlaceFurniture(CellCoord coord, FurnitureType furniture)
+        internal MapOperationResult TryPlaceFurniture(MapCellCoord coord, FurnitureType furniture)
         {
-            return TryGetCell(coord, out var cell) && cell.TryPlaceFurniture(furniture);
+            return WithExistingCell(coord, cell => cell.TryPlaceFurniture(furniture));
         }
 
         /// <summary>
-        /// Attempts to remove furniture from the specified cell.
+        /// Attempts to remove the furniture from the specified cell.
         /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the target cell.
-        /// </param>
+        /// <param name="coord">The coordinate of the target cell.</param>
         /// <returns>
-        /// <c>true</c> if the furniture was removed;
-        /// otherwise, <c>false</c>.
+        /// A map operation result describing the outcome of the removal.
         /// </returns>
-        internal bool TryRemoveFurniture(CellCoord coord)
+        internal MapOperationResult TryRemoveFurniture(MapCellCoord coord)
         {
-            return TryGetCell(coord, out var cell) && cell.TryRemoveFurniture();
+            return WithExistingCell(coord, cell => cell.TryRemoveFurniture());
         }
 
-        // ===================================================================================
-        // HELPERS
+        #endregion
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Determines whether a cell exists at the specified coordinate.
+        /// </summary>
+        /// <param name="coord">The coordinate to check.</param>
+        /// <returns>
+        /// <c>true</c> if a cell exists at the coordinate; otherwise, <c>false</c>.
+        /// </returns>
+        internal bool CellExists(MapCellCoord coord)
+        {
+            return TryGetCell(coord, out var _);
+        }
 
         /// <summary>
         /// Attempts to retrieve the cell at the specified coordinate.
@@ -371,10 +286,54 @@ namespace CosmosCasino.Core.Map
         /// <returns>
         /// <c>true</c> if the cell exists; otherwise, <c>false</c>.
         /// </returns>
-        private bool TryGetCell(CellCoord coord, [NotNullWhen(true)] out MapCell? cell)
+        private bool TryGetCell(MapCellCoord coord, [NotNullWhen(true)] out MapCell? cell)
         {
             cell = _grid.GetCell(coord);
             return cell != null;
+        }
+
+        /// <summary>
+        /// Executes an operation against an existing cell, returning a failure
+        /// result if the cell does not exist.
+        /// </summary>
+        /// <param name="coord">The coordinate of the target cell.</param>
+        /// <param name="operation">The operation to execute on the cell.</param>
+        /// <returns>
+        /// A map operation result describing the outcome.
+        /// </returns>
+        private MapOperationResult WithExistingCell(MapCellCoord coord, Func<MapCell, MapCellResult> operation)
+        {
+            if (!TryGetCell(coord, out var cell))
+            {
+                return MapOperationResult.Failed(coord, MapCellFailureReason.NoCell);
+            }
+
+            var cellResult = operation(cell);
+            return MapOperationResult.FromMapCellResult(coord, cellResult);
+        }
+
+        /// <summary>
+        /// Removes the specified cell from the grid if it is empty.
+        /// This is used to keep the grid sparse after destructive operations.
+        /// </summary>
+        /// <param name="coord">The coordinate of the cell to clean up.</param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown in debug builds if the cell could not be removed when expected.
+        /// </exception>
+        private void CleanupEmptyCell(MapCellCoord coord)
+        {
+            if (!_grid.TryRemoveCell(coord))
+            {
+#if DEBUG
+                throw new InvalidOperationException(
+                    $"{nameof(CleanupEmptyCell)}: Cell cleanup failed after floor removal at {coord}. Cell was expected to be empty.");
+#else
+                    ConsoleLog.Error(
+                        nameof(MapManager),
+                        $"{nameof(CleanupEmptyCell)}: Cell cleanup failed after floor removal at {coord}. Cell was expected to be empty."
+                    );
+#endif
+            }
         }
 
         #endregion

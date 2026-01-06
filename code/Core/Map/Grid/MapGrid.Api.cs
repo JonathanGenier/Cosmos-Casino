@@ -1,12 +1,13 @@
+using CosmosCasino.Core.Map.Cell;
 using System.Numerics;
 
-namespace CosmosCasino.Core.Map
+namespace CosmosCasino.Core.Map.Grid
 {
     /// <summary>
-    /// Stateless utility providing deterministic conversions between
-    /// world-space coordinates and logical grid cell coordinates.
+    /// Manages a sparse collection of map cells indexed by 3D coordinates.
+    /// Cells are created on demand and removed automatically when empty.
     /// </summary>
-    public static class MapGridMath
+    public sealed partial class MapGrid
     {
         #region CONST
 
@@ -42,7 +43,7 @@ namespace CosmosCasino.Core.Map
         /// <returns>
         /// The grid cell containing the specified world position.
         /// </returns>
-        public static CellCoord WorldToCell(float worldX, float worldY, float worldZ)
+        public static MapCellCoord WorldToCell(float worldX, float worldY, float worldZ)
         {
             float localX = worldX - Origin.X;
             float localZ = worldZ - Origin.Z;
@@ -51,7 +52,7 @@ namespace CosmosCasino.Core.Map
             int cellY = (int)MathF.Floor(localZ / CellSize);
             int cellZ = 0;
 
-            return new CellCoord(cellX, cellY, cellZ);
+            return new MapCellCoord(cellX, cellY, cellZ);
         }
 
         /// <summary>
@@ -66,7 +67,7 @@ namespace CosmosCasino.Core.Map
         /// <returns>
         /// World-space position representing the center of the specified cell.
         /// </returns>
-        public static Vector3 CellToWorld(CellCoord cell)
+        public static Vector3 CellToWorld(MapCellCoord cell)
         {
             return new Vector3(
                 (cell.X * CellSize) + (CellSize * 0.5f),

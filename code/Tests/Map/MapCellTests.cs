@@ -1,4 +1,7 @@
-using CosmosCasino.Core.Map;
+using CosmosCasino.Core.Floor;
+using CosmosCasino.Core.Furniture;
+using CosmosCasino.Core.Map.Cell;
+using CosmosCasino.Core.Structure;
 using NUnit.Framework;
 
 namespace CosmosCasino.Tests.Map
@@ -39,14 +42,14 @@ namespace CosmosCasino.Tests.Map
         public void HasFloor_ShouldReturnTrue_WhenFloorExists()
         {
             // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
 
             // Assert
             Assert.That(_mapCell!.HasFloor, Is.True);
         }
 
         [Test]
-        public void HasFloor_ShouldReturnFalse_WhenNoFloorExists()
+        public void HasFloor_ShouldReturnFalse_WhenFloorDoesNotExists()
         {
             // Assert
             Assert.That(_mapCell!.HasFloor, Is.False);
@@ -67,7 +70,7 @@ namespace CosmosCasino.Tests.Map
         }
 
         [Test]
-        public void HasStructure_ShouldReturnFalse_WhenNoStructureExists()
+        public void HasStructure_ShouldReturnFalse_WhenStructureDoesNotExists()
         {
             // Assert
             Assert.That(_mapCell!.HasStructure, Is.False);
@@ -88,7 +91,7 @@ namespace CosmosCasino.Tests.Map
         }
 
         [Test]
-        public void HasFurniture_ShouldReturnFalse_WhenNoFurnitureExists()
+        public void HasFurniture_ShouldReturnFalse_WhenFurnitureDoesNotExists()
         {
             // Assert
             Assert.That(_mapCell!.HasFurniture, Is.False);
@@ -102,7 +105,7 @@ namespace CosmosCasino.Tests.Map
         public void IsEmpty_ShouldReturnFalse_WhenFloorOnlyExists()
         {
             // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
 
             // Assert
             Assert.That(_mapCell!.IsEmpty, Is.False);
@@ -129,7 +132,7 @@ namespace CosmosCasino.Tests.Map
         }
 
         [Test]
-        public void IsEmpty_ShouldReturnTrue_WhenNoFloorAndStructureAndFurnitureExists()
+        public void IsEmpty_ShouldReturnTrue_WhenFloorAndStructureAndFurnitureDoesNotExists()
         {
             // Assert
             Assert.That(_mapCell!.IsEmpty, Is.True);
@@ -137,328 +140,198 @@ namespace CosmosCasino.Tests.Map
 
         #endregion
 
-        #region CanRemoveFloor
+        #region TryPlaceFloor
 
         [Test]
-        public void CanRemoveFloor_ShouldReturnTrue_WhenFloorOnlyExists()
+        public void TryPlaceFloor_ShouldPlaceFloor_WhenFloorDoeNotExist()
         {
-            // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
-
             // Act
-            var result = _mapCell!.CanRemoveFloor();
+            var result = _mapCell!.TryPlaceFloor(FloorType.Metal);
 
             // Assert
-            Assert.That(result, Is.True);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Placed));
+            Assert.That(_mapCell!.HasFloor, Is.True);
+            Assert.That(_mapCell.Floor, Is.EqualTo(FloorType.Metal));
         }
 
         [Test]
-        public void CanRemoveFloor_ShouldReturnFalse_WhenNoFloorExists()
-        {
-            // Act
-            var result = _mapCell!.CanRemoveFloor();
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void CanRemoveFloor_ShouldReturnFalse_WhenFloorAndStructureExists()
+        public void TryPlaceFloor_ShouldFail_WhenFloorExists()
         {
             // Arrange
-            PlaceStructureWithFloor(StructureType.Wall);
+            _mapCell!.TryPlaceFloor(FloorType.Carbon);
 
             // Act
-            var result = _mapCell!.CanRemoveFloor();
+            var result = _mapCell!.TryPlaceFloor(FloorType.Metal);
 
             // Assert
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void CanRemoveFloor_ShouldReturnFalse_WhenFloorAndFurnitureExists()
-        {
-            // Arrange
-            PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
-
-            // Act
-            var result = _mapCell!.CanRemoveFloor();
-
-            // Assert
-            Assert.That(result, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.Blocked));
+            Assert.That(_mapCell!.HasFloor, Is.True);
+            Assert.That(_mapCell!.Floor, Is.EqualTo(FloorType.Carbon));
         }
 
         #endregion
 
-        #region TrySetFloor
+        #region TryReplaceFloor
 
         [Test]
-        public void TrySetFloor_ShouldSetFloorAndReturnTrue_WhenNoFloorExists()
-        {
-            // Act
-            var result = _mapCell!.TrySetFloor(FloorType.Metal);
-
-            // Assert
-            Assert.That(result, Is.True);
-            Assert.That(_mapCell!.HasFloor, Is.True);
-        }
-
-        [Test]
-        public void TrySetFloor_ShouldSetFloorAndReturnTrue_WhenDifferentFloorExists()
+        public void TryReplaceFloor_ShouldReplaceFloor_WhenDifferentFloorType()
         {
             // Arrange
-            _mapCell!.TrySetFloor(FloorType.Carbon);
+            _mapCell!.TryPlaceFloor(FloorType.Carbon);
 
             // Act
-            var result = _mapCell!.TrySetFloor(FloorType.Metal);
+            var result = _mapCell!.TryReplaceFloor(FloorType.Metal);
 
             // Assert
-            Assert.That(result, Is.True);
-            Assert.That(_mapCell!.HasFloor, Is.True);
-            Assert.That(_mapCell!.Floor, Is.EqualTo(FloorType.Metal));
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Replaced));
+            Assert.That(_mapCell.Floor, Is.EqualTo(FloorType.Metal));
+            Assert.That(_mapCell.HasFloor, Is.True);
         }
 
         [Test]
-        public void TrySetFloor_ShouldReturnFalse_WhenFloorTypeAlreadyExists()
+        public void TryReplaceFloor_ShouldSkip_WhenFloorTypeIsSame()
         {
             // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
 
             // Act
-            var result = _mapCell!.TrySetFloor(FloorType.Metal);
+            var result = _mapCell!.TryReplaceFloor(FloorType.Metal);
 
             // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasFloor, Is.True);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Skipped));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.SameType));
+            Assert.That(_mapCell.Floor, Is.EqualTo(FloorType.Metal));
+            Assert.That(_mapCell.HasFloor, Is.True);
         }
+
+#if DEBUG
+        [Test]
+        public void TryReplaceFloor_ShouldThrow_WhenFloorDoesNotExist()
+        {
+            // Act & Assert
+            Assert.Throws<InvalidOperationException>(() => _mapCell!.TryReplaceFloor(FloorType.Metal));
+        }
+#else
+        [Test]
+        public void TryReplaceFloor_ShouldFail_WhenFloorDoesNotExist()
+        {
+            // Act
+            var result = _mapCell!.TryReplaceFloor(FloorType.Metal);
+
+            // Assert
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.InternalError));
+            Assert.That(_mapCell.Floor, Is.Null);
+            Assert.That(_mapCell.HasFloor, Is.False);
+        }
+#endif
 
         #endregion
 
         #region TryRemoveFloor
 
         [Test]
-        public void TryRemoveFloor_ShouldSetFloorToNullAndReturnTrue_WhenFloorOnlyExists()
+        public void TryRemoveFloor_ShouldRemoveFloor_WhenStructureOrFurnitureDoesNotExist()
         {
             // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
 
             // Act
             var result = _mapCell!.TryRemoveFloor();
 
             // Assert
-            Assert.That(result, Is.True);
-            Assert.That(_mapCell!.HasFloor, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Removed));
+            Assert.That(_mapCell.HasFloor, Is.False);
+            Assert.That(_mapCell.Floor, Is.Null);
         }
 
         [Test]
-        public void TryRemoveFloor_ShouldReturnFalse_WhenNoFloorExists()
-        {
-            // Act
-            var result = _mapCell!.TryRemoveFloor();
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void TryRemoveFloor_ShouldReturnFalse_WhenFloorAndStructureExists()
+        public void TryRemoveFloor_ShouldFail_WhenStructureExists()
         {
             // Arrange
-            PlaceStructureWithFloor(StructureType.Wall);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
+            _mapCell!.TryPlaceStructure(StructureType.Wall);
 
             // Act
             var result = _mapCell!.TryRemoveFloor();
 
             // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasFloor, Is.True);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.Blocked));
+            Assert.That(_mapCell.HasFloor, Is.True);
         }
 
         [Test]
-        public void TryRemoveFloor_ShouldReturnFalse_WhenFloorAndFurnitureExists()
+        public void TryRemoveFloor_ShouldFail_WhenFurnitureExists()
         {
             // Arrange
-            PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
+            _mapCell!.TryPlaceFurniture(FurnitureType.SlotMachine);
 
             // Act
             var result = _mapCell!.TryRemoveFloor();
 
             // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasFloor, Is.True);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.Blocked));
+            Assert.That(_mapCell.HasFloor, Is.True);
         }
 
-        #endregion
-
-        #region CanPlaceStructure
-
+#if DEBUG
         [Test]
-        public void CanPlaceStructure_ShouldReturnTrue_WhenFloorOnlyExists()
+        public void TryRemoveFloor_ShouldThrow_WhenFloorDoesNotExist()
         {
-            // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
-
-            // Act
-            var result = _mapCell!.CanPlaceStructure();
-
-            // Assert
-            Assert.That(result, Is.True);
+            // Act & Assert
+            Assert.Throws<InvalidOperationException>(() => _mapCell!.TryRemoveFloor());
         }
-
+#else
         [Test]
-        public void CanPlaceStructure_ShouldReturnFalse_WhenFloorAndStructureExists()
-        {
-            // Arrange
-            PlaceStructureWithFloor(StructureType.Wall);
-
-            // Act
-            var result = _mapCell!.CanPlaceStructure();
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void CanPlaceStructure_ShouldReturnFalse_WhenFloorAndFurnitureExists()
-        {
-            // Arrange
-            PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
-
-            // Act
-            var result = _mapCell!.CanPlaceStructure();
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void CanPlaceStructure_ShouldReturnFalse_WhenNoFloorExists()
+        public void TryRemoveFloor_ShouldFail_WhenFloorDoesNotExist()
         {
             // Act
-            var result = _mapCell!.CanPlaceFurniture();
+            var result = _mapCell!.TryRemoveFloor();
 
             // Assert
-            Assert.That(result, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.InternalError));
+            Assert.That(_mapCell.HasFloor, Is.False);
         }
-
-        #endregion
-
-        #region CanReplaceStructure
-
-        [Test]
-        public void CanReplaceStructure_ShouldReturnTrue_WhenFloorAndStructureExists()
-        {
-            // Arrange
-            PlaceStructureWithFloor(StructureType.Wall);
-
-            // Act
-            var result = _mapCell!.CanReplaceStructure();
-
-            // Assert
-            Assert.That(result, Is.True);
-        }
-
-        [Test]
-        public void CanReplaceStructure_ShouldReturnFalse_WhenFloorOnlyExists()
-        {
-            // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
-
-            // Act
-            var result = _mapCell!.CanReplaceStructure();
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void CanReplaceStructure_ShouldReturnFalse_WhenFloorAndFurnitureOnlyExists()
-        {
-            // Arrange
-            PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
-
-            // Act
-            var result = _mapCell!.CanReplaceStructure();
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void CanReplaceStructure_ShouldReturnFalse_WhenNoFloorExists()
-        {
-            // Act
-            var result = _mapCell!.CanReplaceStructure();
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        #endregion
-
-        #region CanRemoveStructure
-
-        [Test]
-        public void CanRemoveStructure_ShouldReturnTrue_WhenFloorAndStructureExists()
-        {
-            // Arrange
-            PlaceStructureWithFloor(StructureType.Wall);
-
-            // Act
-            var result = _mapCell!.CanRemoveStructure();
-
-            // Assert
-            Assert.That(result, Is.True);
-        }
-
-        [Test]
-        public void CanRemoveStructure_ShouldReturnFalse_WhenNoStructureExists()
-        {
-            // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
-
-            // Act
-            var result = _mapCell!.CanRemoveStructure();
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
+#endif
 
         #endregion
 
         #region TryPlaceStructure
 
         [Test]
-        public void TryPlaceStructure_ShouldPlaceStructureAndReturnTrue_WhenFloorOnlyExists()
+        public void TryPlaceStructure_ShouldPlaceStructure_WhenOnlyFloorExists()
         {
             // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
 
             // Act
             var result = _mapCell!.TryPlaceStructure(StructureType.Wall);
 
             // Assert
-            Assert.That(result, Is.True);
-            Assert.That(_mapCell!.HasStructure, Is.True);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Placed));
+            Assert.That(_mapCell.HasStructure, Is.True);
+            Assert.That(_mapCell.Structure, Is.EqualTo(StructureType.Wall));
         }
 
         [Test]
-        public void TryPlaceStructure_ShouldReturnFalse_WhenFloorAndStructureExists()
+        public void TryPlaceStructure_ShouldFail_WhenFloorDoesNotExist()
         {
-            // Arrange
-            PlaceStructureWithFloor(StructureType.Door);
-
             // Act
             var result = _mapCell!.TryPlaceStructure(StructureType.Wall);
 
             // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasStructure, Is.True);
-            Assert.That(_mapCell!.Structure, Is.EqualTo(StructureType.Door));
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.NoFloor));
+            Assert.That(_mapCell.HasStructure, Is.False);
         }
 
         [Test]
-        public void TryPlaceStructure_ShouldReturnFalse_WhenFloorAndFurnitureExists()
+        public void TryPlaceStructure_ShouldFail_WhenFurnitureExists()
         {
             // Arrange
             PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
@@ -467,94 +340,61 @@ namespace CosmosCasino.Tests.Map
             var result = _mapCell!.TryPlaceStructure(StructureType.Wall);
 
             // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasStructure, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.Blocked));
+            Assert.That(_mapCell.HasStructure, Is.False);
         }
 
+#if DEBUG
         [Test]
-        public void TryPlaceStructure_ShouldReturnFalse_WhenNoFloorExists()
-        {
-            // Act
-            var result = _mapCell!.TryPlaceStructure(StructureType.Wall);
-
-            // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasStructure, Is.False);
-        }
-
-        [Test]
-        public void TryPlaceStructure_ShouldNotAffectFurniture_WhenFurnitureExists()
+        public void TryPlaceStructure_ShouldThrow_WhenStructureAlreadyExists()
         {
             // Arrange
-            PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
+            PlaceStructureWithFloor(StructureType.Wall);
+
+            // Act & Assert
+            Assert.Throws<InvalidOperationException>(
+                () => _mapCell!.TryPlaceStructure(StructureType.Door)
+            );
+        }
+#else
+        [Test]
+        public void TryPlaceStructure_ShouldFail_WhenStructureAlreadyExists()
+        {
+            // Arrange
+            PlaceStructureWithFloor(StructureType.Wall);
 
             // Act
-            _mapCell!.TryPlaceStructure(StructureType.Wall);
+            var result = _mapCell!.TryPlaceStructure(StructureType.Door);
 
             // Assert
-            Assert.That(_mapCell!.HasFurniture, Is.True);
-            Assert.That(_mapCell!.HasStructure, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.InternalError));
+            Assert.That(_mapCell.Structure, Is.EqualTo(StructureType.Wall));
         }
+#endif
 
         #endregion
 
         #region TryReplaceStructure
 
         [Test]
-        public void TryReplaceStructure_ShouldSetStructureAndReturnTrue_WhenFloorAndStructureExists()
+        public void TryReplaceStructure_ShouldReplaceStructure_WhenDifferentType()
         {
             // Arrange
-            PlaceStructureWithFloor(StructureType.Door);
+            PlaceStructureWithFloor(StructureType.Wall);
 
             // Act
-            var result = _mapCell!.TryReplaceStructure(StructureType.Wall);
+            var result = _mapCell!.TryReplaceStructure(StructureType.Door);
 
             // Assert
-            Assert.That(result, Is.True);
-            Assert.That(_mapCell!.Structure, Is.EqualTo(StructureType.Wall));
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Replaced));
+            Assert.That(_mapCell.Structure, Is.EqualTo(StructureType.Door));
+            Assert.That(_mapCell.HasStructure, Is.True);
         }
 
         [Test]
-        public void TryReplaceStructure_ShouldReturnFalse_WhenFloorOnlyExists()
-        {
-            // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
-
-            // Act
-            var result = _mapCell!.TryReplaceStructure(StructureType.Wall);
-
-            // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasStructure, Is.False);
-        }
-
-        [Test]
-        public void TryReplaceStructure_ShouldReturnFalse_WhenFloorAndFurnitureOnlyExists()
-        {
-            // Arrange
-            PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
-
-            // Act
-            var result = _mapCell!.TryReplaceStructure(StructureType.Wall);
-
-            // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasStructure, Is.False);
-        }
-
-        [Test]
-        public void TryReplaceStructure_ShouldReturnFalse_WhenNoFloorExists()
-        {
-            // Act
-            var result = _mapCell!.TryReplaceStructure(StructureType.Wall);
-
-            // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasStructure, Is.False);
-        }
-
-        [Test]
-        public void TryReplaceStructure_ShouldReturnFalse_WhenReplacingWithSameType()
+        public void TryReplaceStructure_ShouldSkip_WhenStructureTypeIsSame()
         {
             // Arrange
             PlaceStructureWithFloor(StructureType.Wall);
@@ -563,30 +403,91 @@ namespace CosmosCasino.Tests.Map
             var result = _mapCell!.TryReplaceStructure(StructureType.Wall);
 
             // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.Structure, Is.EqualTo(StructureType.Wall));
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Skipped));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.SameType));
+            Assert.That(_mapCell.Structure, Is.EqualTo(StructureType.Wall));
+        }
+
+#if DEBUG
+        [Test]
+        public void TryReplaceStructure_ShouldThrow_WhenNoFloorExists()
+        {
+            // Act & assert
+            Assert.Throws<InvalidOperationException>(
+                () => _mapCell!.TryReplaceStructure(StructureType.Wall)
+            );
         }
 
         [Test]
-        public void TryReplaceStructure_ShouldNotAffectFurniture_WhenFurnitureExists()
+        public void TryReplaceStructure_ShouldThrow_WhenNoStructureExists()
+        {
+            // Arrange
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
+
+            // Act & assert
+            Assert.Throws<InvalidOperationException>(
+                () => _mapCell!.TryReplaceStructure(StructureType.Wall)
+            );
+        }
+
+        [Test]
+        public void TryReplaceStructure_ShouldThrow_WhenFurnitureExists()
+        {
+            // Arrange
+            PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
+
+            // Act & assert
+            Assert.Throws<InvalidOperationException>(
+                () => _mapCell!.TryReplaceStructure(StructureType.Wall)
+            );
+        }
+#else
+        [Test]
+        public void TryReplaceStructure_ShouldFail_WhenNoFloorExists()
+        {
+            // Act
+            var result = _mapCell!.TryReplaceStructure(StructureType.Wall);
+
+            // Assert
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.InternalError));
+        }
+
+        [Test]
+        public void TryReplaceStructure_ShouldFail_WhenNoStructureExists()
+        {
+            // Arrange
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
+
+            // Act
+            var result = _mapCell!.TryReplaceStructure(StructureType.Wall);
+
+            // Assert
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.InternalError));
+        }
+
+        [Test]
+        public void TryReplaceStructure_ShouldFail_WhenFurnitureExists()
         {
             // Arrange
             PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
 
             // Act
-            _mapCell!.TryReplaceStructure(StructureType.Wall);
+            var result = _mapCell!.TryReplaceStructure(StructureType.Wall);
 
             // Assert
-            Assert.That(_mapCell!.HasFurniture, Is.True);
-            Assert.That(_mapCell!.HasStructure, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.InternalError));
         }
+#endif
 
         #endregion
 
         #region TryRemoveStructure
 
         [Test]
-        public void TryRemoveStructure_ShouldSetStructureAndReturnTrue_WhenFloorAndStructureExists()
+        public void TryRemoveStructure_ShouldRemoveStructure_WhenStructureExists()
         {
             // Arrange
             PlaceStructureWithFloor(StructureType.Wall);
@@ -595,105 +496,24 @@ namespace CosmosCasino.Tests.Map
             var result = _mapCell!.TryRemoveStructure();
 
             // Assert
-            Assert.That(result, Is.True);
-            Assert.That(_mapCell!.HasStructure, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Removed));
+            Assert.That(_mapCell.HasStructure, Is.False);
+            Assert.That(_mapCell.Structure, Is.Null);
         }
 
         [Test]
-        public void TryRemoveStructure_ShouldReturnFalse_WhenNoStructureExists()
+        public void TryRemoveStructure_ShouldSkip_WhenNoStructureExists()
         {
             // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
 
             // Act
             var result = _mapCell!.TryRemoveStructure();
 
             // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasStructure, Is.False);
-        }
-
-        #endregion
-
-        #region CanPlaceFurniture
-
-        [Test]
-        public void CanPlaceFurniture_ShouldReturnTrue_WhenFloorOnlyExists()
-        {
-            // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
-
-            // Act
-            var result = _mapCell!.CanPlaceFurniture();
-
-            // Assert
-            Assert.That(result, Is.True);
-        }
-
-        [Test]
-        public void CanPlaceFurniture_ShouldReturnFalse_WhenFloorAndStructureExists()
-        {
-            // Arrange
-            PlaceStructureWithFloor(StructureType.Wall);
-
-            // Act
-            var result = _mapCell!.CanPlaceFurniture();
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void CanPlaceFurniture_ShouldReturnFalse_WhenFloorAndFurnitureExists()
-        {
-            // Arrange
-            PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
-
-            // Act
-            var result = _mapCell!.CanPlaceFurniture();
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
-        public void CanPlaceFurniture_ShouldReturnFalse_WhenNoFloorExists()
-        {
-            // Act
-            var result = _mapCell!.CanPlaceFurniture();
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        #endregion
-
-        #region CanRemoveFurniture
-
-        [Test]
-        public void CanRemoveFurniture_ShouldReturnTrue_WhenFloorAndFurnitureExists()
-        {
-            // Arrange
-            PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
-
-            // Act
-            var result = _mapCell!.CanRemoveFurniture();
-
-            // Assert
-            Assert.That(result, Is.True);
-        }
-
-        [Test]
-        public void CanRemoveFurniture_ShouldReturnFalse_WhenNoFurnitureExists()
-        {
-            // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
-
-            // Act
-            var result = _mapCell!.CanRemoveFurniture();
-
-            // Assert
-            Assert.That(result, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Skipped));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.NoStructure));
+            Assert.That(_mapCell.HasStructure, Is.False);
         }
 
         #endregion
@@ -701,35 +521,34 @@ namespace CosmosCasino.Tests.Map
         #region TryPlaceFurniture
 
         [Test]
-        public void TryPlaceFurniture_ShouldSetFurnitureAndReturnTrue_WhenFloorOnlyExists()
+        public void TryPlaceFurniture_ShouldPlaceFurniture_WhenFloorOnlyExists()
         {
             // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
 
             // Act
             var result = _mapCell!.TryPlaceFurniture(FurnitureType.SlotMachine);
 
             // Assert
-            Assert.That(result, Is.True);
-            Assert.That(_mapCell!.HasFurniture, Is.True);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Placed));
+            Assert.That(_mapCell.HasFurniture, Is.True);
+            Assert.That(_mapCell.Furniture, Is.EqualTo(FurnitureType.SlotMachine));
         }
 
         [Test]
-        public void TryPlaceFurniture_ShouldReturnFalse_WhenFloorAndStructureExists()
+        public void TryPlaceFurniture_ShouldFail_WhenNoFloorExists()
         {
-            // Arrange
-            PlaceStructureWithFloor(StructureType.Wall);
-
             // Act
             var result = _mapCell!.TryPlaceFurniture(FurnitureType.SlotMachine);
 
             // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasFurniture, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.NoFloor));
+            Assert.That(_mapCell.HasFurniture, Is.False);
         }
 
         [Test]
-        public void TryPlaceFurniture_ShouldReturnFalse_WhenFloorAndFurnitureExists()
+        public void TryPlaceFurniture_ShouldFail_WhenFurnitureAlreadyExists()
         {
             // Arrange
             PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
@@ -738,33 +557,24 @@ namespace CosmosCasino.Tests.Map
             var result = _mapCell!.TryPlaceFurniture(FurnitureType.SlotMachine);
 
             // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasFurniture, Is.True);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.Blocked));
+            Assert.That(_mapCell.Furniture, Is.EqualTo(FurnitureType.SlotMachine));
         }
 
         [Test]
-        public void TryPlaceFurniture_ShouldReturnFalse_WhenNoFloorExists()
-        {
-            // Act
-            var result = _mapCell!.TryPlaceFurniture(FurnitureType.SlotMachine);
-
-            // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasFurniture, Is.False);
-        }
-
-        [Test]
-        public void TryPlaceFurniture_ShouldNotAffectStructure_WhenStructureExists()
+        public void TryPlaceFurniture_ShouldFail_WhenStructureExists()
         {
             // Arrange
             PlaceStructureWithFloor(StructureType.Wall);
 
             // Act
-            _mapCell!.TryPlaceFurniture(FurnitureType.SlotMachine);
+            var result = _mapCell!.TryPlaceFurniture(FurnitureType.SlotMachine);
 
             // Assert
-            Assert.That(_mapCell!.HasStructure, Is.True);
-            Assert.That(_mapCell!.HasFurniture, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Failed));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.Blocked));
+            Assert.That(_mapCell.HasFurniture, Is.False);
         }
 
         #endregion
@@ -772,7 +582,7 @@ namespace CosmosCasino.Tests.Map
         #region TryRemoveFurniture
 
         [Test]
-        public void TryRemoveFurniture_ShouldSetFurnitureAndReturnTrue_WhenFloorAndFurnitureExists()
+        public void TryRemoveFurniture_ShouldRemoveFurniture_WhenFurnitureExists()
         {
             // Arrange
             PlaceFurnitureWithFloor(FurnitureType.SlotMachine);
@@ -781,22 +591,24 @@ namespace CosmosCasino.Tests.Map
             var result = _mapCell!.TryRemoveFurniture();
 
             // Assert
-            Assert.That(result, Is.True);
-            Assert.That(_mapCell!.HasFurniture, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Removed));
+            Assert.That(_mapCell.HasFurniture, Is.False);
+            Assert.That(_mapCell.Furniture, Is.Null);
         }
 
         [Test]
-        public void TryRemoveFurniture_ShouldReturnFalse_WhenNoFurnitureExists()
+        public void TryRemoveFurniture_ShouldSkip_WhenNoFurnitureExists()
         {
             // Arrange
-            _mapCell!.TrySetFloor(FloorType.Metal);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
 
             // Act
             var result = _mapCell!.TryRemoveFurniture();
 
             // Assert
-            Assert.That(result, Is.False);
-            Assert.That(_mapCell!.HasFurniture, Is.False);
+            Assert.That(result.Outcome, Is.EqualTo(MapCellOutcome.Skipped));
+            Assert.That(result.FailureReason, Is.EqualTo(MapCellFailureReason.NoFurniture));
+            Assert.That(_mapCell.HasFurniture, Is.False);
         }
 
         #endregion
@@ -805,13 +617,13 @@ namespace CosmosCasino.Tests.Map
 
         private void PlaceStructureWithFloor(StructureType structure)
         {
-            _mapCell!.TrySetFloor(FloorType.Metal);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
             _mapCell!.TryPlaceStructure(structure);
         }
 
         private void PlaceFurnitureWithFloor(FurnitureType furniture)
         {
-            _mapCell!.TrySetFloor(FloorType.Metal);
+            _mapCell!.TryPlaceFloor(FloorType.Metal);
             _mapCell!.TryPlaceFurniture(furniture);
         }
 

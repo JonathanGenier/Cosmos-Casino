@@ -1,11 +1,11 @@
-namespace CosmosCasino.Core.Map
+namespace CosmosCasino.Core.Furniture
 {
     /// <summary>
     /// Identifies the type of furniture placed within a map cell.
     /// Furniture represents interactive objects that provide gameplay
     /// functionality rather than structural support.
     /// </summary>
-    internal enum FurnitureType
+    public enum FurnitureType
     {
         /// <summary>
         /// A gambling machine that players or NPCs can interact with

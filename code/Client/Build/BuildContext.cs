@@ -1,4 +1,5 @@
-using CosmosCasino.Core.Map;
+using CosmosCasino.Core.Floor;
+
 
 /// <summary>
 /// Holds the current build intent selected by the player.
