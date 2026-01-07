@@ -21,7 +21,7 @@ public sealed class SelectionInteractionHandler : IInteractionHandler
     /// </param>
     public void OnPrimaryGestureStarted(CursorContext start)
     {
-        ConsoleLog.Warning("Selection", "Primary Start");
+
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ public sealed class SelectionInteractionHandler : IInteractionHandler
     /// </param>
     public void OnPrimaryGestureUpdated(CursorContext start, CursorContext current)
     {
-        ConsoleLog.Warning("Selection", "Primary Update");
+
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public sealed class SelectionInteractionHandler : IInteractionHandler
     /// </param>
     public void OnPrimaryGestureEnded(CursorContext start, CursorContext end)
     {
-        ConsoleLog.Warning("Selection", "Primary End");
+
     }
 
     // ===========================================================================
@@ -70,6 +70,6 @@ public sealed class SelectionInteractionHandler : IInteractionHandler
     /// </param>
     public void OnPrimaryGestureCancelled(CursorContext start)
     {
-        ConsoleLog.Warning("Selection", "CANCEL");
+
     }
 }
