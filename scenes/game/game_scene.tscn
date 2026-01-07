@@ -3,7 +3,14 @@
 [ext_resource type="Script" uid="uid://dtn2emvumr8go" path="res://code/Client/Game/GameScene.cs" id="1_uwrxv"]
 [ext_resource type="PackedScene" uid="uid://b50cildorh28g" path="res://scenes/game/camera_rig.tscn" id="2_omorx"]
 [ext_resource type="PackedScene" uid="uid://cj1ati2232xbp" path="res://scenes/debug/cursor_debug_visializer.tscn" id="3_ydf3n"]
-[ext_resource type="PackedScene" uid="uid://cjwavg2v71lgc" path="res://scenes/game/spaceship_template.tscn" id="4_6hqhf"]
+
+[sub_resource type="Environment" id="Environment_6hqhf"]
+background_mode = 2
+ambient_light_source = 2
+ambient_light_color = Color(0.53303695, 0.53303665, 0.5330367, 1)
+ambient_light_energy = 3.87
+reflected_light_source = 1
+fog_enabled = true
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1_uwrxv")
@@ -12,10 +19,8 @@ script = ExtResource("1_uwrxv")
 
 [node name="CursorDebugVisializer" parent="." instance=ExtResource("3_ydf3n")]
 
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_6hqhf")
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.7071067, 0.4999999, 0.4999999, 0, 0.7071067, -0.7071067, -0.7071067, 0.4999999, 0.4999999, 0, 0, 0)
-
-[node name="Spaceship Template" parent="." instance=ExtResource("4_6hqhf")]
-
-[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.7071067, -0.4999999, -0.4999999, 0, 0.7071067, -0.7071067, 0.7071067, 0.4999999, 0.4999999, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 0, 0)

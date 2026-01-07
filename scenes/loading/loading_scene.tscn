@@ -1,6 +1,11 @@
-[gd_scene load_steps=2 format=3 uid="uid://cilfhwa8wiefe"]
+[gd_scene load_steps=4 format=3 uid="uid://cilfhwa8wiefe"]
 
 [ext_resource type="Script" uid="uid://t0amjl0gnjh6" path="res://code/Client/Loading/LoadingScene.cs" id="1_ir5ef"]
+[ext_resource type="PackedScene" uid="uid://curynshbrk30c" path="res://scenes/entities/floors/floor_metal.tscn" id="2_eh2sv"]
+[ext_resource type="PackedScene" uid="uid://bidbofnue21fu" path="res://scenes/entities/floors/floor_carbon.tscn" id="2_x1esv"]
 
 [node name="Loading" type="Node3D"]
 script = ExtResource("1_ir5ef")
+
+[node name="SpawnResources" type="ResourcePreloader" parent="."]
+resources = [PackedStringArray("floor_carbon", "floor_metal"), [ExtResource("2_x1esv"), ExtResource("2_eh2sv")]]

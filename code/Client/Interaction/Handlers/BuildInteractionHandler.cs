@@ -1,6 +1,4 @@
 using CosmosCasino.Core.Build;
-using CosmosCasino.Core.Console.Logging;
-using CosmosCasino.Core.Floor;
 using CosmosCasino.Core.Map.Cell;
 using CosmosCasino.Core.Map.Grid;
 using Godot;

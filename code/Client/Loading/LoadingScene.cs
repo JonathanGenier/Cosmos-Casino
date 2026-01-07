@@ -1,5 +1,7 @@
 using CosmosCasino.Core.Console.Logging;
 using CosmosCasino.Core.Services;
+using Godot;
+using System;
 using System.Threading.Tasks;
 
 /// <summary>
@@ -22,11 +24,19 @@ public sealed partial class LoadingScene : SceneController
     /// Entry point for the loading scene.
     /// Begins the asynchronous loading workflow when the node becomes ready.
     /// </summary>
-    public override void _Ready()
+    public override async void _Ready()
     {
         using (ConsoleLog.SystemScope(nameof(LoadingScene)))
         {
-            _ = LoadAsync();
+            try
+            {
+                await LoadAsync();
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.Error(nameof(LoadingScene), ex.ToString());
+                throw;
+            }
         }
     }
 
@@ -45,15 +55,25 @@ public sealed partial class LoadingScene : SceneController
     /// </summary>
     private async Task LoadAsync()
     {
-        // Decide new game vs load game
         // Later:
-        // core.Game.LoadSave(...)
-        // core.Game.InitializeWorld()
+        // await core.Game.LoadSaveAsync();
+        // await core.Game.InitializeWorldAsync();
+
+        LoadSpawnResources();
+
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 
         AppManager.Instance.CallDeferred(
             nameof(AppManager.ChangeState),
             (int)AppState.Game
         );
+    }
+
+    private void LoadSpawnResources()
+    {
+        var preloader = GetNode<ResourcePreloader>("SpawnResources");
+        var catalog = SpawnCatalog.LoadFromResourcePreloader(preloader);
+        ClientServices.SpawnManager.Configure(catalog);
     }
 
     #endregion

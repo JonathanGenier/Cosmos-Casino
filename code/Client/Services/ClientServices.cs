@@ -84,6 +84,12 @@ public sealed partial class ClientServices : Node
     /// </summary>
     public ClientBuildManager ClientBuildManager { get; private set; }
 
+    /// <summary>
+    /// Gets the spawn manager responsible for creating and destroying
+    /// visual instances during an active game session.
+    /// </summary>
+    public SpawnManager SpawnManager { get; private set; }
+
     #endregion
 
     #region METHODS
@@ -100,6 +106,7 @@ public sealed partial class ClientServices : Node
         {
             InputManager = AddService(new InputManager(_bootstrap), nameof(InputManager));
             UiManager = AddService(new UiManager(_bootstrap), nameof(UiManager));
+            SpawnManager = AddService(new SpawnManager(_bootstrap), nameof(SpawnManager));
         }
     }
 

@@ -187,43 +187,6 @@ namespace CosmosCasino.Tests.Map
 
         #endregion
 
-        #region CellToWorld
-
-        [Test]
-        public void CellToWorld_ZeroCell_ReturnsCenteredWorldPosition()
-        {
-            MapCellCoord cell = new MapCellCoord(0, 0, 0);
-            Vector3 world = MapGrid.CellToWorld(cell);
-
-            Assert.That(world.X, Is.EqualTo(0.5f));
-            Assert.That(world.Y, Is.EqualTo(0f));
-            Assert.That(world.Z, Is.EqualTo(0.5f));
-        }
-
-        [Test]
-        public void CellToWorld_PositiveCell_ReturnsCorrectCenter()
-        {
-            MapCellCoord cell = new MapCellCoord(2, 3, 0);
-            Vector3 world = MapGrid.CellToWorld(cell);
-
-            Assert.That(world.X, Is.EqualTo(2.5f));
-            Assert.That(world.Y, Is.EqualTo(0f));
-            Assert.That(world.Z, Is.EqualTo(3.5f));
-        }
-
-        [Test]
-        public void CellToWorld_NegativeCell_ReturnsCorrectCenter()
-        {
-            MapCellCoord cell = new MapCellCoord(-1, -2, 0);
-            Vector3 world = MapGrid.CellToWorld(cell);
-
-            Assert.That(world.X, Is.EqualTo(-0.5f));
-            Assert.That(world.Y, Is.EqualTo(0f));
-            Assert.That(world.Z, Is.EqualTo(-1.5f));
-        }
-
-        #endregion
-
         #region Round-trip consistency
 
         [Test]

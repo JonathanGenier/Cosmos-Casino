@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://curynshbrk30c"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4g4pa"]
+metallic = 1.0
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_csdyx"]
+material = SubResource("StandardMaterial3D_4g4pa")
+
+[node name="FloorMetal" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.25, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_csdyx")
