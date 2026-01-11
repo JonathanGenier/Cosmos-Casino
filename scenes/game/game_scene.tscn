@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://cpwd808y472vu"]
+[gd_scene load_steps=6 format=3 uid="uid://cpwd808y472vu"]
 
-[ext_resource type="Script" uid="uid://dtn2emvumr8go" path="res://code/Client/Game/GameScene.cs" id="1_uwrxv"]
+[ext_resource type="Script" uid="uid://xib1iyh132ru" path="res://code/Client/Game/GameManager.cs" id="1_ydf3n"]
+[ext_resource type="PackedScene" uid="uid://curynshbrk30c" path="res://scenes/game/entities/floors/floor_metal.tscn" id="2_6hqhf"]
 [ext_resource type="PackedScene" uid="uid://b50cildorh28g" path="res://scenes/game/camera_rig.tscn" id="2_omorx"]
-[ext_resource type="PackedScene" uid="uid://cj1ati2232xbp" path="res://scenes/debug/cursor_debug_visializer.tscn" id="3_ydf3n"]
+[ext_resource type="PackedScene" uid="uid://bidbofnue21fu" path="res://scenes/game/entities/floors/floor_carbon.tscn" id="2_p0de3"]
 
 [sub_resource type="Environment" id="Environment_6hqhf"]
 background_mode = 2
@@ -13,11 +14,12 @@ reflected_light_source = 1
 fog_enabled = true
 
 [node name="Game" type="Node3D"]
-script = ExtResource("1_uwrxv")
+script = ExtResource("1_ydf3n")
+
+[node name="SpawnResources" type="ResourcePreloader" parent="."]
+resources = [PackedStringArray("floor_carbon", "floor_metal"), [ExtResource("2_p0de3"), ExtResource("2_6hqhf")]]
 
 [node name="Camera_Rig" parent="." instance=ExtResource("2_omorx")]
-
-[node name="CursorDebugVisializer" parent="." instance=ExtResource("3_ydf3n")]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_6hqhf")

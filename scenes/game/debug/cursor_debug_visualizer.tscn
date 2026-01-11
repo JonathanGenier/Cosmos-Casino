@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cj1ati2232xbp"]
+
+[ext_resource type="Script" uid="uid://dl2jsni7gh8p0" path="res://code/Client/Game/Cursor/CursorDebugVisualizer.cs" id="1_0wf4i"]
+
+[node name="CursorDebugVisualizer" type="Node3D"]
+script = ExtResource("1_0wf4i")
