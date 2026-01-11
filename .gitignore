@@ -4,9 +4,11 @@
 .export/
 *.translation
 mono_crash.*.json
+godot_crash_*.log
 
-# Godot 4 cache
+# Godot editor cache
 .godot/
+*.uid
 
 # Visual Studio
 .vs/
