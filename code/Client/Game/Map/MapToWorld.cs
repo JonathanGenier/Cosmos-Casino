@@ -1,5 +1,5 @@
-using CosmosCasino.Core.Map.Cell;
-using CosmosCasino.Core.Map.Grid;
+using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map.Grid;
 using Godot;
 
 /// <summary>

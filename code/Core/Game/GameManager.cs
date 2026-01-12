@@ -1,5 +1,4 @@
-using CosmosCasino.Core.Console.Logging;
-using CosmosCasino.Core.Save;
+using CosmosCasino.Core.Application.Save;
 
 namespace CosmosCasino.Core.Game
 {

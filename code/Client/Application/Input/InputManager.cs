@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Console.Logging;
+using CosmosCasino.Core.Application.Console.Logging;
 using Godot;
 using System;
 using System.Collections.Generic;

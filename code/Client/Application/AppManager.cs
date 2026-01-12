@@ -1,5 +1,5 @@
-using CosmosCasino.Core.Console.Logging;
-using CosmosCasino.Core.Services;
+using CosmosCasino.Core.Application.Console.Logging;
+using CosmosCasino.Core.Application.Services;
 using Godot;
 using System;
 

@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Floor;
+using CosmosCasino.Core.Game.Floor;
 
 /// <summary>
 /// Spawn variant describing which floor type should be used

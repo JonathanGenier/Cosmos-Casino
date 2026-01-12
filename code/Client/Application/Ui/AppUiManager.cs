@@ -1,5 +1,5 @@
-using CosmosCasino.Core.Console;
-using CosmosCasino.Core.Console.Logging;
+using CosmosCasino.Core.Application.Console;
+using CosmosCasino.Core.Application.Console.Logging;
 
 /// <summary>
 /// Manages the application's user interface components and coordinates the initialization and attachment of UI

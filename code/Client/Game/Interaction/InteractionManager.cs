@@ -1,7 +1,7 @@
-using CosmosCasino.Core.Build;
-using CosmosCasino.Core.Console.Logging;
-using Godot;
 using System;
+using CosmosCasino.Core.Application.Console.Logging;
+using CosmosCasino.Core.Game.Build;
+using Godot;
 
 /// <summary>
 /// Manages user interaction modes and gesture handling for primary input actions, coordinating between selection and
