@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://0b0venf65idy"]
 
-[ext_resource type="Script" uid="uid://dex2mgwfwupe6" path="res://code/Client/MainMenu/MainMenuManager.cs" id="1_lx82y"]
+[ext_resource type="Script" uid="uid://dq1htjw16slkx" path="res://code/Client/MainMenu/MainMenuManager.cs" id="1_lx82y"]
 [ext_resource type="PackedScene" uid="uid://b50cildorh28g" path="res://scenes/game/camera_rig.tscn" id="2_lx82y"]
 
 [node name="MainMenu" type="Node3D"]

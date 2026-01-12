@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://xf6doqvmtjr3"]
 
-[ext_resource type="Script" uid="uid://dwpho5tj5oryy" path="res://code/Client/Ui/Game/Build/BuildUi.cs" id="1_dd774"]
+[ext_resource type="Script" uid="uid://gfaj8p06l7m3" path="res://code/Client/Game/Ui/Build/BuildUi.cs" id="1_dd774"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_744we"]
 

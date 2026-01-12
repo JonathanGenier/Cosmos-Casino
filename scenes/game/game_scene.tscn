@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://cpwd808y472vu"]
 
-[ext_resource type="Script" uid="uid://xib1iyh132ru" path="res://code/Client/Game/GameManager.cs" id="1_ydf3n"]
+[ext_resource type="Script" uid="uid://deve3yyfhp41u" path="res://code/Client/Game/GameManager.cs" id="1_ydf3n"]
 [ext_resource type="PackedScene" uid="uid://curynshbrk30c" path="res://scenes/game/entities/floors/floor_metal.tscn" id="2_6hqhf"]
 [ext_resource type="PackedScene" uid="uid://b50cildorh28g" path="res://scenes/game/camera_rig.tscn" id="2_omorx"]
 [ext_resource type="PackedScene" uid="uid://bidbofnue21fu" path="res://scenes/game/entities/floors/floor_carbon.tscn" id="2_p0de3"]
