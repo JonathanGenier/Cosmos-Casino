@@ -1,6 +1,5 @@
-using CosmosCasino.Core.Console;
-using CosmosCasino.Core.Console.Command;
-using CosmosCasino.Core.Console.Logging;
+using CosmosCasino.Core.Application.Console;
+using CosmosCasino.Core.Application.Console.Command;
 using System;
 
 /// <summary>

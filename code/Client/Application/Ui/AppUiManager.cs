@@ -1,5 +1,4 @@
-using CosmosCasino.Core.Console;
-using CosmosCasino.Core.Console.Logging;
+using CosmosCasino.Core.Application.Console;
 
 /// <summary>
 /// Manages the application's user interface components and coordinates the initialization and attachment of UI
@@ -26,7 +25,6 @@ public sealed partial class AppUiManager : InitializableNodeManager
     /// <param name="consoleManager">The console manager to be used for managing console operations during initialization. Cannot be null.</param>
     public void Initialize(InputManager inputManager, ConsoleManager consoleManager)
     {
-
         _consoleUiManager = CreateInitializableNode<ConsoleUiManager>(
             cum => cum.Initialize(inputManager, consoleManager));
         MarkInitialized();

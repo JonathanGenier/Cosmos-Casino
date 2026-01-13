@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Build;
+using CosmosCasino.Core.Game.Build;
 using System;
 
 /// <summary>

@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Floor;
+using CosmosCasino.Core.Game.Floor;
 using System;
 
 /// <summary>

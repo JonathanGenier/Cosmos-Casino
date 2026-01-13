@@ -1,4 +1,3 @@
-
 /// <summary>
 /// Provides constant paths to core scenes used throughout the application, including boot, main menu, and gameplay
 /// scenes.

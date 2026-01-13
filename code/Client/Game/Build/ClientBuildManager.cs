@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Build;
+using CosmosCasino.Core.Game.Build;
 using System;
 
 /// <summary>
@@ -15,7 +15,6 @@ public sealed partial class ClientBuildManager : InitializableNodeManager
     private BuildManager _buildManager;
 
     #endregion
-
 
     #region Events
 

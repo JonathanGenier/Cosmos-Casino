@@ -1,10 +1,9 @@
-using CosmosCasino.Core.Build;
-using CosmosCasino.Core.Console.Logging;
-using CosmosCasino.Core.Floor;
-using CosmosCasino.Core.Map;
-using CosmosCasino.Core.Map.Cell;
+using CosmosCasino.Core.Game.Build;
+using CosmosCasino.Core.Game.Floor;
+using CosmosCasino.Core.Game.Map.Cell;
 using Godot;
 using System;
+
 
 /// <summary>
 /// Coordinates the flow for building and spawning floor elements in the game, handling build completion events and

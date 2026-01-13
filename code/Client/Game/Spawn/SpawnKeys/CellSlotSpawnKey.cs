@@ -1,5 +1,4 @@
-using CosmosCasino.Core.Map;
-using CosmosCasino.Core.Map.Cell;
+using CosmosCasino.Core.Game.Map.Cell;
 using System;
 
 /// <summary>

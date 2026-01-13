@@ -1,5 +1,4 @@
-using CosmosCasino.Core.Console.Logging;
-using CosmosCasino.Core.Services;
+using CosmosCasino.Core.Game;
 using Godot;
 using System;
 
@@ -13,8 +12,8 @@ public sealed partial class GameManager : NodeManager
 
     private readonly BuildContext _buildContext = new();
 
-    private CoreServices _coreServices;
     private AppServices _appServices;
+    private GameSession _gameSession;
 
     private CameraManager _cameraManager;
     private ClientBuildManager _clientBuildManager;
@@ -67,42 +66,42 @@ public sealed partial class GameManager : NodeManager
     /// Starts a new game session using the specified core and application services, and sets up callbacks for ending
     /// the game or shutting down the application.
     /// </summary>
-    /// <param name="coreServices">The core services required to initialize and run the game. Cannot be null.</param>
     /// <param name="appServices">The application-level services used during the game session. Cannot be null.</param>
     /// <param name="endGame">An action to invoke when the game session ends. Cannot be null.</param>
     /// <param name="shutdownApp">An action to invoke to shut down the application. Cannot be null.</param>
     /// <exception cref="InvalidOperationException">Thrown if the game is not ready to start a new session.</exception>
-    public void StartNewGame(CoreServices coreServices, AppServices appServices, Action endGame, Action shutdownApp)
+    public void StartNewGame(AppServices appServices, Action endGame, Action shutdownApp)
     {
         if (!_isReady)
         {
             throw new InvalidOperationException();
         }
 
-        Initialize(coreServices, appServices, endGame, shutdownApp);
-        StartGame();
+        _gameSession = GameSession.CreateNewSession();
+        Initialize(appServices, endGame, shutdownApp);
+        StartSimulation();
     }
 
     /// <summary>
     /// Initializes and starts a new game session using the specified core and application services, and sets up
     /// callbacks for ending the game and shutting down the application.
     /// </summary>
-    /// <param name="coreServices">The core services required for game initialization and runtime operations. Cannot be null.</param>
     /// <param name="appServices">The application-level services used during the game session. Cannot be null.</param>
     /// <param name="endGame">An action to invoke when the game session ends. Cannot be null.</param>
     /// <param name="shutdownApp">An action to invoke to shut down the application. Cannot be null.</param>
     /// <exception cref="InvalidOperationException">Thrown if the game is not ready to be loaded.</exception>
-    public void LoadGame(CoreServices coreServices, AppServices appServices, Action endGame, Action shutdownApp)
+    public void LoadGame(AppServices appServices, Action endGame, Action shutdownApp)
     {
         if (!_isReady)
         {
             throw new InvalidOperationException();
         }
 
-        Initialize(coreServices, appServices, endGame, shutdownApp);
+        _gameSession = GameSession.LoadSession(); // Pass GameSaveData
+        Initialize(appServices, endGame, shutdownApp);
         // Load map
         // Load Entities
-        StartGame();
+        StartSimulation();
     }
 
     /// <summary>
@@ -148,30 +147,27 @@ public sealed partial class GameManager : NodeManager
     /// Performs one-time initialization of game subsystems and managers.
     /// Binds injected services, creates manager nodes, and initializes them with their respective dependencies.
     /// </summary>
-    /// <param name="coreServices">Core framework services required by lower-level managers. Must not be null.</param>
     /// <param name="appServices">Application-level services (input, ui, etc.) required by higher-level managers. Must not be null.</param>
     /// <param name="endGame">Callback invoked when the current game session ends. Must not be null.</param>
     /// <param name="shutdownApp">Callback invoked to request application shutdown. Must not be null.</param>
     /// <exception cref="InvalidOperationException">Thrown if this method is called more than once on the same instance.</exception>
-    private void Initialize(CoreServices coreServices, AppServices appServices, Action endGame, Action shutdownApp)
+    private void Initialize(AppServices appServices, Action endGame, Action shutdownApp)
     {
         if (_isInitialized)
         {
             throw new InvalidOperationException("GameManager already initialized.");
         }
 
-        ArgumentNullException.ThrowIfNull(coreServices);
         ArgumentNullException.ThrowIfNull(appServices);
         ArgumentNullException.ThrowIfNull(endGame);
         ArgumentNullException.ThrowIfNull(shutdownApp);
 
-        _coreServices = coreServices;
         _appServices = appServices;
         _endGame = endGame;
         _shutdownApp = shutdownApp;
 
         _clientBuildManager = AddInitializableNode<ClientBuildManager>(
-            cbm => cbm.Initialize(_coreServices.BuildManager));
+            cbm => cbm.Initialize(_gameSession.BuildManager));
         _cursorManager = AddInitializableNode<CursorManager>(
             cm => cm.Initialize(CollisionLayers.Buildable));
         _interactionManager = AddInitializableNode<InteractionManager>(
@@ -208,7 +204,7 @@ public sealed partial class GameManager : NodeManager
     /// - Initializes flow objects
     /// - Sets the initial game state to paused
     /// </summary>
-    private void StartGame()
+    private void StartSimulation()
     {
         AddChild(_cameraManager);
         AddChild(_gameUiManager);

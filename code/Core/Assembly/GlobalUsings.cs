@@ -1,0 +1,1 @@
+global using CosmosCasino.Core.Application.Console.Logging;
