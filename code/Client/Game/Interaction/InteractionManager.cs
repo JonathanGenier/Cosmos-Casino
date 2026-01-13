@@ -1,5 +1,4 @@
 using System;
-using CosmosCasino.Core.Application.Console.Logging;
 using CosmosCasino.Core.Game.Build;
 using Godot;
 

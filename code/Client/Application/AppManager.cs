@@ -1,4 +1,3 @@
-using CosmosCasino.Core.Application.Console.Logging;
 using CosmosCasino.Core.Application.Services;
 using Godot;
 using System;
@@ -200,8 +199,6 @@ public sealed partial class AppManager : NodeManager
     /// <exception cref="InvalidOperationException">Thrown if a game session is already in progress or if the game scene root does not have a GameManager attached.</exception>
     private void StartGame()
     {
-        _coreServices.StartGame();
-
         if (_gameManager != null)
         {
             throw new InvalidOperationException($"{nameof(GameManager)} already exists.");
@@ -209,7 +206,7 @@ public sealed partial class AppManager : NodeManager
 
         var scene = ChangeState(AppState.Game);
         _gameManager = scene as GameManager ?? throw new InvalidOperationException($"Game scene root does not have {nameof(GameManager)} attached.");
-        _gameManager.StartNewGame(_coreServices, _appServices, EndGame, Shutdown);
+        _gameManager.StartNewGame(_appServices, EndGame, Shutdown);
     }
 
     /// <summary>
@@ -231,7 +228,6 @@ public sealed partial class AppManager : NodeManager
             throw new InvalidOperationException($"{nameof(GameManager)} does not exist.");
         }
 
-        _coreServices.EndGame();
         _gameManager.QueueFree();
         _gameManager = null;
         ChangeState(AppState.MainMenu);

@@ -1,4 +1,3 @@
-using CosmosCasino.Core.Application.Console.Logging;
 using System;
 
 /// <summary>

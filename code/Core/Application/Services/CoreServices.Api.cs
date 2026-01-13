@@ -1,9 +1,6 @@
 using CosmosCasino.Core.Application.Console;
 using CosmosCasino.Core.Application.Save;
 using CosmosCasino.Core.Application.Serialization;
-using CosmosCasino.Core.Game;
-using CosmosCasino.Core.Game.Build;
-using CosmosCasino.Core.Game.Map;
 
 namespace CosmosCasino.Core.Application.Services
 {
@@ -42,9 +39,7 @@ namespace CosmosCasino.Core.Application.Services
                 JsonSaveSerializer serializer = new();
                 SaveManager = new SaveManager(serializer, savePath);
                 ConsoleManager = new ConsoleManager();
-                MapManager = new MapManager();
                 _consoleManagerDisposable = ConsoleManager;
-                BuildManager = new BuildManager(MapManager);
             }
         }
 
@@ -53,27 +48,10 @@ namespace CosmosCasino.Core.Application.Services
         #region PROPERTIES
 
         /// <summary>
-        /// Manages core game logic for an active game session.
-        /// <para>
-        /// This property is <c>null</c> when no game is running and is initialized
-        /// by calling <see cref="StartGame"/>. It is cleared when
-        /// <see cref="EndGame"/> is called.
-        /// </para>
-        /// </summary>
-        public GameManager? GameManager { get; private set; }
-
-        /// <summary>
         /// The active debug console instance used to collect log output
         /// and execute debug commands.
         /// </summary>
         public ConsoleManager ConsoleManager { get; private set; }
-
-        /// <summary>
-        /// Provides access to the core build manager responsible for
-        /// validating and executing build intents against the
-        /// authoritative game state.
-        /// </summary>
-        public BuildManager BuildManager { get; private set; }
 
         #endregion
 
@@ -94,8 +72,6 @@ namespace CosmosCasino.Core.Application.Services
             }
 
             _isShutdown = true;
-
-            EndGame();
         }
 
         /// <summary>
@@ -117,67 +93,6 @@ namespace CosmosCasino.Core.Application.Services
 
             Shutdown(); // ALWAYS first
             _consoleManagerDisposable.Dispose();
-        }
-
-        /// <summary>
-        /// Starts a new game session and initializes all game-scoped core services.
-        /// <para>
-        /// This method may only be called when no game is currently running.
-        /// Calling it while a game session is active is considered a logic error.
-        /// </para>
-        /// </summary>
-        /// <returns>
-        /// <c>true</c> if the game session was successfully started;
-        /// <c>false</c> if a game session is already active and the application
-        /// is running in a non-debug build.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if a game session is already active.
-        /// </exception>
-        public bool StartGame()
-        {
-            ConsoleLog.System(nameof(CoreServices), "Starting game...");
-            if (GameManager != null)
-            {
-                ConsoleLog.Error(nameof(CoreServices), "Cannot start a new game when a game has already started.");
-
-#if DEBUG
-                throw new InvalidOperationException("Cannot start a new game when a game has already started.");
-#else
-
-                return false;
-#endif
-            }
-
-            GameManager = new GameManager(SaveManager);
-            return true;
-        }
-
-        /// <summary>
-        /// Ends the currently active game session and releases all game-scoped
-        /// core services.
-        /// <para>
-        /// This method enforces a strict lifecycle: it may only be called when
-        /// a game session is currently active.
-        /// </para>
-        /// </summary>
-        /// <returns>
-        /// <c>true</c> if the active game session was successfully ended;
-        /// <c>false</c> if no game session is running and the application
-        /// is operating in a non-debug build.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if no game session is currently running.
-        /// </exception>
-        public bool EndGame()
-        {
-            if (GameManager == null)
-            {
-                return true;
-            }
-
-            GameManager = null;
-            return true;
         }
 
         #endregion

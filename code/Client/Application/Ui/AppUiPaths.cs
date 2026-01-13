@@ -1,4 +1,3 @@
-
 /// <summary>
 /// Provides constants for application user interface (UI) scene paths.
 /// </summary>

@@ -1,4 +1,3 @@
-using CosmosCasino.Core.Application.Console.Logging;
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Floor;
 using CosmosCasino.Core.Game.Map.Cell;

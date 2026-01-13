@@ -8,7 +8,7 @@ namespace CosmosCasino.Tests.Application.Services
     {
         #region FIELDS
 
-        private CoreServices? _coreServices;
+        private CoreServices _coreServices = null!;
 
         #endregion
 
@@ -22,7 +22,7 @@ namespace CosmosCasino.Tests.Application.Services
 
         #endregion
 
-        #region CORESERVICES
+        #region Initialization
 
         [Test]
         public void Constructor_SavePathIsNullOrWhiteSpace_ThrowsArgumentException()
@@ -34,99 +34,13 @@ namespace CosmosCasino.Tests.Application.Services
         }
 
         [Test]
-        public void CoreServices_ShouldInitializeSaveManager()
+        public void CoreServices_ShouldCreateValidServices()
         {
             // Assert
-            Assert.That(_coreServices!.SaveManager, Is.Not.Null);
+            Assert.That(_coreServices.SaveManager, Is.Not.Null);
+            Assert.That(_coreServices.ConsoleManager, Is.Not.Null);
         }
 
-        #endregion
-
-        #region STARTNEWGAME
-
-        [Test]
-        public void StartNewGame_WhenGameManagerIsNull_ShouldInitializeGameManager()
-        {
-            // Act
-            _coreServices!.StartGame();
-
-            // Assert
-            Assert.That(_coreServices!.GameManager, Is.Not.Null);
-        }
-
-        [Test]
-        public void StartNewGame_WhenGameManagerIsNull_ShouldReturnTrue()
-        {
-            // Act
-            var result = _coreServices!.StartGame();
-
-            // Assert
-            Assert.That(result, Is.True);
-        }
-
-#if DEBUG
-        [Test]
-        public void StartNewGame_WhenGameAlreadyStarted_ThrowsInvalidOperationException_InDebug()
-        {
-            // Arrange
-            _coreServices!.StartGame();
-
-            // Assert
-            Assert.That(() => _coreServices!.StartGame(), Throws.TypeOf<InvalidOperationException>());
-        }
-#endif
-
-#if !DEBUG
-        [Test]
-        public void StartGame_WhenGameAlreadyStarted_ReturnFalse_InRelease()
-        {
-            // Arrange
-            _coreServices!.StartGame();
-
-            // Assert
-            Assert.That(() => _coreServices!.StartGame(), Is.False);
-        }
-#endif
-
-        #endregion
-
-        #region ENDGAME
-
-        [Test]
-        public void EndGame_WhenGameExists_ShouldSetGameManagerToNull()
-        {
-            // Arrange
-            _coreServices!.StartGame();
-
-            // Act
-            _coreServices!.EndGame();
-
-            // Assert
-            Assert.That(_coreServices!.GameManager, Is.Null);
-        }
-
-        [Test]
-        public void EndGame_WhenGameExists_ShouldReturnTrue()
-        {
-            // Arrange
-            _coreServices!.StartGame();
-
-            // Act
-            var result = _coreServices!.EndGame();
-
-            // Assert
-            Assert.That(result, Is.True);
-        }
-
-        [Test]
-        public void EndGame_WhenNoGameStarted_ShouldReturnTrue()
-        {
-            // Act
-            var result = _coreServices!.EndGame();
-
-            // Assert
-            Assert.That(result, Is.True);
-        }
         #endregion
     }
 }
