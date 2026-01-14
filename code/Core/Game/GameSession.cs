@@ -37,7 +37,7 @@ namespace CosmosCasino.Core.Game
 
         /// <summary>
         /// Provides access to the global <see cref="MapManager"/> responsible for
-        /// managing map cells, floors, structures, and furniture during gameplay.
+        /// managing map cells, floors, walls, and furniture during gameplay.
         /// This reference is initialized during core service setup and remains
         /// immutable for the lifetime of the application.
         /// </summary>

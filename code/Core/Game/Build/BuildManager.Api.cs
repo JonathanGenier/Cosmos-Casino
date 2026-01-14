@@ -39,7 +39,7 @@ namespace CosmosCasino.Core.Game.Build
                 var result = intent.Kind switch
                 {
                     BuildKind.Floor => ResolveFloor(intent, coord),
-                    // BuildKind.Structure => ResolveStructure(...)
+                    BuildKind.Wall => ResolveWall(intent, coord),
                     // BuildKind.Furniture => ResolveFurniture(...)
                     _ => throw new NotImplementedException($"{nameof(BuildKind)} not implemented.")
                 };

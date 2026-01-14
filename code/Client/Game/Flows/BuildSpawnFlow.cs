@@ -1,5 +1,4 @@
 using CosmosCasino.Core.Game.Build;
-using CosmosCasino.Core.Game.Floor;
 using CosmosCasino.Core.Game.Map.Cell;
 using Godot;
 using System;
@@ -67,7 +66,6 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
     {
         BuildIntent buildIntent = buildResult.Intent;
 
-        ConsoleLog.Warning(nameof(BuildSpawnFlow), buildIntent.ToString());
         foreach (BuildOperationResult result in buildResult.Results)
         {
             switch (result.Outcome)
@@ -78,12 +76,11 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
                     continue;
 
                 case BuildOperationOutcome.Placed:
-                case BuildOperationOutcome.Replaced:
-                    PlaceOrReplaceFloor(result, buildIntent);
+                    SpawnBuild(result, buildIntent);
                     continue;
 
                 case BuildOperationOutcome.Removed:
-                    RemoveFloor(result);
+                    RemoveBuild(result, buildIntent.Kind);
                     continue;
 
                 default:
@@ -109,13 +106,11 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
         // This will be replaced with UI feedback later.
         switch (failureReason)
         {
-            case BuildOperationFailureReason.NoStructure:
-            case BuildOperationFailureReason.NoFurniture:
+            case BuildOperationFailureReason.NoWall:
             case BuildOperationFailureReason.NoFunds:
             case BuildOperationFailureReason.NoFloor:
             case BuildOperationFailureReason.Blocked:
             case BuildOperationFailureReason.None:
-            case BuildOperationFailureReason.SameType:
                 ConsoleLog.Info(nameof(ClientBuildManager), failureReason.ToString());
                 break;
 
@@ -133,46 +128,45 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
 
     #region Spawn/Despawn Methods
 
-    /// <summary>
-    /// Places a new floor or replaces an existing floor at the specified location based on the build operation result
-    /// and intent.
-    /// </summary>
-    /// <param name="result">The result of the build operation, containing information about the target cell and operation outcome.</param>
-    /// <param name="buildIntent">The intent specifying the type of floor to place or replace.</param>
-    private void PlaceOrReplaceFloor(BuildOperationResult result, BuildIntent buildIntent)
+    private void SpawnBuild(BuildOperationResult result, BuildIntent buildIntent)
     {
-        CellSlotSpawnKey spawnKey = GetSpawnKey(result);
-        FloorSpawnVariant variant = new((FloorType)buildIntent.FloorType);
+        CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildIntent.Kind);
         Vector3 position = MapToWorld.CellToWorld(spawnKey.Coord);
+        BuildSpawnDescriptor descriptor = BuildSpawnDescriptorResolver.Resolve(buildIntent);
 
-        _spawnManager.Spawn(spawnKey, variant, position, SpawnLayer.Floors);
+        _spawnManager.Spawn(
+            spawnKey,
+            descriptor.Variant,
+            position,
+            descriptor.Layer);
     }
 
-    /// <summary>
-    /// Removes the floor associated with the specified build operation result.
-    /// </summary>
-    /// <param name="result">The result of the build operation that identifies the floor to remove. Cannot be null.</param>
-    private void RemoveFloor(BuildOperationResult result)
+    private void RemoveBuild(BuildOperationResult result, BuildKind buildKind)
     {
-        CellSlotSpawnKey spawnKey = GetSpawnKey(result);
+        CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildKind);
         _spawnManager.Despawn(spawnKey);
     }
 
-    /// <summary>
-    /// Creates a new spawn key for the specified build operation result.
-    /// </summary>
-    /// <param name="result">The result of the build operation containing the cell information to use for the spawn key.</param>
-    /// <returns>A <see cref="CellSlotSpawnKey"/> representing the spawn location for the specified build operation result.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if <paramref name="result"/> does not contain a valid cell coordinate.</exception>
-    private CellSlotSpawnKey GetSpawnKey(BuildOperationResult result)
+    #endregion
+
+    #region Spawn Key
+
+    private CellSlotSpawnKey GetSpawnKey(BuildOperationResult result, BuildKind buildKind)
     {
-        if (result.Cell is not MapCellCoord coord)
+        if (result.Cell is null)
         {
             throw new InvalidOperationException(
-                $"BuildOperationOutcome '{result.Outcome}' requires a cell, but none was provided.");
+                $"Cannot resolve spawn key for {buildKind} build result without a target cell.");
         }
 
-        var slot = MapCellSlot.Floor;
+        MapCellCoord coord = result.Cell.Value;
+        MapCellSlot slot = buildKind switch
+        {
+            BuildKind.Floor => MapCellSlot.Floor,
+            BuildKind.Wall => MapCellSlot.Wall,
+            _ => throw new InvalidOperationException($"{nameof(BuildKind)} {buildKind} not implemented"),
+        };
+
         return new CellSlotSpawnKey(coord, slot);
     }
 

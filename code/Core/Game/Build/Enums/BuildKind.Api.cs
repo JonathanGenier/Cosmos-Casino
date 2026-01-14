@@ -12,9 +12,9 @@ namespace CosmosCasino.Core.Game.Build
         Floor,
 
         /// <summary>
-        /// Structure-related build operations (walls, doors, etc.).
+        /// Wall-related build operations (place or remove walls).
         /// </summary>
-        Structure,
+        Wall,
 
         /// <summary>
         /// Furniture-related build operations (placeable objects).

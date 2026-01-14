@@ -1,7 +1,4 @@
-using CosmosCasino.Core.Game.Floor;
-using CosmosCasino.Core.Game.Furniture;
 using CosmosCasino.Core.Game.Map.Cell;
-using CosmosCasino.Core.Game.Structure;
 
 namespace CosmosCasino.Core.Game.Build
 {
@@ -22,34 +19,19 @@ namespace CosmosCasino.Core.Game.Build
         /// Target cells affected by the build operation.
         /// </param>
         /// <param name="kind">
-        /// High-level category of build (floor, structure, furniture).
+        /// High-level category of build.
         /// </param>
         /// <param name="operation">
         /// Operation to perform (place, replace, remove).
         /// </param>
-        /// <param name="floor">
-        /// Floor type associated with the intent, if applicable.
-        /// </param>
-        /// <param name="structure">
-        /// Structure type associated with the intent, if applicable.
-        /// </param>
-        /// <param name="furniture">
-        /// Furniture type associated with the intent, if applicable.
-        /// </param>
         private BuildIntent(
             IReadOnlyList<MapCellCoord> cells,
             BuildKind kind,
-            BuildOperation operation,
-            FloorType? floor,
-            StructureType? structure,
-            FurnitureType? furniture)
+            BuildOperation operation)
         {
             Cells = cells;
             Kind = kind;
             Operation = operation;
-            FloorType = floor;
-            StructureType = structure;
-            FurnitureType = furniture;
         }
 
         #endregion
@@ -72,72 +54,38 @@ namespace CosmosCasino.Core.Game.Build
         /// </summary>
         public IReadOnlyList<MapCellCoord> Cells { get; }
 
-        /// <summary>
-        /// Gets the floor type associated with this intent, if any.
-        /// </summary>
-        public FloorType? FloorType { get; }
-
-        /// <summary>
-        /// Gets the structure type associated with this intent, if any.
-        /// </summary>
-        public StructureType? StructureType { get; }
-
-        /// <summary>
-        /// Gets the furniture type associated with this intent, if any.
-        /// </summary>
-        public FurnitureType? FurnitureType { get; }
-
         #endregion
 
         #region Factories
 
         /// <summary>
-        /// Creates a build intent representing a floor placement operation
-        /// over the specified target cells.
+        /// Creates a build intent to place a floor on the specified map cells.
         /// </summary>
-        /// <param name="cells">
-        /// Cells where the floor should be placed.
-        /// </param>
-        /// <param name="floor">
-        /// Type of floor to place.
-        /// </param>
-        /// <returns>
-        /// A validated floor placement build intent.
-        /// </returns>
-        public static BuildIntent BuildFloor(IReadOnlyList<MapCellCoord> cells, FloorType floor)
+        /// <param name="cells">A read-only list of map cell coordinates where the floor will be placed. Cannot be null or empty.</param>
+        /// <returns>A BuildIntent representing the operation to place a floor on the specified cells.</returns>
+        public static BuildIntent BuildFloor(IReadOnlyList<MapCellCoord> cells)
         {
             ValidateCells(cells);
 
             return new BuildIntent(
                 cells.ToArray(),
                 BuildKind.Floor,
-                BuildOperation.Place,
-                floor,
-                null,
-                null);
+                BuildOperation.Place);
         }
 
         /// <summary>
-        /// Creates a build intent representing a floor removal operation
-        /// over the specified target cells.
+        /// Creates a build intent to place a wall on the specified map cells.
         /// </summary>
-        /// <param name="cells">
-        /// Cells where the floor should be removed.
-        /// </param>
-        /// <returns>
-        /// A validated floor removal build intent.
-        /// </returns>
-        public static BuildIntent RemoveFloor(IReadOnlyList<MapCellCoord> cells)
+        /// <param name="cells">A read-only list of map cell coordinates where the wall will be placed. Cannot be null or empty.</param>
+        /// <returns>A BuildIntent representing the action to place a wall on the specified cells.</returns>
+        public static BuildIntent BuildWall(IReadOnlyList<MapCellCoord> cells)
         {
             ValidateCells(cells);
 
             return new BuildIntent(
                 cells.ToArray(),
-                BuildKind.Floor,
-                BuildOperation.Remove,
-                null,
-                null,
-                null);
+                BuildKind.Wall,
+                BuildOperation.Place);
         }
 
         #endregion

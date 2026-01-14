@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Floor;
+using CosmosCasino.Core.Game.Build;
 using Godot;
 using System;
 
@@ -20,37 +20,51 @@ public sealed partial class BuildUi : Control
     /// Button used to cancel the current build selection and exit build mode.
     /// </summary>
     [Export]
-    private Button _cancelButton = null!;
+    private Button? _cancelButton;
 
-    /// <summary>
-    /// Toggle button selecting the metal floor build intent.
-    /// </summary>
     [Export]
-    private Button _metalFloorButton = null!;
+    private Button? _floorButton;
 
-    /// <summary>
-    /// Toggle button selecting the carbon floor build intent.
-    /// </summary>
     [Export]
-    private Button _carbonFloorButton = null!;
+    private Button? _wallButton;
 
     #endregion
 
     #region Events
 
     /// <summary>
-    /// Raised when the player selects a floor type to build.
-    /// This event communicates intent only and does not apply
-    /// any build logic directly.
+    /// Occurs when a build kind is selected.
     /// </summary>
-    public event Action<FloorType> FloorSelected;
+    public event Action<BuildKind>? BuildKindSelected;
 
     /// <summary>
     /// Raised when the player cancels the current build selection.
     /// Consumers are expected to clear build context and restore
     /// default interaction state.
     /// </summary>
-    public event Action BuildCancelled;
+    public event Action? BuildCancelled;
+
+    #endregion
+
+    #region Properties
+
+    private Button CancelButton
+    {
+        get => _cancelButton ?? throw new InvalidOperationException("CancelButton not assigned.");
+        set => _cancelButton = value;
+    }
+
+    private Button FloorButton
+    {
+        get => _floorButton ?? throw new InvalidOperationException("FloorButton not assigned.");
+        set => _floorButton = value;
+    }
+
+    private Button WallButton
+    {
+        get => _wallButton ?? throw new InvalidOperationException("WallButton not assigned.");
+        set => _wallButton = value;
+    }
 
     #endregion
 
@@ -61,9 +75,9 @@ public sealed partial class BuildUi : Control
     /// </summary>
     public override void _Ready()
     {
-        _metalFloorButton.Toggled += OnMetalFloorToggled;
-        _carbonFloorButton.Toggled += OnCarbonFloorToggled;
-        _cancelButton.Pressed += ClearToggles;
+        FloorButton.Toggled += OnFloorToggled;
+        WallButton.Toggled += OnWallToggled;
+        CancelButton.Pressed += ClearToggles;
     }
 
     /// <summary>
@@ -72,9 +86,9 @@ public sealed partial class BuildUi : Control
     /// </summary>
     public override void _ExitTree()
     {
-        _metalFloorButton.Toggled -= OnMetalFloorToggled;
-        _carbonFloorButton.Toggled -= OnCarbonFloorToggled;
-        _cancelButton.Pressed -= ClearToggles;
+        FloorButton.Toggled -= OnFloorToggled;
+        WallButton.Toggled -= OnWallToggled;
+        CancelButton.Pressed -= ClearToggles;
     }
 
     #endregion
@@ -87,8 +101,8 @@ public sealed partial class BuildUi : Control
     /// </summary>
     private void ClearToggles()
     {
-        _metalFloorButton.SetPressedNoSignal(false);
-        _carbonFloorButton.SetPressedNoSignal(false);
+        FloorButton.SetPressedNoSignal(false);
+        WallButton.SetPressedNoSignal(false);
         BuildCancelled?.Invoke();
     }
 
@@ -99,32 +113,30 @@ public sealed partial class BuildUi : Control
     /// <param name="toggled">
     /// Whether the button was toggled on.
     /// </param>
-    private void OnMetalFloorToggled(bool toggled)
+    private void OnFloorToggled(bool toggled)
     {
-        if (!toggled)
+        if (toggled)
         {
-            return;
+            SelectBuildKind(BuildKind.Floor);
         }
-
-        FloorSelected?.Invoke(FloorType.Metal);
     }
 
-    /// <summary>
-    /// Handles toggle state changes for the carbon floor button.
-    /// Emits a floor selection intent when toggled on.
-    /// </summary>
-    /// <param name="toggled">
-    /// Whether the button was toggled on.
-    /// </param>
-    private void OnCarbonFloorToggled(bool toggled)
+    private void OnWallToggled(bool toggled)
     {
-        if (!toggled)
+        if (toggled)
         {
-            return;
+            SelectBuildKind(BuildKind.Wall);
         }
-
-        FloorSelected?.Invoke(FloorType.Carbon);
     }
 
     #endregion
+
+    private void SelectBuildKind(BuildKind kind)
+    {
+        FloorButton.SetPressedNoSignal(kind == BuildKind.Floor);
+        WallButton.SetPressedNoSignal(kind == BuildKind.Wall);
+
+        BuildKindSelected?.Invoke(kind);
+    }
+
 }

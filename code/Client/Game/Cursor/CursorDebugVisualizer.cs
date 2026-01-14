@@ -1,4 +1,5 @@
 using Godot;
+using System;
 
 /// <summary>
 /// Provides a debug visualizer that displays the current cursor position in 3D world space using a visual marker.
@@ -21,8 +22,26 @@ public sealed partial class CursorDebugVisualizer : Node3D
 
     #region Fields
 
-    private CursorManager _cursorManager;
-    private MeshInstance3D _marker;
+    private bool _isInitialized = false;
+
+    private CursorManager? _cursorManager;
+    private MeshInstance3D? _marker;
+
+    #endregion
+
+    #region Properties
+
+    private CursorManager CursorManager
+    {
+        get => _cursorManager ?? throw new InvalidOperationException($"{nameof(CursorManager)} has not been initialized.");
+        set => _cursorManager = value;
+    }
+
+    private MeshInstance3D Marker
+    {
+        get => _marker ?? throw new InvalidOperationException($"Marker has not been initialized.");
+        set => _marker = value;
+    }
 
     #endregion
 
@@ -34,7 +53,8 @@ public sealed partial class CursorDebugVisualizer : Node3D
     /// <param name="cursorManager">The cursor manager to associate with this instance. Cannot be null.</param>
     public void Initialize(CursorManager cursorManager)
     {
-        _cursorManager = cursorManager;
+        CursorManager = cursorManager;
+        _isInitialized = true;
     }
 
     #endregion
@@ -48,16 +68,18 @@ public sealed partial class CursorDebugVisualizer : Node3D
     /// Override this method to perform setup tasks that require the node to be part of the scene tree.</remarks>
     public override void _Ready()
     {
-        _marker = new MeshInstance3D
+        Marker = new MeshInstance3D
         {
             Mesh = new SphereMesh
             {
                 Radius = _markerSize,
                 Height = _markerSize,
-            }
+            },
+
+            Visible = false
         };
 
-        AddChild(_marker);
+        AddChild(Marker);
     }
 
     /// <summary>
@@ -70,12 +92,12 @@ public sealed partial class CursorDebugVisualizer : Node3D
     /// time-based calculations.</param>
     public override void _Process(double delta)
     {
-        if (_cursorManager == null)
+        if (!_isInitialized)
         {
             return;
         }
 
-        if (_cursorManager.TryGetCursorPosition(out var position))
+        if (CursorManager.TryGetCursorPosition(out var position))
         {
             GlobalPosition = position;
             Visible = true;

@@ -12,7 +12,7 @@ public sealed partial class ClientBuildManager : InitializableNodeManager
 {
     #region Fields
 
-    private BuildManager _buildManager;
+    private BuildManager? _buildManager;
 
     #endregion
 
@@ -23,7 +23,17 @@ public sealed partial class ClientBuildManager : InitializableNodeManager
     /// </summary>
     /// <remarks>Subscribe to this event to receive notification when a build finishes, regardless of success
     /// or failure. The event provides a BuildResult object containing details about the outcome of the build.</remarks>
-    public event Action<BuildResult> BuildCompleted;
+    public event Action<BuildResult>? BuildCompleted;
+
+    #endregion
+
+    #region Properties
+
+    private BuildManager BuildManager
+    {
+        get => _buildManager ?? throw new InvalidOperationException($"{nameof(BuildManager)} has not been initialized.");
+        set => _buildManager = value;
+    }
 
     #endregion
 
@@ -35,7 +45,7 @@ public sealed partial class ClientBuildManager : InitializableNodeManager
     /// <param name="buildManager">The build manager to associate with this instance. Cannot be null.</param>
     public void Initialize(BuildManager buildManager)
     {
-        _buildManager = buildManager;
+        BuildManager = buildManager;
         MarkInitialized();
     }
 
@@ -52,7 +62,14 @@ public sealed partial class ClientBuildManager : InitializableNodeManager
     /// <param name="buildIntent">The build intent that defines the set of operations to apply. Cannot be null.</param>
     public void ExecuteBuildIntent(BuildIntent buildIntent)
     {
-        BuildResult buildResult = _buildManager.ApplyBuildOperations(buildIntent);
+        ArgumentNullException.ThrowIfNull(buildIntent);
+
+        if (!IsInitialized)
+        {
+            throw new InvalidOperationException($"{nameof(ClientBuildManager)} is not initialized.");
+        }
+
+        BuildResult buildResult = BuildManager.ApplyBuildOperations(buildIntent);
         BuildCompleted?.Invoke(buildResult);
     }
 

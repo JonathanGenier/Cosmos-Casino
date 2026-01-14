@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Floor;
+using CosmosCasino.Core.Game.Build;
 using Godot;
 using System;
 
@@ -14,25 +14,35 @@ public sealed partial class BuildUiManager : InitializableNodeManager
 {
     #region Fields
 
-    private BuildUi _buildUi = null!;
+    private BuildUi? _buildUi;
 
     #endregion
 
     #region Events
 
     /// <summary>
-    /// Raised when the player selects a floor type to build.
-    /// This event communicates intent only and does not apply
-    /// any build logic directly.
+    /// Occurs when a build kind is selected.
     /// </summary>
-    public event Action<FloorType> FloorSelected;
+    /// <remarks>Subscribers are notified with the selected build kind when the event is raised. The event
+    /// argument provides the selected value, or null if no build kind is selected.</remarks>
+    public event Action<BuildKind>? BuildKindSelected;
 
     /// <summary>
     /// Raised when the player cancels the current build selection.
     /// Consumers are expected to clear build context and restore
     /// default interaction state.
     /// </summary>
-    public event Action BuildCancelled;
+    public event Action? BuildCancelled;
+
+    #endregion
+
+    #region Properties
+
+    private BuildUi BuildUi
+    {
+        get => _buildUi ?? throw new InvalidOperationException($"{nameof(BuildUi)} has not been initialized.");
+        set => _buildUi = value;
+    }
 
     #endregion
 
@@ -56,9 +66,10 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     /// </summary>
     protected override void OnReady()
     {
-        _buildUi = AddNode(GD.Load<PackedScene>(GameUiPaths.Build).Instantiate<BuildUi>());
-        _buildUi.FloorSelected += OnFloorSelected;
-        _buildUi.BuildCancelled += OnBuildCancelled;
+        BuildUi = AddNode(GD.Load<PackedScene>(GameUiPaths.Build).Instantiate<BuildUi>());
+        BuildUi.BuildKindSelected += OnBuildKindSelected;
+        BuildUi.BuildCancelled += OnBuildCancelled;
+
     }
 
     /// <summary>
@@ -67,25 +78,17 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     /// </summary>
     protected override void OnExit()
     {
-        _buildUi.FloorSelected -= OnFloorSelected;
-        _buildUi.BuildCancelled -= OnBuildCancelled;
+        BuildUi.BuildKindSelected -= OnBuildKindSelected;
+        BuildUi.BuildCancelled -= OnBuildCancelled;
     }
 
     #endregion
 
     #region BuildUi Callbacks
 
-    /// <summary>
-    /// Handles floor selection intent emitted by the build UI by updating
-    /// the active build context and switching the interaction system into
-    /// build mode.
-    /// </summary>
-    /// <param name="floorType">
-    /// The selected floor type to build.
-    /// </param>
-    private void OnFloorSelected(FloorType floorType)
+    private void OnBuildKindSelected(BuildKind buildKind)
     {
-        FloorSelected?.Invoke(floorType);
+        BuildKindSelected?.Invoke(buildKind);
     }
 
     /// <summary>

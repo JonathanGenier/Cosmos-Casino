@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Application.Console;
+using System;
 
 /// <summary>
 /// Manages the application's user interface components and coordinates the initialization and attachment of UI
@@ -12,7 +13,17 @@ public sealed partial class AppUiManager : InitializableNodeManager
 {
     #region FIELDS
 
-    private ConsoleUiManager _consoleUiManager;
+    private ConsoleUiManager? _consoleUiManager;
+
+    #endregion
+
+    #region Properties
+
+    private ConsoleUiManager ConsoleUiManager
+    {
+        get => _consoleUiManager ?? throw new InvalidOperationException($"{nameof(ConsoleUiManager)} is not initialized.");
+        set => _consoleUiManager = value;
+    }
 
     #endregion
 
@@ -25,7 +36,7 @@ public sealed partial class AppUiManager : InitializableNodeManager
     /// <param name="consoleManager">The console manager to be used for managing console operations during initialization. Cannot be null.</param>
     public void Initialize(InputManager inputManager, ConsoleManager consoleManager)
     {
-        _consoleUiManager = CreateInitializableNode<ConsoleUiManager>(
+        ConsoleUiManager = CreateInitializableNode<ConsoleUiManager>(
             cum => cum.Initialize(inputManager, consoleManager));
         MarkInitialized();
     }
@@ -45,7 +56,7 @@ public sealed partial class AppUiManager : InitializableNodeManager
     {
         using (ConsoleLog.SystemScope(nameof(AppUiManager)))
         {
-            AddChild(_consoleUiManager);
+            AddChild(ConsoleUiManager);
         }
     }
 

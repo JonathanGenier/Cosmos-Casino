@@ -125,7 +125,6 @@ namespace CosmosCasino.Core.Game.Build
             return outcome switch
             {
                 MapCellOutcome.Placed => BuildOperationOutcome.Placed,
-                MapCellOutcome.Replaced => BuildOperationOutcome.Replaced,
                 MapCellOutcome.Removed => BuildOperationOutcome.Removed,
                 MapCellOutcome.Skipped => BuildOperationOutcome.Skipped,
                 MapCellOutcome.Failed => BuildOperationOutcome.Failed,
@@ -153,9 +152,7 @@ namespace CosmosCasino.Core.Game.Build
                 MapCellFailureReason.None => BuildOperationFailureReason.None,
                 MapCellFailureReason.Blocked => BuildOperationFailureReason.Blocked,
                 MapCellFailureReason.NoFloor => BuildOperationFailureReason.NoFloor,
-                MapCellFailureReason.NoStructure => BuildOperationFailureReason.NoStructure,
-                MapCellFailureReason.NoFurniture => BuildOperationFailureReason.NoFurniture,
-                MapCellFailureReason.SameType => BuildOperationFailureReason.SameType,
+                MapCellFailureReason.NoWall => BuildOperationFailureReason.NoWall,
                 MapCellFailureReason.NoCell => BuildOperationFailureReason.NoCell,
                 MapCellFailureReason.InternalError => BuildOperationFailureReason.InternalError,
                 _ => throw new ArgumentOutOfRangeException(nameof(failureReason), failureReason, $"Unhandled {nameof(MapCellFailureReason)}")

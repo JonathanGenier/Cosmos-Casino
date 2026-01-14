@@ -19,26 +19,14 @@ namespace CosmosCasino.Core.Game.Build
         NoFloor,
 
         /// <summary>
-        /// The target cell does not contain a structure where one
+        /// The target cell does not contain a wall where one
         /// is required by the operation.
         /// </summary>
-        NoStructure,
-
-        /// <summary>
-        /// The target cell does not contain furniture where one
-        /// is required by the operation.
-        /// </summary>
-        NoFurniture,
-
-        /// <summary>
-        /// The requested build operation targets the same type
-        /// that is already present, resulting in no state change.
-        /// </summary>
-        SameType,
+        NoWall,
 
         /// <summary>
         /// The operation is blocked by another entity occupying
-        /// the target cell (e.g., structure, furniture, or rule constraint).
+        /// the target cell (e.g., wall, furniture, or rule constraint).
         /// </summary>
         Blocked,
 

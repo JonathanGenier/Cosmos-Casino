@@ -5,7 +5,7 @@ using System;
 /// Represents a unique key identifying a specific logical slot within a map cell, used to distinguish spawned entities
 /// by their cell and slot location.
 /// </summary>
-/// <remarks>A CellSlotSpawnKey combines a map cell coordinate with a logical slot (such as Floor, Structure, or
+/// <remarks>A CellSlotSpawnKey combines a map cell coordinate with a logical slot (such as Floor, Wall, or
 /// Furniture) to uniquely identify where an entity is spawned within a map. This struct is typically used as a key in
 /// collections or systems that need to track or reference entities by their cell and slot. CellSlotSpawnKey supports
 /// value equality and can be used in hash-based collections.</remarks>
@@ -108,7 +108,7 @@ public readonly struct CellSlotSpawnKey : IEquatable<CellSlotSpawnKey>, ISpawnKe
     /// <c>true</c> if the object is a <see cref="CellSlotSpawnKey"/>
     /// with identical cell and slot values; otherwise <c>false</c>.
     /// </returns>
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is CellSlotSpawnKey other && Equals(other);
     }

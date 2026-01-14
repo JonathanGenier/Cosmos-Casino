@@ -1,9 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://cpwd808y472vu"]
+[gd_scene load_steps=7 format=3 uid="uid://cpwd808y472vu"]
 
 [ext_resource type="Script" uid="uid://deve3yyfhp41u" path="res://code/Client/Game/GameManager.cs" id="1_ydf3n"]
-[ext_resource type="PackedScene" uid="uid://curynshbrk30c" path="res://scenes/game/entities/floors/floor_metal.tscn" id="2_6hqhf"]
 [ext_resource type="PackedScene" uid="uid://b50cildorh28g" path="res://scenes/game/camera_rig.tscn" id="2_omorx"]
-[ext_resource type="PackedScene" uid="uid://bidbofnue21fu" path="res://scenes/game/entities/floors/floor_carbon.tscn" id="2_p0de3"]
+[ext_resource type="PackedScene" uid="uid://bidbofnue21fu" path="res://scenes/game/entities/structures/floor.tscn" id="2_p0de3"]
+[ext_resource type="PackedScene" uid="uid://tt5euv8t06il" path="res://scenes/game/entities/structures/wall.tscn" id="5_p0de3"]
 
 [sub_resource type="Environment" id="Environment_6hqhf"]
 background_mode = 2
@@ -13,11 +13,15 @@ ambient_light_energy = 3.87
 reflected_light_source = 1
 fog_enabled = true
 
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_p0de3"]
+radius = 0.25
+height = 1.0
+
 [node name="Game" type="Node3D"]
 script = ExtResource("1_ydf3n")
 
 [node name="SpawnResources" type="ResourcePreloader" parent="."]
-resources = [PackedStringArray("floor_carbon", "floor_metal"), [ExtResource("2_p0de3"), ExtResource("2_6hqhf")]]
+resources = [PackedStringArray("floor", "wall"), [ExtResource("2_p0de3"), ExtResource("5_p0de3")]]
 
 [node name="Camera_Rig" parent="." instance=ExtResource("2_omorx")]
 
@@ -26,3 +30,7 @@ environment = SubResource("Environment_6hqhf")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 0, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("CapsuleMesh_p0de3")

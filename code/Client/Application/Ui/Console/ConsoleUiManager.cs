@@ -1,5 +1,6 @@
 using CosmosCasino.Core.Application.Console;
 using Godot;
+using System;
 
 /// <summary>
 /// Manages the initialization and lifecycle of the client-side debug console UI, coordinating input handling and
@@ -13,10 +14,38 @@ public sealed partial class ConsoleUiManager : InitializableNodeManager
 {
     #region FIELDS
 
-    private InputManager _inputManager;
-    private ConsoleManager _consoleManager;
-    private ConsoleUi _consoleUi;
-    private ConsoleAdapter _consoleAdapter;
+    private InputManager? _inputManager;
+    private ConsoleManager? _consoleManager;
+    private ConsoleUi? _consoleUi;
+    private ConsoleAdapter? _consoleAdapter;
+
+    #endregion
+
+    #region Properties
+
+    private InputManager InputManager
+    {
+        get => _inputManager ?? throw new InvalidOperationException($"{nameof(InputManager)} has not been initialized.");
+        set => _inputManager = value;
+    }
+
+    private ConsoleManager ConsoleManager
+    {
+        get => _consoleManager ?? throw new InvalidOperationException($"{nameof(ConsoleManager)} has not been initialized.");
+        set => _consoleManager = value;
+    }
+
+    private ConsoleUi ConsoleUi
+    {
+        get => _consoleUi ?? throw new InvalidOperationException($"{nameof(ConsoleUi)} has not been initialized.");
+        set => _consoleUi = value;
+    }
+
+    private ConsoleAdapter ConsoleAdapter
+    {
+        get => _consoleAdapter ?? throw new InvalidOperationException($"{nameof(ConsoleAdapter)} has not been initialized.");
+        set => _consoleAdapter = value;
+    }
 
     #endregion
 
@@ -29,8 +58,8 @@ public sealed partial class ConsoleUiManager : InitializableNodeManager
     /// <param name="consoleManager">The console manager to be used for console operations. Cannot be null.</param>
     public void Initialize(InputManager inputManager, ConsoleManager consoleManager)
     {
-        _inputManager = inputManager;
-        _consoleManager = consoleManager;
+        InputManager = inputManager;
+        ConsoleManager = consoleManager;
         MarkInitialized();
     }
 
@@ -44,11 +73,11 @@ public sealed partial class ConsoleUiManager : InitializableNodeManager
     {
         using (ConsoleLog.SystemScope(nameof(ConsoleUiManager)))
         {
-            _consoleUi = AddNode(GD.Load<PackedScene>(AppUiPaths.Console).Instantiate<ConsoleUi>());
-            _consoleUi.Toggle();
-            _consoleAdapter = new ConsoleAdapter(_consoleUi, _consoleManager);
+            ConsoleUi = AddNode(GD.Load<PackedScene>(AppUiPaths.Console).Instantiate<ConsoleUi>());
+            ConsoleUi.Toggle();
+            ConsoleAdapter = new ConsoleAdapter(ConsoleUi, ConsoleManager);
 
-            _inputManager.ToggleConsoleUi += OnToggleConsoleUi;
+            InputManager.ToggleConsoleUi += OnToggleConsoleUi;
         }
     }
 
@@ -59,8 +88,8 @@ public sealed partial class ConsoleUiManager : InitializableNodeManager
     /// detach event handlers. Override this method to implement additional cleanup logic if necessary.</remarks>
     protected override void OnExit()
     {
-        _inputManager.ToggleConsoleUi -= OnToggleConsoleUi;
-        _consoleAdapter.Dispose();
+        InputManager.ToggleConsoleUi -= OnToggleConsoleUi;
+        ConsoleAdapter?.Dispose();
     }
 
     /// <summary>
@@ -68,7 +97,7 @@ public sealed partial class ConsoleUiManager : InitializableNodeManager
     /// </summary>
     private void OnToggleConsoleUi()
     {
-        _consoleUi.Toggle();
+        ConsoleUi.Toggle();
     }
 
     #endregion

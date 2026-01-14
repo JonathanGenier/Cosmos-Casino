@@ -9,46 +9,28 @@ using System;
 public sealed partial class GameManager : NodeManager
 {
     #region Fields
-
     private readonly BuildContext _buildContext = new();
 
-    private AppServices _appServices;
-    private GameSession _gameSession;
+    private bool _sceneReady = false;
+    private bool _sessionInitialized = false;
+    private bool _simulationHasStarted = false;
 
-    private CameraManager _cameraManager;
-    private ClientBuildManager _clientBuildManager;
-    private GameUiManager _gameUiManager;
-    private InteractionManager _interactionManager;
-    private SpawnManager _spawnManager;
-    private CursorManager _cursorManager;
-
-    private CameraInputFlow _cameraInputFlow;
-    private BuildContextFlow _buildContextFlow;
-    private BuildRequestFlow _buildRequestFlow;
-    private BuildSpawnFlow _buildSpawnFlow;
-
-    private ResourcePreloader _spawnResourcesPreloader;
+    private AppServices? _appServices;
+    private GameSession? _gameSession;
+    private CameraManager? _cameraManager;
+    private ClientBuildManager? _clientBuildManager;
+    private GameUiManager? _gameUiManager;
+    private InteractionManager? _interactionManager;
+    private SpawnManager? _spawnManager;
+    private CursorManager? _cursorManager;
+    private CameraInputFlow? _cameraInputFlow;
+    private BuildContextFlow? _buildContextFlow;
+    private BuildRequestFlow? _buildRequestFlow;
+    private BuildSpawnFlow? _buildSpawnFlow;
+    private ResourcePreloader? _spawnResourcesPreloader;
 #if DEBUG
-    private CursorDebugVisualizer _cursorDebugVisualizer;
+    private CursorDebugVisualizer? _cursorDebugVisualizer;
 #endif
-
-    private bool _isReady = false;
-    private bool _isInitialized = false;
-
-    #endregion
-
-    #region Events
-
-    /// <summary>
-    /// Invoked when the active game session ends.
-    /// </summary>
-    private Action _endGame;
-
-    /// <summary>
-    /// Invoked to shut down the application.
-    /// </summary>
-    private Action _shutdownApp;
-
     #endregion
 
     #region Properties
@@ -58,6 +40,91 @@ public sealed partial class GameManager : NodeManager
     /// </summary>
     public GameState State { get; private set; } = GameState.Loading;
 
+    private AppServices AppServices
+    {
+        get => _appServices ?? throw new InvalidOperationException($"{nameof(AppServices)} is not initialized.");
+        set => _appServices = value;
+    }
+
+    private GameSession GameSession
+    {
+        get => _gameSession ?? throw new InvalidOperationException($"{nameof(GameSession)} is not initialized.");
+        set => _gameSession = value;
+    }
+
+    private CameraManager CameraManager
+    {
+        get => _cameraManager ?? throw new InvalidOperationException($"{nameof(CameraManager)} is not initialized.");
+        set => _cameraManager = value;
+    }
+
+    private ClientBuildManager ClientBuildManager
+    {
+        get => _clientBuildManager ?? throw new InvalidOperationException($"{nameof(ClientBuildManager)} is not initialized.");
+        set => _clientBuildManager = value;
+    }
+
+    private GameUiManager GameUiManager
+    {
+        get => _gameUiManager ?? throw new InvalidOperationException($"{nameof(GameUiManager)} is not initialized.");
+        set => _gameUiManager = value;
+    }
+
+    private InteractionManager InteractionManager
+    {
+        get => _interactionManager ?? throw new InvalidOperationException($"{nameof(InteractionManager)} is not initialized.");
+        set => _interactionManager = value;
+    }
+
+    private SpawnManager SpawnManager
+    {
+        get => _spawnManager ?? throw new InvalidOperationException($"{nameof(SpawnManager)} is not initialized.");
+        set => _spawnManager = value;
+    }
+
+    private CursorManager CursorManager
+    {
+        get => _cursorManager ?? throw new InvalidOperationException($"{nameof(CursorManager)} is not initialized.");
+        set => _cursorManager = value;
+    }
+
+    private CameraInputFlow CameraInputFlow
+    {
+        get => _cameraInputFlow ?? throw new InvalidOperationException($"{nameof(CameraInputFlow)} is not initialized.");
+        set => _cameraInputFlow = value;
+    }
+
+    private BuildContextFlow BuildContextFlow
+    {
+        get => _buildContextFlow ?? throw new InvalidOperationException($"{nameof(BuildContextFlow)} is not initialized.");
+        set => _buildContextFlow = value;
+    }
+
+    private BuildRequestFlow BuildRequestFlow
+    {
+        get => _buildRequestFlow ?? throw new InvalidOperationException($"{nameof(BuildRequestFlow)} is not initialized.");
+        set => _buildRequestFlow = value;
+    }
+
+    private BuildSpawnFlow BuildSpawnFlow
+    {
+        get => _buildSpawnFlow ?? throw new InvalidOperationException($"{nameof(BuildSpawnFlow)} is not initialized.");
+        set => _buildSpawnFlow = value;
+    }
+
+    private ResourcePreloader SpawnResourcesPreloader
+    {
+        get => _spawnResourcesPreloader ?? throw new InvalidOperationException($"{nameof(SpawnResourcesPreloader)} is not initialized.");
+        set => _spawnResourcesPreloader = value;
+    }
+
+#if DEBUG
+    private CursorDebugVisualizer CursorDebugVisualizer
+    {
+        get => _cursorDebugVisualizer ?? throw new InvalidOperationException($"{nameof(CursorDebugVisualizer)} is not initialized.");
+        set => _cursorDebugVisualizer = value;
+    }
+#endif
     #endregion
 
     #region Godot Process
@@ -67,18 +134,16 @@ public sealed partial class GameManager : NodeManager
     /// the game or shutting down the application.
     /// </summary>
     /// <param name="appServices">The application-level services used during the game session. Cannot be null.</param>
-    /// <param name="endGame">An action to invoke when the game session ends. Cannot be null.</param>
-    /// <param name="shutdownApp">An action to invoke to shut down the application. Cannot be null.</param>
     /// <exception cref="InvalidOperationException">Thrown if the game is not ready to start a new session.</exception>
-    public void StartNewGame(AppServices appServices, Action endGame, Action shutdownApp)
+    public void StartNewGame(AppServices appServices)
     {
-        if (!_isReady)
+        if (!_sceneReady)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"{nameof(GameManager)} scene not ready yet.");
         }
 
-        _gameSession = GameSession.CreateNewSession();
-        Initialize(appServices, endGame, shutdownApp);
+        GameSession = GameSession.CreateNewSession();
+        Initialize(appServices);
         StartSimulation();
     }
 
@@ -87,18 +152,16 @@ public sealed partial class GameManager : NodeManager
     /// callbacks for ending the game and shutting down the application.
     /// </summary>
     /// <param name="appServices">The application-level services used during the game session. Cannot be null.</param>
-    /// <param name="endGame">An action to invoke when the game session ends. Cannot be null.</param>
-    /// <param name="shutdownApp">An action to invoke to shut down the application. Cannot be null.</param>
     /// <exception cref="InvalidOperationException">Thrown if the game is not ready to be loaded.</exception>
-    public void LoadGame(AppServices appServices, Action endGame, Action shutdownApp)
+    public void LoadGame(AppServices appServices)
     {
-        if (!_isReady)
+        if (!_sceneReady)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"{nameof(GameManager)} scene not ready yet.");
         }
 
-        _gameSession = GameSession.LoadSession(); // Pass GameSaveData
-        Initialize(appServices, endGame, shutdownApp);
+        GameSession = GameSession.LoadSession(); // Pass GameSaveData
+        Initialize(appServices);
         // Load map
         // Load Entities
         StartSimulation();
@@ -114,15 +177,15 @@ public sealed partial class GameManager : NodeManager
     /// method.</remarks>
     public override void _Ready()
     {
-        _spawnResourcesPreloader = GetNode<ResourcePreloader>("SpawnResources");
+        SpawnResourcesPreloader = GetNode<ResourcePreloader>("SpawnResources");
 
 #if DEBUG
         var cursorVisualizer = GD.Load<PackedScene>("res://scenes/game/debug/cursor_debug_visualizer.tscn");
-        _cursorDebugVisualizer = (CursorDebugVisualizer)cursorVisualizer.Instantiate();
-        AddChild(_cursorDebugVisualizer);
+        CursorDebugVisualizer = (CursorDebugVisualizer)cursorVisualizer.Instantiate();
+        AddChild(CursorDebugVisualizer);
 #endif
 
-        _isReady = true;
+        _sceneReady = true;
     }
 
     /// <summary>
@@ -133,10 +196,13 @@ public sealed partial class GameManager : NodeManager
     /// method to implement additional cleanup logic if necessary.</remarks>
     public override void _ExitTree()
     {
-        _buildContextFlow?.Dispose();
-        _buildRequestFlow?.Dispose();
-        _buildSpawnFlow?.Dispose();
-        _cameraInputFlow?.Dispose();
+        BuildContextFlow?.Dispose();
+        BuildRequestFlow?.Dispose();
+        BuildSpawnFlow?.Dispose();
+        CameraInputFlow?.Dispose();
+        _sessionInitialized = false;
+        _simulationHasStarted = false;
+        State = GameState.Loading;
     }
 
     #endregion
@@ -148,42 +214,36 @@ public sealed partial class GameManager : NodeManager
     /// Binds injected services, creates manager nodes, and initializes them with their respective dependencies.
     /// </summary>
     /// <param name="appServices">Application-level services (input, ui, etc.) required by higher-level managers. Must not be null.</param>
-    /// <param name="endGame">Callback invoked when the current game session ends. Must not be null.</param>
-    /// <param name="shutdownApp">Callback invoked to request application shutdown. Must not be null.</param>
     /// <exception cref="InvalidOperationException">Thrown if this method is called more than once on the same instance.</exception>
-    private void Initialize(AppServices appServices, Action endGame, Action shutdownApp)
+    private void Initialize(AppServices appServices)
     {
-        if (_isInitialized)
+        if (_sessionInitialized)
         {
-            throw new InvalidOperationException("GameManager already initialized.");
+            throw new InvalidOperationException($"{nameof(GameManager)} is already initialized.");
         }
 
         ArgumentNullException.ThrowIfNull(appServices);
-        ArgumentNullException.ThrowIfNull(endGame);
-        ArgumentNullException.ThrowIfNull(shutdownApp);
 
-        _appServices = appServices;
-        _endGame = endGame;
-        _shutdownApp = shutdownApp;
+        AppServices = appServices;
 
-        _clientBuildManager = AddInitializableNode<ClientBuildManager>(
-            cbm => cbm.Initialize(_gameSession.BuildManager));
-        _cursorManager = AddInitializableNode<CursorManager>(
+        ClientBuildManager = AddInitializableNode<ClientBuildManager>(
+            cbm => cbm.Initialize(GameSession.BuildManager));
+        CursorManager = AddInitializableNode<CursorManager>(
             cm => cm.Initialize(CollisionLayers.Buildable));
-        _interactionManager = AddInitializableNode<InteractionManager>(
-            im => im.Initialize(_appServices.InputManager, _cursorManager, _buildContext));
-        _spawnManager = AddInitializableNode<SpawnManager>(
-            sm => sm.Initialize(SpawnCatalog.LoadFromResourcePreloader(_spawnResourcesPreloader)));
+        InteractionManager = AddInitializableNode<InteractionManager>(
+            im => im.Initialize(AppServices.InputManager, CursorManager, _buildContext));
+        SpawnManager = AddInitializableNode<SpawnManager>(
+            sm => sm.Initialize(SpawnCatalog.LoadFromResourcePreloader(SpawnResourcesPreloader)));
 
-        _cameraManager = CreateNode<CameraManager>();
-        _gameUiManager = CreateInitializableNode<GameUiManager>(
+        CameraManager = CreateNode<CameraManager>();
+        GameUiManager = CreateInitializableNode<GameUiManager>(
             gum => gum.Initialize());
 
 #if DEBUG
-        _cursorDebugVisualizer.Initialize(_cursorManager);
+        CursorDebugVisualizer.Initialize(CursorManager);
 #endif
 
-        _isInitialized = true;
+        _sessionInitialized = true;
     }
 
     /// <summary>
@@ -192,10 +252,15 @@ public sealed partial class GameManager : NodeManager
     /// </summary>
     private void InitializeFlows()
     {
-        _buildContextFlow = new BuildContextFlow(_gameUiManager.BuildUiManager, _buildContext, _interactionManager);
-        _buildRequestFlow = new BuildRequestFlow(_interactionManager, _clientBuildManager);
-        _buildSpawnFlow = new BuildSpawnFlow(_clientBuildManager, _spawnManager);
-        _cameraInputFlow = new CameraInputFlow(_appServices.InputManager, _cameraManager);
+        if (!_sessionInitialized)
+        {
+            throw new InvalidOperationException($"Cannot initialize flows before {nameof(GameManager)} initialization.");
+        }
+
+        BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, _buildContext, InteractionManager);
+        BuildRequestFlow = new BuildRequestFlow(InteractionManager, ClientBuildManager);
+        BuildSpawnFlow = new BuildSpawnFlow(ClientBuildManager, SpawnManager);
+        CameraInputFlow = new CameraInputFlow(AppServices.InputManager, CameraManager);
     }
 
     /// <summary>
@@ -206,11 +271,22 @@ public sealed partial class GameManager : NodeManager
     /// </summary>
     private void StartSimulation()
     {
-        AddChild(_cameraManager);
-        AddChild(_gameUiManager);
+        if (!_sessionInitialized)
+        {
+            throw new InvalidOperationException($"Cannot start simulation before {nameof(GameManager)} session initialization.");
+        }
+
+        if (_simulationHasStarted)
+        {
+            throw new InvalidOperationException("Simulation already started.");
+        }
+
+        AddChild(CameraManager);
+        AddChild(GameUiManager);
 
         InitializeFlows();
         SetState(GameState.Paused);
+        _simulationHasStarted = true;
     }
 
     #endregion 
@@ -230,7 +306,7 @@ public sealed partial class GameManager : NodeManager
         }
 
         State = newState;
-        _appServices.InputManager.OnGameStateChanged(newState);
+        AppServices.InputManager.OnGameStateChanged(newState);
         ConsoleLog.System(nameof(GameManager), $"GameState → {State}");
     }
 

@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Floor;
+using CosmosCasino.Core.Game.Build;
 using System;
 
 /// <summary>
@@ -35,7 +35,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
         _buildContext = context;
         _interactionManager = interaction;
 
-        _buildUiManager.FloorSelected += OnFloorSelected;
+        _buildUiManager.BuildKindSelected += OnBuildKindSelected;
         _buildUiManager.BuildCancelled += OnBuildCancelled;
     }
 
@@ -55,7 +55,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
             return;
         }
 
-        _buildUiManager.FloorSelected -= OnFloorSelected;
+        _buildUiManager.BuildKindSelected -= OnBuildKindSelected;
         _buildUiManager.BuildCancelled -= OnBuildCancelled;
         _disposed = true;
     }
@@ -64,13 +64,17 @@ public class BuildContextFlow : IGameFlow, IDisposable
 
     #region Ui Input Action
 
-    /// <summary>
-    /// Handles the selection of a floor type and updates the build context accordingly.
-    /// </summary>
-    /// <param name="floor">The floor type that has been selected. Specifies which floor to set in the build context.</param>
-    private void OnFloorSelected(FloorType floor)
+    private void OnBuildKindSelected(BuildKind buildKind)
     {
-        _buildContext.SetFloor(floor);
+        BuildContextBase context = buildKind switch
+        {
+            BuildKind.Floor => new FloorBuildContext(),
+            BuildKind.Wall => new WallBuildContext(),
+            _ => throw new NotSupportedException(
+            $"Build kind '{buildKind}' is not supported.")
+        };
+
+        _buildContext.Set(context);
         _interactionManager.SetTool(InteractionTool.Build);
     }
 

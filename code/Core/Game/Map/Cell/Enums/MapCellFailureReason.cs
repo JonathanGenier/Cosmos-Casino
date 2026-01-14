@@ -19,22 +19,16 @@ namespace CosmosCasino.Core.Game.Map.Cell
         NoFloor,
 
         /// <summary>
-        /// The cell does not contain a structure where one
+        /// The cell does not contain a wall where one
         /// is required by the operation.
         /// </summary>
-        NoStructure,
+        NoWall,
 
         /// <summary>
-        /// The cell does not contain furniture where one
-        /// is required by the operation.
+        /// The requested cell does not exist and could not
+        /// be resolved for the operation.
         /// </summary>
-        NoFurniture,
-
-        /// <summary>
-        /// The operation targets the same type already present
-        /// in the cell, resulting in no state change.
-        /// </summary>
-        SameType,
+        NoCell,
 
         /// <summary>
         /// The operation is blocked by another element
@@ -47,11 +41,5 @@ namespace CosmosCasino.Core.Game.Map.Cell
         /// was encountered, indicating a programmer error.
         /// </summary>
         InternalError,
-
-        /// <summary>
-        /// The requested cell does not exist and could not
-        /// be resolved for the operation.
-        /// </summary>
-        NoCell,
     }
 }
