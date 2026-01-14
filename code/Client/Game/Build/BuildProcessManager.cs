@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Game.Build;
+using Godot;
 using System;
 
 /// <summary>
@@ -8,11 +9,12 @@ using System;
 /// BuildManager and exposes events to notify subscribers when a build operation completes. This class is intended to be
 /// initialized with a BuildManager instance before use. It is not thread-safe; callers should ensure appropriate
 /// synchronization if accessed from multiple threads.</remarks>
-public sealed partial class ClientBuildManager : InitializableNodeManager
+public sealed partial class BuildProcessManager : InitializableNodeManager
 {
     #region Fields
 
     private BuildManager? _buildManager;
+    private BuildPreviewManager? buildPreviewManager;
 
     #endregion
 
@@ -35,23 +37,15 @@ public sealed partial class ClientBuildManager : InitializableNodeManager
         set => _buildManager = value;
     }
 
-    #endregion
-
-    #region Godot Methods
-
-    /// <summary>
-    /// Initializes the instance with the specified build manager.
-    /// </summary>
-    /// <param name="buildManager">The build manager to associate with this instance. Cannot be null.</param>
-    public void Initialize(BuildManager buildManager)
+    private BuildPreviewManager? BuildPreviewManager
     {
-        BuildManager = buildManager;
-        MarkInitialized();
+        get => buildPreviewManager ?? throw new InvalidOperationException($"{nameof(BuildPreviewManager)} has not been initialized.");
+        set => buildPreviewManager = value;
     }
 
     #endregion
 
-    #region Build Intent
+    #region Build Processes
 
     /// <summary>
     /// Executes the specified build intent by applying its operations and triggers the build completion event.
@@ -66,11 +60,45 @@ public sealed partial class ClientBuildManager : InitializableNodeManager
 
         if (!IsInitialized)
         {
-            throw new InvalidOperationException($"{nameof(ClientBuildManager)} is not initialized.");
+            throw new InvalidOperationException($"{nameof(BuildProcessManager)} is not initialized.");
         }
 
         BuildResult buildResult = BuildManager.ApplyBuildOperations(buildIntent);
         BuildCompleted?.Invoke(buildResult);
+    }
+
+    #endregion
+
+    #region Godot Methods
+
+    /// <summary>
+    /// Initializes the build system and its associated managers using the specified services.
+    /// </summary>
+    /// <param name="services">The set of services required to configure the build system, including build management, preview resources, build
+    /// context, and cursor management. Cannot be null.</param>
+    public void Initialize(BuildProcessServices services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        BuildManager = services.BuildManager;
+        BuildPreviewManager = new BuildPreviewManager();
+        BuildPreviewManager.Initialize(
+            services.PreviewResources,
+            services.BuildContext,
+            services.CursorManager);
+
+        MarkInitialized();
+    }
+
+    /// <summary>
+    /// Initializes the control when it is ready for interaction by adding the preview manager as a child element.
+    /// </summary>
+    /// <remarks>Override this method to perform setup tasks that require the control to be fully constructed.
+    /// This method is called by the framework when the control is ready, and is typically used to add child elements or
+    /// initialize state.</remarks>
+    protected override void OnReady()
+    {
+        AddChild(BuildPreviewManager);
     }
 
     #endregion

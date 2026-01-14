@@ -14,7 +14,7 @@ public class BuildRequestFlow : IGameFlow, IDisposable
     #region Fields
 
     private readonly InteractionManager _interactionManager;
-    private readonly ClientBuildManager _clientBuildManager;
+    private readonly BuildProcessManager _clientBuildManager;
     private bool _isDisposed;
 
     #endregion
@@ -26,7 +26,7 @@ public class BuildRequestFlow : IGameFlow, IDisposable
     /// </summary>
     /// <param name="interactionManager">The InteractionManager instance used to handle user interactions and build requests. Cannot be null.</param>
     /// <param name="clientBuildManager">The ClientBuildManager instance responsible for managing build operations. Cannot be null.</param>
-    public BuildRequestFlow(InteractionManager interactionManager, ClientBuildManager clientBuildManager)
+    public BuildRequestFlow(InteractionManager interactionManager, BuildProcessManager clientBuildManager)
     {
         ArgumentNullException.ThrowIfNull(interactionManager);
         ArgumentNullException.ThrowIfNull(clientBuildManager);

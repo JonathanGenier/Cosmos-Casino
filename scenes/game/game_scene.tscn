@@ -1,9 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://cpwd808y472vu"]
+[gd_scene load_steps=9 format=3 uid="uid://cpwd808y472vu"]
 
 [ext_resource type="Script" uid="uid://deve3yyfhp41u" path="res://code/Client/Game/GameManager.cs" id="1_ydf3n"]
+[ext_resource type="Script" uid="uid://dts4au5yvnwqt" path="res://code/Client/Game/Resources/ResourceAssembler.cs" id="2_6thfb"]
 [ext_resource type="PackedScene" uid="uid://b50cildorh28g" path="res://scenes/game/camera_rig.tscn" id="2_omorx"]
-[ext_resource type="PackedScene" uid="uid://bidbofnue21fu" path="res://scenes/game/entities/structures/floor.tscn" id="2_p0de3"]
-[ext_resource type="PackedScene" uid="uid://tt5euv8t06il" path="res://scenes/game/entities/structures/wall.tscn" id="5_p0de3"]
+[ext_resource type="PackedScene" uid="uid://bidbofnue21fu" path="res://scenes/game/build/spawn/floor.tscn" id="2_p0de3"]
+[ext_resource type="PackedScene" uid="uid://c8q38ydbo13th" path="res://scenes/game/build/preview/build_grid_preview.tscn" id="5_6thfb"]
+[ext_resource type="PackedScene" uid="uid://tt5euv8t06il" path="res://scenes/game/build/spawn/wall.tscn" id="5_p0de3"]
 
 [sub_resource type="Environment" id="Environment_6hqhf"]
 background_mode = 2
@@ -20,8 +22,14 @@ height = 1.0
 [node name="Game" type="Node3D"]
 script = ExtResource("1_ydf3n")
 
-[node name="SpawnResources" type="ResourcePreloader" parent="."]
+[node name="ResourceAssembler" type="Node" parent="."]
+script = ExtResource("2_6thfb")
+
+[node name="SpawnResources" type="ResourcePreloader" parent="ResourceAssembler"]
 resources = [PackedStringArray("floor", "wall"), [ExtResource("2_p0de3"), ExtResource("5_p0de3")]]
+
+[node name="PreviewResources" type="ResourcePreloader" parent="ResourceAssembler"]
+resources = [PackedStringArray("build_grid_preview"), [ExtResource("5_6thfb")]]
 
 [node name="Camera_Rig" parent="." instance=ExtResource("2_omorx")]
 

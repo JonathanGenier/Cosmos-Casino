@@ -14,6 +14,17 @@ public sealed class BuildContext
 
     #endregion
 
+    #region Events
+
+    /// <summary>
+    /// Occurs when the build context changes.
+    /// </summary>
+    /// <remarks>Subscribers are notified whenever the associated build context is updated or replaced. The
+    /// event handler receives the new build context, or <see langword="null"/> if the context is cleared.</remarks>
+    public event Action<BuildContextBase?>? ContextChanged;
+
+    #endregion
+
     #region Properties
 
     /// <summary>
@@ -35,6 +46,7 @@ public sealed class BuildContext
     {
         ArgumentNullException.ThrowIfNull(context);
         _activeContext = context;
+        ContextChanged?.Invoke(_activeContext);
     }
 
     /// <summary>
@@ -43,6 +55,7 @@ public sealed class BuildContext
     public void Clear()
     {
         _activeContext = null;
+        ContextChanged?.Invoke(null);
     }
 
     #endregion

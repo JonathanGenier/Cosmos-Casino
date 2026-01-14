@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3 uid="uid://c8q38ydbo13th"]
+
+[ext_resource type="Script" uid="uid://ll3o42csdk1" path="res://code/Client/Game/Build/Preview/BuildGridPreview.cs" id="1_o3sbj"]
+[ext_resource type="Shader" uid="uid://dkjjf5xk0dyey" path="res://scenes/game/build/preview/build_grid_preview.gdshader" id="2_xbpfe"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_wa4d0"]
+size = Vector2(1, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xbpfe"]
+render_priority = 0
+shader = ExtResource("2_xbpfe")
+shader_parameter/radius = 5.5
+shader_parameter/cell_size = 1.0
+shader_parameter/line_width = 0.05
+shader_parameter/edge_fade = 10.0
+shader_parameter/grid_color = Color(0.00064697355, 0.3733038, 0.7133373, 1)
+
+[node name="BuildGridPreview" type="Node3D"]
+script = ExtResource("1_o3sbj")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("PlaneMesh_wa4d0")
+surface_material_override/0 = SubResource("ShaderMaterial_xbpfe")
