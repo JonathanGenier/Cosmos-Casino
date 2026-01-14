@@ -1,3 +1,6 @@
+using System;
+
+
 /// <summary>
 /// Provides centralized access to application services for the client layer, including input management and node
 /// coordination.
@@ -8,12 +11,22 @@
 /// application's node hierarchy.</remarks>
 public sealed partial class AppServices : NodeManager
 {
+    #region Fields
+
+    private InputManager? _inputManager;
+
+    #endregion
+
     #region Properties
 
     /// <summary>
     /// Gets the input manager used to process and manage user input events.
     /// </summary>
-    public InputManager InputManager { get; private set; }
+    public InputManager InputManager
+    {
+        get => _inputManager ?? throw new InvalidOperationException($"{nameof(InputManager)} accessed before initialization.");
+        private set => _inputManager = value;
+    }
 
     #endregion
 
@@ -26,8 +39,13 @@ public sealed partial class AppServices : NodeManager
     /// <remarks>This method is automatically invoked by the engine and should not be called directly.
     /// Override this method to set up node references, connect signals, or perform other setup tasks that depend on the
     /// node being added to the scene.</remarks>
-    public override void _Ready()
+    public override void _EnterTree()
     {
+        if (_inputManager != null)
+        {
+            throw new InvalidOperationException($"{nameof(AppServices)} already initialized.");
+        }
+
         InputManager = AddNode<InputManager>();
     }
 

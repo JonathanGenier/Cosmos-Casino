@@ -96,6 +96,24 @@ namespace CosmosCasino.Core.Game.Map
             return new(coord, MapCellOutcome.Failed, failureReason);
         }
 
+        /// <summary>
+        /// Creates a failed map operation result for the specified
+        /// cell coordinate and failure reason.
+        /// </summary>
+        /// <param name="coord">
+        /// The coordinate of the affected cell.
+        /// </param>
+        /// <param name="failureReason">
+        /// The reason the operation failed.
+        /// </param>
+        /// <returns>
+        /// A failed map operation result.
+        /// </returns>
+        internal static MapOperationResult Skipped(MapCellCoord coord, MapCellFailureReason failureReason)
+        {
+            return new(coord, MapCellOutcome.Skipped, failureReason);
+        }
+
         #endregion
     }
 }

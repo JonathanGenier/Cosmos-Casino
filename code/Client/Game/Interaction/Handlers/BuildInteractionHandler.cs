@@ -1,9 +1,5 @@
 using CosmosCasino.Core.Game.Build;
-using CosmosCasino.Core.Game.Map.Cell;
-using CosmosCasino.Core.Game.Map.Grid;
-using Godot;
 using System;
-using System.Collections.Generic;
 
 /// <summary>
 /// Handles player build interactions by translating input gestures into build actions using the provided build context
@@ -17,7 +13,7 @@ public sealed class BuildInteractionHandler : IInteractionHandler
 {
     #region Fields
 
-    private BuildContext _buildContext;
+    private readonly BuildContext _buildContext;
 
     #endregion
 
@@ -29,6 +25,7 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// <param name="buildContext">The build context to associate with this handler. Cannot be null.</param>
     public BuildInteractionHandler(BuildContext buildContext)
     {
+        ArgumentNullException.ThrowIfNull(buildContext);
         _buildContext = buildContext;
     }
 
@@ -42,7 +39,7 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// <remarks>Subscribers can handle this event to initiate or respond to build operations based on the
     /// provided build intent. The event provides a <see cref="BuildIntent"/> parameter that describes the details of
     /// the requested build.</remarks>
-    public event Action<BuildIntent> BuildRequested;
+    public event Action<BuildIntent>? BuildRequested;
 
     #endregion
 
@@ -81,21 +78,15 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// operation to proceed.</param>
     public void OnPrimaryGestureEnded(CursorContext start, CursorContext end)
     {
-        if (!_buildContext.HasIntent || !end.IsValid)
+        if (_buildContext.ActiveContext == null || !end.IsValid)
         {
             return;
         }
 
-        var cells = GetCellsBetween(start.WorldPosition, end.WorldPosition);
-
-        if (cells.Count == 0)
+        if (_buildContext.ActiveContext.TryCreateBuildIntent(start, end, out var intent))
         {
-            return;
+            BuildRequested?.Invoke(intent);
         }
-
-        var floorType = _buildContext.SelectedFloor!.Value;
-        var intent = BuildIntent.BuildFloor(cells, floorType);
-        BuildRequested?.Invoke(intent);
     }
 
     /// <summary>
@@ -107,53 +98,6 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     {
         // No-op for now.
         // Later: clear preview state.
-    }
-
-    #endregion
-
-    #region Get Cells
-
-    /// <summary>
-    /// Returns a list of map cell coordinates that lie within the rectangular area defined by two world-space
-    /// positions.
-    /// </summary>
-    /// <remarks>The method assumes that both positions are on the same Z layer. The returned cells are
-    /// ordered by X and then by Y coordinate.</remarks>
-    /// <param name="startWorld">The world-space position representing one corner of the rectangular area.</param>
-    /// <param name="endWorld">The world-space position representing the opposite corner of the rectangular area.</param>
-    /// <returns>A read-only list of map cell coordinates that are contained within the rectangle defined by the two world
-    /// positions. The list includes all cells between the two corners, inclusive.</returns>
-    private static IReadOnlyList<MapCellCoord> GetCellsBetween(Vector3 startWorld, Vector3 endWorld)
-    {
-        MapCellCoord startCell = MapGrid.WorldToCell(
-        startWorld.X,
-        startWorld.Y,
-        startWorld.Z);
-
-        MapCellCoord endCell = MapGrid.WorldToCell(
-        endWorld.X,
-        endWorld.Y,
-        endWorld.Z);
-
-        int minX = Math.Min(startCell.X, endCell.X);
-        int maxX = Math.Max(startCell.X, endCell.X);
-
-        int minY = Math.Min(startCell.Y, endCell.Y);
-        int maxY = Math.Max(startCell.Y, endCell.Y);
-
-        int z = startCell.Z; // assume same layer for now
-
-        var cells = new List<MapCellCoord>();
-
-        for (int x = minX; x <= maxX; x++)
-        {
-            for (int y = minY; y <= maxY; y++)
-            {
-                cells.Add(new MapCellCoord(x, y, z));
-            }
-        }
-
-        return cells;
     }
 
     #endregion

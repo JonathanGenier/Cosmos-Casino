@@ -62,6 +62,11 @@ public abstract partial class InitializableNodeManager : NodeManager
     /// node. Do not call this method directly.</remarks>
     public sealed override void _ExitTree()
     {
+        if (!_isInitialized)
+        {
+            throw new InvalidOperationException($"{GetType().Name} entered the tree without being Initialized.");
+        }
+
         OnExit();
     }
 
@@ -72,6 +77,11 @@ public abstract partial class InitializableNodeManager : NodeManager
     /// <param name="delta">The elapsed time, in seconds, since the previous frame. Use this value to make updates frame rate independent.</param>
     public sealed override void _Process(double delta)
     {
+        if (!_isInitialized)
+        {
+            throw new InvalidOperationException($"{GetType().Name} entered the tree without being Initialized.");
+        }
+
         OnProcess(delta);
     }
 

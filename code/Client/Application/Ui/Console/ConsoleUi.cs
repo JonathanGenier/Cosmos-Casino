@@ -13,10 +13,10 @@ public sealed partial class ConsoleUi : Control
     #region Inspector nodes
 
     [Export]
-    private RichTextLabel _textLog;
+    private RichTextLabel? _textLog;
 
     [Export]
-    private LineEdit _lineEdit;
+    private LineEdit? _lineEdit;
 
     #endregion
 
@@ -28,7 +28,23 @@ public sealed partial class ConsoleUi : Control
     /// <remarks>Subscribers can handle this event to process or respond to user-submitted commands. The event
     /// is raised each time a command is submitted, and the provided string parameter contains the full text of the
     /// command.</remarks>
-    public event Action<string> CommandSubmitted;
+    public event Action<string>? CommandSubmitted;
+
+    #endregion
+
+    #region Properties
+
+    private RichTextLabel TextLog
+    {
+        get => _textLog ?? throw new InvalidOperationException($"{nameof(RichTextLabel)} is not initialized.");
+        set => _textLog = value;
+    }
+
+    private LineEdit LineEdit
+    {
+        get => _lineEdit ?? throw new InvalidOperationException($"{nameof(LineEdit)} is not initialized.");
+        set => _lineEdit = value;
+    }
 
     #endregion
 
@@ -43,7 +59,17 @@ public sealed partial class ConsoleUi : Control
     /// initialization logic for your node.</remarks>
     public override void _Ready()
     {
-        _lineEdit.TextSubmitted += OnCommandSubmitted;
+        if (_textLog == null)
+        {
+            throw new InvalidOperationException($"{nameof(ConsoleUi)}: TextLog is not assigned.");
+        }
+
+        if (_lineEdit == null)
+        {
+            throw new InvalidOperationException($"{nameof(ConsoleUi)}: LineEdit is not assigned.");
+        }
+
+        LineEdit.TextSubmitted += OnCommandSubmitted;
     }
 
     /// <summary>
@@ -54,7 +80,7 @@ public sealed partial class ConsoleUi : Control
     /// This method is called automatically by the engine; it is not intended to be called directly.</remarks>
     public override void _ExitTree()
     {
-        _lineEdit.TextSubmitted -= OnCommandSubmitted;
+        LineEdit.TextSubmitted -= OnCommandSubmitted;
     }
 
     #endregion
@@ -70,6 +96,11 @@ public sealed partial class ConsoleUi : Control
     public void Toggle()
     {
         Visible = !Visible;
+
+        if (Visible)
+        {
+            LineEdit.GrabFocus();
+        }
     }
 
     #endregion
@@ -82,7 +113,8 @@ public sealed partial class ConsoleUi : Control
     /// <param name="log">The log message to append. Cannot be null.</param>
     public void AppendLog(string log)
     {
-        _textLog.AppendText(log + "\n");
+        TextLog.AppendText(log + "\n");
+        TextLog.ScrollToLine(TextLog.GetLineCount());
     }
 
     /// <summary>
@@ -92,7 +124,7 @@ public sealed partial class ConsoleUi : Control
     /// </summary>
     public void Clear()
     {
-        _textLog.Clear();
+        TextLog.Clear();
     }
 
     #endregion
@@ -108,7 +140,7 @@ public sealed partial class ConsoleUi : Control
     private void OnCommandSubmitted(string command)
     {
         CommandSubmitted?.Invoke(command);
-        _lineEdit.Clear();
+        LineEdit.Clear();
     }
 
     #endregion

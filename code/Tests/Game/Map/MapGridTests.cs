@@ -1,4 +1,3 @@
-using CosmosCasino.Core.Game.Floor;
 using CosmosCasino.Core.Game.Map.Cell;
 using CosmosCasino.Core.Game.Map.Grid;
 using NUnit.Framework;
@@ -108,7 +107,7 @@ namespace CosmosCasino.Tests.Game.Map
             // Arrange
             var coord = new MapCellCoord(1, 1, 1);
             var cell = _mapGrid!.GetOrCreateCell(coord);
-            cell.TryPlaceFloor(FloorType.Metal);
+            cell.TryPlaceFloor();
 
             // Act
             var result = _mapGrid!.TryRemoveCell(coord);

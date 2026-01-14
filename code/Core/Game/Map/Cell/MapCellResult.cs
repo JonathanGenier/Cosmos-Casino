@@ -57,18 +57,6 @@ namespace CosmosCasino.Core.Game.Map.Cell
         }
 
         /// <summary>
-        /// Creates a result indicating that an existing element
-        /// was replaced with a new one.
-        /// </summary>
-        /// <returns>
-        /// A successful replacement result.
-        /// </returns>
-        internal static MapCellResult Replaced()
-        {
-            return new(MapCellOutcome.Replaced, MapCellFailureReason.None);
-        }
-
-        /// <summary>
         /// Creates a result indicating that an element
         /// was successfully removed from the cell.
         /// </summary>

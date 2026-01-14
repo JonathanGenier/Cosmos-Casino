@@ -11,7 +11,6 @@ namespace CosmosCasino.Tests.Game.Build
         #region TranslateOutcomeFromMapOperationResult
 
         [TestCase(MapCellOutcome.Placed, BuildOperationOutcome.Placed)]
-        [TestCase(MapCellOutcome.Replaced, BuildOperationOutcome.Replaced)]
         [TestCase(MapCellOutcome.Removed, BuildOperationOutcome.Removed)]
         [TestCase(MapCellOutcome.Skipped, BuildOperationOutcome.Skipped)]
         [TestCase(MapCellOutcome.Failed, BuildOperationOutcome.Failed)]
@@ -21,7 +20,6 @@ namespace CosmosCasino.Tests.Game.Build
             var cellResult = mapOutcome switch
             {
                 MapCellOutcome.Placed => MapCellResult.Placed(),
-                MapCellOutcome.Replaced => MapCellResult.Replaced(),
                 MapCellOutcome.Removed => MapCellResult.Removed(),
                 MapCellOutcome.Skipped => MapCellResult.Skipped(MapCellFailureReason.None),
                 MapCellOutcome.Failed => MapCellResult.Failed(MapCellFailureReason.None),
@@ -44,9 +42,7 @@ namespace CosmosCasino.Tests.Game.Build
 
         [TestCase(MapCellFailureReason.None, BuildOperationFailureReason.None)]
         [TestCase(MapCellFailureReason.NoFloor, BuildOperationFailureReason.NoFloor)]
-        [TestCase(MapCellFailureReason.NoStructure, BuildOperationFailureReason.NoStructure)]
-        [TestCase(MapCellFailureReason.NoFurniture, BuildOperationFailureReason.NoFurniture)]
-        [TestCase(MapCellFailureReason.SameType, BuildOperationFailureReason.SameType)]
+        [TestCase(MapCellFailureReason.NoWall, BuildOperationFailureReason.NoWall)]
         [TestCase(MapCellFailureReason.Blocked, BuildOperationFailureReason.Blocked)]
         [TestCase(MapCellFailureReason.InternalError, BuildOperationFailureReason.InternalError)]
         [TestCase(MapCellFailureReason.NoCell, BuildOperationFailureReason.NoCell)]

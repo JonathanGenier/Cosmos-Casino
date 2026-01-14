@@ -14,19 +14,15 @@ using System;
 public sealed partial class AppManager : NodeManager
 {
     #region Fields
-
-
-    private static AppManager _instance;
-    private AppServices _appServices;
-
-    private CoreServices _coreServices;
-    private AppUiManager _appUiManager;
-    private MainMenuManager _mainMenuManager;
-    private GameManager _gameManager;
-
-    private SceneLoader _sceneLoader;
-
+    private static AppManager? _instance;
     private bool _isShutdown;
+
+    private AppServices? _appServices;
+    private CoreServices? _coreServices;
+    private AppUiManager? _appUiManager;
+    private MainMenuManager? _mainMenuManager;
+    private GameManager? _gameManager;
+    private SceneLoader? _sceneLoader;
 
     #endregion
 
@@ -36,6 +32,42 @@ public sealed partial class AppManager : NodeManager
     /// Gets the current state of the application lifecycle.
     /// </summary>
     public AppState State { get; private set; } = AppState.Boot;
+
+    private AppServices AppServices
+    {
+        get => _appServices ?? throw new InvalidOperationException($"{nameof(AppServices)} is not initialized.");
+        set => _appServices = value;
+    }
+
+    private CoreServices CoreServices
+    {
+        get => _coreServices ?? throw new InvalidOperationException($"{nameof(CoreServices)} is not initialized.");
+        set => _coreServices = value;
+    }
+
+    private AppUiManager AppUiManager
+    {
+        get => _appUiManager ?? throw new InvalidOperationException($"{nameof(AppUiManager)} is not initialized.");
+        set => _appUiManager = value;
+    }
+
+    private MainMenuManager MainMenuManager
+    {
+        get => _mainMenuManager ?? throw new InvalidOperationException($"{nameof(MainMenuManager)} is not initialized.");
+        set => _mainMenuManager = value;
+    }
+
+    private GameManager GameManager
+    {
+        get => _gameManager ?? throw new InvalidOperationException($"{nameof(GameManager)} is not initialized.");
+        set => _gameManager = value;
+    }
+
+    private SceneLoader SceneLoader
+    {
+        get => _sceneLoader ?? throw new InvalidOperationException($"{nameof(SceneLoader)} is not initialized.");
+        set => _sceneLoader = value;
+    }
 
     #endregion
 
@@ -79,7 +111,7 @@ public sealed partial class AppManager : NodeManager
     /// tree to release resources. Overrides the base implementation to ensure proper resource management.</remarks>
     public override void _ExitTree()
     {
-        _coreServices.Dispose();
+        CoreServices.Dispose();
         base._ExitTree();
     }
 
@@ -108,14 +140,14 @@ public sealed partial class AppManager : NodeManager
     {
         if (State == newState)
         {
-            return null;
+            return null!;
         }
 
         Node scene = ChangeScene(newState);
 
         if (scene == null)
         {
-            return null;
+            return null!;
         }
 
         var previousState = State;
@@ -148,7 +180,7 @@ public sealed partial class AppManager : NodeManager
     private Node ChangeScene(AppState state)
     {
         var path = GetScenePathForState(state);
-        return _sceneLoader.Load(path);
+        return SceneLoader.Load(path);
     }
 
     #endregion
@@ -166,10 +198,10 @@ public sealed partial class AppManager : NodeManager
         InitializeCoreServices();
         InitializeAppServices();
 
-        _appUiManager = AddInitializableNode<AppUiManager>(
-            aum => aum.Initialize(_appServices.InputManager, _coreServices.ConsoleManager));
+        AppUiManager = AddInitializableNode<AppUiManager>(
+            aum => aum.Initialize(AppServices.InputManager, CoreServices.ConsoleManager));
 
-        _sceneLoader = new SceneLoader(GetTree());
+        SceneLoader = new SceneLoader(GetTree());
         StartMainMenu();
     }
 
@@ -182,14 +214,9 @@ public sealed partial class AppManager : NodeManager
     /// attached.</exception>
     private void StartMainMenu()
     {
-        if (_mainMenuManager != null)
-        {
-            throw new InvalidOperationException($"{nameof(MainMenuManager)} already exists.");
-        }
-
         var scene = ChangeState(AppState.MainMenu);
-        _mainMenuManager = scene as MainMenuManager ?? throw new InvalidOperationException($"MainMenu scene root does not have {nameof(MainMenuManager)} attached.");
-        _mainMenuManager.Initialize(StartGame, LoadGame, Shutdown);
+        MainMenuManager = scene as MainMenuManager ?? throw new InvalidOperationException($"MainMenu scene root does not have {nameof(MainMenuManager)} attached.");
+        MainMenuManager.Initialize(StartGame);
     }
 
     /// <summary>
@@ -199,14 +226,9 @@ public sealed partial class AppManager : NodeManager
     /// <exception cref="InvalidOperationException">Thrown if a game session is already in progress or if the game scene root does not have a GameManager attached.</exception>
     private void StartGame()
     {
-        if (_gameManager != null)
-        {
-            throw new InvalidOperationException($"{nameof(GameManager)} already exists.");
-        }
-
         var scene = ChangeState(AppState.Game);
-        _gameManager = scene as GameManager ?? throw new InvalidOperationException($"Game scene root does not have {nameof(GameManager)} attached.");
-        _gameManager.StartNewGame(_appServices, EndGame, Shutdown);
+        GameManager = scene as GameManager ?? throw new InvalidOperationException($"Game scene root does not have {nameof(GameManager)} attached.");
+        GameManager.StartNewGame(AppServices);
     }
 
     /// <summary>
@@ -223,13 +245,7 @@ public sealed partial class AppManager : NodeManager
     /// <exception cref="InvalidOperationException">Thrown if the game manager does not exist when attempting to end the game.</exception>
     private void EndGame()
     {
-        if (_gameManager == null)
-        {
-            throw new InvalidOperationException($"{nameof(GameManager)} does not exist.");
-        }
-
-        _gameManager.QueueFree();
-        _gameManager = null;
+        GameManager.QueueFree();
         ChangeState(AppState.MainMenu);
     }
 
@@ -247,7 +263,7 @@ public sealed partial class AppManager : NodeManager
         }
 
         _isShutdown = true;
-        _coreServices.Shutdown();
+        CoreServices.Shutdown();
 
         GetTree().Quit();
     }
@@ -263,13 +279,8 @@ public sealed partial class AppManager : NodeManager
     /// <exception cref="InvalidOperationException">Thrown if the core services have already been initialized.</exception>
     private void InitializeCoreServices()
     {
-        if (_coreServices != null)
-        {
-            throw new InvalidOperationException($"{nameof(CoreServices)} already initialized.");
-        }
-
         string savePath = OS.GetUserDataDir();
-        _coreServices = new CoreServices(savePath);
+        CoreServices = new CoreServices(savePath);
     }
 
     /// <summary>
@@ -278,12 +289,7 @@ public sealed partial class AppManager : NodeManager
     /// <exception cref="InvalidOperationException">Thrown if the application services have already been initialized.</exception>
     private void InitializeAppServices()
     {
-        if (_appServices != null)
-        {
-            throw new InvalidOperationException($"{nameof(AppServices)} already initialized.");
-        }
-
-        _appServices = AddNode<AppServices>();
+        AppServices = AddNode<AppServices>();
     }
 
     #endregion

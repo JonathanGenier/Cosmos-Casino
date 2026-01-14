@@ -13,8 +13,18 @@ public sealed partial class CameraManager : NodeManager
 {
     #region Fields
 
-    private CameraRig _cameraRig;
+    private CameraRig? _cameraRig;
     private bool _isEnabled = true;
+
+    #endregion
+
+    #region Properties
+
+    private CameraRig CameraRig
+    {
+        get => _cameraRig ?? throw new InvalidOperationException($"{nameof(CameraRig)} has not been initialized.");
+        set => _cameraRig = value;
+    }
 
     #endregion
 
@@ -28,8 +38,7 @@ public sealed partial class CameraManager : NodeManager
     /// is thrown and the node will not function correctly.</remarks>
     public override void _Ready()
     {
-        _cameraRig = GetParent().GetNode<CameraRig>("Camera_Rig");
-        ArgumentNullException.ThrowIfNull(_cameraRig);
+        CameraRig = GetParent().GetNode<CameraRig>("Camera_Rig");
     }
 
     #endregion
@@ -46,9 +55,9 @@ public sealed partial class CameraManager : NodeManager
 
         if (!_isEnabled)
         {
-            _cameraRig.SetMove(Vector2.Zero);
-            _cameraRig.SetRotate(0f);
-            _cameraRig.SetZoom(0f);
+            CameraRig.SetMove(Vector2.Zero);
+            CameraRig.SetRotate(0f);
+            CameraRig.SetZoom(0f);
         }
     }
 
@@ -68,7 +77,7 @@ public sealed partial class CameraManager : NodeManager
             return;
         }
 
-        _cameraRig.SetMove(direction);
+        CameraRig.SetMove(direction);
     }
 
     /// <summary>
@@ -84,7 +93,7 @@ public sealed partial class CameraManager : NodeManager
             return;
         }
 
-        _cameraRig.SetRotate(direction);
+        CameraRig.SetRotate(direction);
     }
 
     /// <summary>
@@ -100,7 +109,7 @@ public sealed partial class CameraManager : NodeManager
             return;
         }
 
-        _cameraRig.SetZoom(direction);
+        CameraRig.SetZoom(direction);
     }
 
     #endregion

@@ -20,13 +20,8 @@ namespace CosmosCasino.Core.Game.Map.Cell
         Floor,
 
         /// <summary>
-        /// Structure layer of the cell (walls, pillars, etc).
+        /// Wall layer of the cell.
         /// </summary>
-        Structure,
-
-        /// <summary>
-        /// Furniture layer of the cell.
-        /// </summary>
-        Furniture
+        Wall
     }
 }

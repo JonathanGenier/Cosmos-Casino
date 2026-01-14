@@ -1,317 +1,114 @@
-using CosmosCasino.Core.Game.Floor;
-using CosmosCasino.Core.Game.Furniture;
-using CosmosCasino.Core.Game.Structure;
-
 namespace CosmosCasino.Core.Game.Map.Cell
 {
     /// <summary>
-    /// Represents a single logical cell in the map grid.
-    /// A cell may contain a floor, a structure, or furniture,
-    /// with enforced rules on which elements may coexist.
+    /// Represents a single cell within a map that can contain a floor and/or a wall.
     /// </summary>
+    /// <remarks>A MapCell tracks the presence of a floor and a wall independently. Operations on the cell,
+    /// such as placing or removing a floor or wall, are subject to constraints (for example, a wall cannot be placed
+    /// unless a floor is present). This type is intended for internal use within map construction or editing
+    /// logic.</remarks>
     internal sealed class MapCell
     {
         #region PROPERTIES
 
         /// <summary>
-        /// The floor type assigned to this cell, if any.
+        /// Gets a value indicating whether a floor is present.
         /// </summary>
-        internal FloorType? Floor { get; private set; }
+        internal bool HasFloor { get; private set; }
 
         /// <summary>
-        /// The structure occupying this cell, if any.
+        /// Gets a value indicating whether a wall is present.
         /// </summary>
-        internal StructureType? Structure { get; private set; }
+        internal bool HasWall { get; private set; }
 
         /// <summary>
-        /// The furniture occupying this cell, if any.
+        /// Gets a value indicating whether the <see cref="MapCell"/> contains neither a floor nor a wall.
         /// </summary>
-        internal FurnitureType? Furniture { get; private set; }
-
-        /// <summary>
-        /// Indicates whether this cell currently has a floor.
-        /// </summary>
-        internal bool HasFloor => Floor != null;
-
-        /// <summary>
-        /// Indicates whether this cell currently has a structure.
-        /// </summary>
-        internal bool HasStructure => Structure != null;
-
-        /// <summary>
-        /// Indicates whether this cell currently has furniture.
-        /// </summary>
-        internal bool HasFurniture => Furniture != null;
-
-        /// <summary>
-        /// Indicates whether the cell contains no floor, structure, or furniture.
-        /// </summary>
-        internal bool IsEmpty => !HasFloor && !HasStructure && !HasFurniture;
+        internal bool IsEmpty => !HasFloor && !HasWall;
 
         #endregion
 
         #region Floor Methods
 
         /// <summary>
-        /// Attempts to place a floor in this cell.
-        /// Fails if a floor already exists.
+        /// Attempts to place a floor in the current cell if one is not already present.
         /// </summary>
-        /// <param name="floor">
-        /// The type of floor to place.
-        /// </param>
-        /// <returns>
-        /// A result indicating whether the floor was placed or the operation failed.
-        /// </returns>
-        internal MapCellResult TryPlaceFloor(FloorType floor)
+        /// <returns>A <see cref="MapCellResult"/> indicating whether the floor was placed successfully or the reason for
+        /// failure.</returns>
+        internal MapCellResult TryPlaceFloor()
         {
             if (HasFloor)
             {
                 return MapCellResult.Failed(MapCellFailureReason.Blocked);
             }
 
-            Floor = floor;
+            HasFloor = true;
             return MapCellResult.Placed();
         }
 
         /// <summary>
-        /// Attempts to replace the existing floor with a different floor type.
+        /// Attempts to remove the floor from the current map cell, if present and not blocked by a wall.
         /// </summary>
-        /// <param name="floor">
-        /// The new floor type to apply.
-        /// </param>
-        /// <returns>
-        /// A result indicating whether the floor was replaced, skipped, or failed.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown in debug builds if the cell has no floor, indicating a contract violation.
-        /// </exception>
-        internal MapCellResult TryReplaceFloor(FloorType floor)
-        {
-            // This state should be unreachable.
-            // The operation contract was violated by higher-level systems.
-            // Indicates a programmer error, not gameplay behavior.
-            if (!HasFloor)
-            {
-#if DEBUG
-                throw new InvalidOperationException($"{nameof(TryReplaceFloor)} called but cell has no floor.");
-#else
-                ConsoleLog.Error(nameof(MapCell), $"Invalid state: {nameof(TryReplaceFloor)} called but cell has no floor.");
-                return MapCellResult.Failed(MapCellFailureReason.InternalError);
-#endif
-            }
-
-            if (Floor == floor)
-            {
-                return MapCellResult.Skipped(MapCellFailureReason.SameType);
-            }
-
-            Floor = floor;
-            return MapCellResult.Replaced();
-        }
-
-        /// <summary>
-        /// Attempts to remove the floor from this cell.
-        /// Removal is blocked if a structure or furniture is present.
-        /// </summary>
-        /// <returns>
-        /// A result indicating whether the floor was removed or the operation failed.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown in debug builds if the cell has no floor, indicating a contract violation.
-        /// </exception>
+        /// <returns>A <see cref="MapCellResult"/> indicating the outcome of the operation. Returns <see
+        /// cref="MapCellResult.Removed"/> if the floor was successfully removed; <see cref="MapCellResult.Skipped"/> if
+        /// there was no floor to remove; or <see cref="MapCellResult.Failed"/> if the operation was blocked by a wall.</returns>
         internal MapCellResult TryRemoveFloor()
         {
-            // This state should be unreachable.
-            // The operation contract was violated by higher-level systems.
-            // Indicates a programmer error, not gameplay behavior.
             if (!HasFloor)
             {
-#if DEBUG
-                throw new InvalidOperationException($"{nameof(TryRemoveFloor)} called but cell already has no floor.");
-#else
-                ConsoleLog.Error(nameof(MapCell), $"Invalid state: {nameof(TryRemoveFloor)} called but cell already has no floor.");
-                return MapCellResult.Failed(MapCellFailureReason.InternalError);
-#endif
+                return MapCellResult.Skipped(MapCellFailureReason.NoFloor);
             }
 
-            if (HasStructure || HasFurniture)
+            if (HasWall)
             {
                 return MapCellResult.Failed(MapCellFailureReason.Blocked);
             }
 
-            Floor = null;
+            HasFloor = false;
             return MapCellResult.Removed();
         }
 
         #endregion
 
-        #region Structure Methods
+        #region Wall Methods
 
         /// <summary>
-        /// Attempts to place a structure in this cell.
-        /// Requires a floor and no existing structure or furniture.
+        /// Attempts to place a wall in the current map cell.
         /// </summary>
-        /// <param name="structure">
-        /// The structure type to place.
-        /// </param>
-        /// <returns>
-        /// A result indicating whether the structure was placed or the operation failed.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown in debug builds if a structure already exists, indicating a contract violation.
-        /// </exception>
-        internal MapCellResult TryPlaceStructure(StructureType structure)
-        {
-            // This state should be unreachable.
-            // The operation contract was violated by higher-level systems.
-            // Indicates a programmer error, not gameplay behavior.
-            if (HasStructure)
-            {
-#if DEBUG
-                throw new InvalidOperationException($"{nameof(TryPlaceStructure)} called but already has structure. Call {nameof(TryReplaceStructure)} instead.");
-#else
-                ConsoleLog.Error(nameof(MapCell), $"Invalid state: {nameof(TryPlaceStructure)} called but already has structure. Call {nameof(TryReplaceStructure)} instead.");
-                return MapCellResult.Failed(MapCellFailureReason.InternalError);
-#endif
-            }
-
-            if (!HasFloor)
-            {
-                return MapCellResult.Failed(MapCellFailureReason.NoFloor);
-            }
-
-            if (HasFurniture)
-            {
-                return MapCellResult.Failed(MapCellFailureReason.Blocked);
-            }
-
-            Structure = structure;
-            return MapCellResult.Placed();
-        }
-
-        /// <summary>
-        /// Attempts to replace the existing structure with a different structure type.
-        /// </summary>
-        /// <param name="newStructure">
-        /// The new structure type to apply.
-        /// </param>
-        /// <returns>
-        /// A result indicating whether the structure was replaced, skipped, or failed.
-        /// </returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown in debug builds if the cell state violates replacement contracts.
-        /// </exception>
-        internal MapCellResult TryReplaceStructure(StructureType newStructure)
-        {
-            // This state should be unreachable.
-            // The operation contract was violated by higher-level systems.
-            // Indicates a programmer error, not gameplay behavior.
-            if (!HasFloor)
-            {
-#if DEBUG
-                throw new InvalidOperationException($"{nameof(TryReplaceStructure)} called but cell has no floor.");
-#else
-                ConsoleLog.Error(nameof(MapCell), $"{nameof(TryReplaceStructure)} called but cell has no floor.");
-                return MapCellResult.Failed(MapCellFailureReason.InternalError);
-#endif
-            }
-
-            // This state should be unreachable.
-            // The operation contract was violated by higher-level systems.
-            // Indicates a programmer error, not gameplay behavior.
-            if (!HasStructure)
-            {
-#if DEBUG
-                throw new InvalidOperationException($"{nameof(TryReplaceStructure)} called but cell has no structure.");
-#else
-                ConsoleLog.Error(nameof(MapCell), $"{nameof(TryReplaceStructure)} called but cell has no structure.");
-                return MapCellResult.Failed(MapCellFailureReason.InternalError);
-#endif
-            }
-
-            // This state should be unreachable.
-            // The operation contract was violated by higher-level systems.
-            // Indicates a programmer error, not gameplay behavior.
-            if (HasFurniture)
-            {
-#if DEBUG
-                throw new InvalidOperationException($"{nameof(TryReplaceStructure)} called but cell has furniture.");
-#else
-                ConsoleLog.Error(nameof(MapCell), $"{nameof(TryReplaceStructure)} called but cell has furniture.");
-                return MapCellResult.Failed(MapCellFailureReason.InternalError);
-#endif
-            }
-
-            if (Structure == newStructure)
-            {
-                return MapCellResult.Skipped(MapCellFailureReason.SameType);
-            }
-
-            Structure = newStructure;
-            return MapCellResult.Replaced();
-        }
-
-        /// <summary>
-        /// Attempts to remove the structure from this cell.
-        /// </summary>
-        /// <returns>
-        /// A result indicating whether the structure was removed or skipped.
-        /// </returns>
-        internal MapCellResult TryRemoveStructure()
-        {
-            if (!HasStructure)
-            {
-                return MapCellResult.Skipped(MapCellFailureReason.NoStructure);
-            }
-
-            Structure = null;
-            return MapCellResult.Removed();
-        }
-
-        #endregion
-
-        #region Furniture Methods
-
-        /// <summary>
-        /// Attempts to place furniture in this cell.
-        /// Requires a floor and no existing structure or furniture.
-        /// </summary>
-        /// <param name="newFurniture">
-        /// The furniture type to place.
-        /// </param>
-        /// <returns>
-        /// A result indicating whether the furniture was placed or the operation failed.
-        /// </returns>
-        internal MapCellResult TryPlaceFurniture(FurnitureType newFurniture)
+        /// <remarks>A wall can only be placed if the cell has a floor and does not already contain a
+        /// wall.</remarks>
+        /// <returns>A <see cref="MapCellResult"/> indicating the outcome of the operation. The result will indicate success if
+        /// the wall was placed, or provide a failure reason if placement was not possible.</returns>
+        internal MapCellResult TryPlaceWall()
         {
             if (!HasFloor)
             {
                 return MapCellResult.Failed(MapCellFailureReason.NoFloor);
             }
 
-            if (HasFurniture || HasStructure)
+            if (HasWall)
             {
-                return MapCellResult.Failed(MapCellFailureReason.Blocked);
+                return MapCellResult.Skipped(MapCellFailureReason.Blocked);
             }
 
-            Furniture = newFurniture;
+            HasWall = true;
             return MapCellResult.Placed();
         }
 
         /// <summary>
-        /// Attempts to remove the furniture from this cell.
+        /// Attempts to remove the wall from the current map cell.
         /// </summary>
-        /// <returns>
-        /// A result indicating whether the furniture was removed or skipped.
-        /// </returns>
-        internal MapCellResult TryRemoveFurniture()
+        /// <returns>A <see cref="MapCellResult"/> indicating the outcome of the operation. Returns <see
+        /// cref="MapCellResult.Removed"/> if the wall was successfully removed; otherwise, returns <see
+        /// cref="MapCellResult.Skipped"/> with a failure reason if no wall was present.</returns>
+        internal MapCellResult TryRemoveWall()
         {
-            if (!HasFurniture)
+            if (!HasWall)
             {
-                return MapCellResult.Skipped(MapCellFailureReason.NoFurniture);
+                return MapCellResult.Skipped(MapCellFailureReason.NoWall);
             }
 
-            Furniture = null;
+            HasWall = false;
             return MapCellResult.Removed();
         }
 

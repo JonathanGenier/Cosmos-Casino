@@ -1,4 +1,5 @@
 using Godot;
+using System;
 
 /// <summary>
 /// Provides a 3D camera rig node that supports smooth movement, rotation, and zooming in a scene. Designed for use as a
@@ -13,13 +14,14 @@ public sealed partial class CameraRig : Node3D
 {
     #region Nodes
 
-    private Node3D _cameraSocket;
-    private Camera3D _camera;
+    private Node3D? _cameraSocket;
+    private Camera3D? _camera;
 
     #endregion
 
     #region Fields
 
+    private bool _isInitialized = false;
     private Vector2 _moveVelocity;
     private Vector2 _moveDirection;
     private float _rotateVelocity;
@@ -27,6 +29,22 @@ public sealed partial class CameraRig : Node3D
     private float _zoomVelocity;
     private float _zoomDirection;
     private float _zoomFactor = 0;
+
+    #endregion
+
+    #region Properties
+
+    private Node3D CameraSocket
+    {
+        get => _cameraSocket ?? throw new InvalidOperationException("CameraSocket has not been initialized.");
+        set => _cameraSocket = value;
+    }
+
+    private Camera3D Camera
+    {
+        get => _camera ?? throw new InvalidOperationException("Camera has not been initialized.");
+        set => _camera = value;
+    }
 
     #endregion
 
@@ -39,8 +57,9 @@ public sealed partial class CameraRig : Node3D
     /// Override this method to perform setup tasks that require the node to be part of the scene tree.</remarks>
     public override void _Ready()
     {
-        _cameraSocket = GetNode<Node3D>("Camera_Socket");
-        _camera = GetNode<Camera3D>("Camera_Socket/Camera");
+        CameraSocket = GetNode<Node3D>("Camera_Socket");
+        Camera = GetNode<Camera3D>("Camera_Socket/Camera");
+        _isInitialized = true;
     }
 
     /// <summary>
@@ -50,6 +69,11 @@ public sealed partial class CameraRig : Node3D
     /// movement.</param>
     public override void _Process(double delta)
     {
+        if (!_isInitialized)
+        {
+            return;
+        }
+
         MoveCamera(delta);
         RotateCamera(delta);
         ZoomCamera(delta);
@@ -165,12 +189,11 @@ public sealed partial class CameraRig : Node3D
             _zoomVelocity = 0;
         }
 
-        float newZoom = _camera.Position.Z + (_zoomVelocity * (float)delta);
-        _camera.Position = new Vector3(_camera.Position.X, _camera.Position.Y, Mathf.Clamp(newZoom, CameraConfigs.CameraZoomMin, CameraConfigs.CameraZoomMax));
-        _zoomFactor = _camera.Position.Z * 0.1f;
+        float newZoom = Camera.Position.Z + (_zoomVelocity * (float)delta);
+        Camera.Position = new Vector3(Camera.Position.X, Camera.Position.Y, Mathf.Clamp(newZoom, CameraConfigs.CameraZoomMin, CameraConfigs.CameraZoomMax));
+        _zoomFactor = Camera.Position.Z * 0.1f;
         _zoomDirection = 0;
     }
 
     #endregion
 }
-

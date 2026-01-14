@@ -9,12 +9,22 @@ using System;
 /// before use by calling Initialize().</remarks>
 public partial class GameUiManager : InitializableNodeManager
 {
+    #region Fields
+
+    private BuildUiManager? _buildUiManager;
+
+    #endregion
+
     #region Properties
 
     /// <summary>
-    /// Gets the build user interface manager for the current context.
+    /// Gets the manager responsible for build-related user interface operations.
     /// </summary>
-    public BuildUiManager BuildUiManager { get; private set; }
+    public BuildUiManager BuildUiManager
+    {
+        get => _buildUiManager ?? throw new InvalidOperationException($"{nameof(BuildUiManager)} is not initialized.");
+        private set => _buildUiManager = value;
+    }
 
     #endregion
 
@@ -27,8 +37,7 @@ public partial class GameUiManager : InitializableNodeManager
     /// initialized. This method should only be called once during the component's lifecycle.</remarks>
     public void Initialize()
     {
-        BuildUiManager = CreateInitializableNode<BuildUiManager>(
-            bm => bm.Initialize());
+        BuildUiManager = CreateInitializableNode<BuildUiManager>(bm => bm.Initialize());
         MarkInitialized();
     }
 
@@ -38,11 +47,6 @@ public partial class GameUiManager : InitializableNodeManager
     /// <exception cref="InvalidOperationException">Thrown if the UI manager has not been initialized before the node enters the scene tree.</exception>
     protected override void OnReady()
     {
-        if (BuildUiManager == null)
-        {
-            throw new InvalidOperationException($"{nameof(GameUiManager)} entered the scene tree without Initialize().");
-        }
-
         AddChild(BuildUiManager);
     }
 

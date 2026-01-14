@@ -10,7 +10,7 @@ public enum SpawnLayer
     Floors,
 
     /// <summary>
-    /// Layer containing structure visuals occupying map cell slots.
+    /// Layer containing floor visuals aligned to the map grid.
     /// </summary>
-    Structures,
+    Walls,
 }

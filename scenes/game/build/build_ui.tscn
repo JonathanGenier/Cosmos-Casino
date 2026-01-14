@@ -1,45 +1,48 @@
-[gd_scene load_steps=4 format=3 uid="uid://xf6doqvmtjr3"]
+[gd_scene load_steps=3 format=3 uid="uid://xf6doqvmtjr3"]
 
 [ext_resource type="Script" uid="uid://gfaj8p06l7m3" path="res://code/Client/Game/Ui/Build/BuildUi.cs" id="1_dd774"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_744we"]
+[sub_resource type="ButtonGroup" id="ButtonGroup_dd774"]
 
-[sub_resource type="ButtonGroup" id="ButtonGroup_a72f2"]
-
-[node name="BuildUi" type="Control" node_paths=PackedStringArray("_cancelButton", "_metalFloorButton", "_carbonFloorButton")]
+[node name="BuildUi" type="Control" node_paths=PackedStringArray("_cancelButton", "_floorButton", "_wallButton")]
 layout_mode = 3
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 grow_vertical = 0
 script = ExtResource("1_dd774")
-_cancelButton = NodePath("VBoxContainer/Cancel")
-_metalFloorButton = NodePath("VBoxContainer/Metal_Floor")
-_carbonFloorButton = NodePath("VBoxContainer/Carbon_Floor")
+_cancelButton = NodePath("HBoxContainer/Cancel_Button")
+_floorButton = NodePath("HBoxContainer/VBoxContainer/Floor_Button")
+_wallButton = NodePath("HBoxContainer/VBoxContainer/Wall_Button")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_top = -66.0
-offset_right = 53.0
+offset_right = 278.0
 grow_vertical = 0
 
-[node name="Cancel" type="Button" parent="VBoxContainer"]
+[node name="Cancel_Button" type="Button" parent="HBoxContainer"]
 layout_mode = 2
 text = "Cancel
 "
 
-[node name="Metal_Floor" type="Button" parent="VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
-toggle_mode = true
-button_group = SubResource("ButtonGroup_744we")
-text = "Metal"
+size_flags_horizontal = 3
 
-[node name="Carbon_Floor" type="Button" parent="VBoxContainer"]
+[node name="Floor_Button" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
 toggle_mode = true
-button_group = SubResource("ButtonGroup_a72f2")
-text = "Carbon
+button_group = SubResource("ButtonGroup_dd774")
+text = "Floor
+"
+
+[node name="Wall_Button" type="Button" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_dd774")
+text = "Wall
 "

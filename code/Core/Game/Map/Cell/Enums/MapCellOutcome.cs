@@ -12,11 +12,6 @@ namespace CosmosCasino.Core.Game.Map.Cell
         Placed,
 
         /// <summary>
-        /// Existing content on the cell was successfully replaced.
-        /// </summary>
-        Replaced,
-
-        /// <summary>
         /// Existing content was successfully removed from the cell.
         /// </summary>
         Removed,

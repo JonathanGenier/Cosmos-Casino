@@ -10,7 +10,18 @@ public sealed partial class CursorManager : InitializableNodeManager
 {
     #region Fields
 
-    private CursorResolver _resolver;
+    private CursorResolver? _resolver;
+
+    #endregion
+
+    #region Properties
+
+    private CursorResolver Resolver
+    {
+        get => _resolver ?? throw new InvalidOperationException($"{nameof(CursorManager)} not initialized.");
+        set => _resolver = value;
+    }
+
 
     #endregion
 
@@ -23,16 +34,16 @@ public sealed partial class CursorManager : InitializableNodeManager
     /// <param name="planeHeight">The height, in world units, at which the cursor's reference plane is positioned. The default is 0.</param>
     public void Initialize(uint buildableCollisionMask, float planeHeight = 0f)
     {
+        if (IsInitialized)
+        {
+            throw new InvalidOperationException($"{nameof(CursorManager)} already initialized.");
+        }
+
         var rayProvider = new CursorRayProvider();
         var physicsResolver = new CursorPhysicsResolver(buildableCollisionMask);
         var planeResolver = new CursorPlaneResolver(planeHeight);
 
-        _resolver = new CursorResolver(
-            rayProvider,
-            physicsResolver,
-            planeResolver
-        );
-
+        Resolver = new CursorResolver(rayProvider, physicsResolver, planeResolver);
         MarkInitialized();
     }
 
@@ -69,7 +80,7 @@ public sealed partial class CursorManager : InitializableNodeManager
             return false;
         }
 
-        return _resolver.TryResolve(out position);
+        return Resolver.TryResolve(out position);
     }
 
     #endregion

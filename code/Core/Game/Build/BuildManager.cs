@@ -1,4 +1,3 @@
-using CosmosCasino.Core.Game.Floor;
 using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Cell;
 
@@ -61,42 +60,14 @@ namespace CosmosCasino.Core.Game.Build
             switch (intent.Operation)
             {
                 case BuildOperation.Place:
-                    return TryPlaceOrReplaceFloor(coord, intent.FloorType!.Value);
+                    return TryPlaceFloor(coord);
 
                 case BuildOperation.Remove:
-                    return ApplyRemoveFloor(coord);
+                    return TryRemoveFloor(coord);
 
                 default:
                     throw new NotImplementedException($"{nameof(BuildOperation)} not implemented");
             }
-        }
-
-        /// <summary>
-        /// Attempts to place a floor at the specified cell, falling back to
-        /// a replacement operation if placement is blocked by an existing
-        /// floor of a different type.
-        /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the target cell.
-        /// </param>
-        /// <param name="floor">
-        /// The floor type to place or replace.
-        /// </param>
-        /// <returns>
-        /// A <see cref="BuildOperationResult"/> representing the final
-        /// outcome of the placement or replacement attempt.
-        /// </returns>
-        private BuildOperationResult TryPlaceOrReplaceFloor(MapCellCoord coord, FloorType floor)
-        {
-            var mapResult = TryPlaceFloor(coord, floor);
-
-            if (mapResult.Outcome == BuildOperationOutcome.Failed
-                && mapResult.FailureReason == BuildOperationFailureReason.Blocked)
-            {
-                return TryReplaceFloor(coord, floor);
-            }
-
-            return mapResult;
         }
 
         /// <summary>
@@ -106,54 +77,21 @@ namespace CosmosCasino.Core.Game.Build
         /// <param name="coord">
         /// The coordinate of the target cell.
         /// </param>
-        /// <param name="floor">
-        /// The floor type to place.
-        /// </param>
         /// <returns>
         /// A <see cref="BuildOperationResult"/> describing the outcome
         /// of the placement attempt.
         /// </returns>
-        private BuildOperationResult TryPlaceFloor(MapCellCoord coord, FloorType floor)
+        private BuildOperationResult TryPlaceFloor(MapCellCoord coord)
         {
             // TODO: Calculate cost to place said floorType
             // TODO: Check if can afford cost
             // If Yes :
-            MapOperationResult mapResult = _mapManager.TryPlaceFloor(coord, floor);
+            MapOperationResult mapResult = _mapManager.TryPlaceFloor(coord);
             // Else BuildOperationResult NOFUNDS
 
             if (mapResult.Outcome == MapCellOutcome.Placed)
             {
                 // Deduct Cost (FloorType Cost)
-            }
-
-            return BuildOperationResult.FromMapOperationResult(mapResult);
-        }
-
-        /// <summary>
-        /// Attempts to replace an existing floor at the specified cell
-        /// with a new floor type.
-        /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the target cell.
-        /// </param>
-        /// <param name="floor">
-        /// The new floor type to apply.
-        /// </param>
-        /// <returns>
-        /// A <see cref="BuildOperationResult"/> describing the outcome
-        /// of the replacement attempt.
-        /// </returns>
-        private BuildOperationResult TryReplaceFloor(MapCellCoord coord, FloorType floor)
-        {
-            // TODO: Calculate cost to replace said floorType
-            // TODO: Check if can afford cost
-            // If Yes :
-            MapOperationResult mapResult = _mapManager.TryReplaceFloor(coord, floor);
-            // Else BuildOperationResult NOFUNDS
-
-            if (mapResult.Outcome == MapCellOutcome.Replaced)
-            {
-                // Deduct Cost
             }
 
             return BuildOperationResult.FromMapOperationResult(mapResult);
@@ -170,9 +108,56 @@ namespace CosmosCasino.Core.Game.Build
         /// A <see cref="BuildOperationResult"/> describing the outcome
         /// of the removal attempt.
         /// </returns>
-        private BuildOperationResult ApplyRemoveFloor(MapCellCoord coord)
+        private BuildOperationResult TryRemoveFloor(MapCellCoord coord)
         {
             MapOperationResult mapResult = _mapManager.TryRemoveFloor(coord);
+
+            if (mapResult.Outcome == MapCellOutcome.Removed)
+            {
+                // Refund Cost
+            }
+
+            return BuildOperationResult.FromMapOperationResult(mapResult);
+        }
+
+        #endregion
+
+        #region Wall Methods
+
+        private BuildOperationResult ResolveWall(BuildIntent intent, MapCellCoord coord)
+        {
+            switch (intent.Operation)
+            {
+                case BuildOperation.Place:
+                    return TryPlaceWall(coord);
+
+                case BuildOperation.Remove:
+                    return TryRemoveWall(coord);
+
+                default:
+                    throw new NotImplementedException($"{nameof(BuildOperation)} not implemented");
+            }
+        }
+
+        private BuildOperationResult TryPlaceWall(MapCellCoord coord)
+        {
+            // TODO: Calculate cost to place said floorType
+            // TODO: Check if can afford cost
+            // If Yes :
+            MapOperationResult mapResult = _mapManager.TryPlaceWall(coord);
+            // Else BuildOperationResult NOFUNDS
+
+            if (mapResult.Outcome == MapCellOutcome.Placed)
+            {
+                // Deduct Cost (FloorType Cost)
+            }
+
+            return BuildOperationResult.FromMapOperationResult(mapResult);
+        }
+
+        private BuildOperationResult TryRemoveWall(MapCellCoord coord)
+        {
+            MapOperationResult mapResult = _mapManager.TryRemoveWall(coord);
 
             if (mapResult.Outcome == MapCellOutcome.Removed)
             {

@@ -9,15 +9,29 @@ public sealed partial class MainMenuManager : NodeManager
 {
     #region Fields
 
-    private Button _playButton;
+    private Button? _playButton;
 
     #endregion
 
     #region Events
 
-    private Action _startNewGame;
-    private Action _loadGame;
-    private Action _shutdown;
+    private Action? _startNewGame;
+
+    #endregion
+
+    #region Properties
+
+    private Button PlayButton
+    {
+        get => _playButton ?? throw new InvalidOperationException($"{nameof(Button)} is not initialized.");
+        set => _playButton = value;
+    }
+
+    private Action StartNewGame
+    {
+        get => _startNewGame ?? throw new InvalidOperationException("StartNewGame callback is not initialized.");
+        set => _startNewGame = value;
+    }
 
     #endregion
 
@@ -26,14 +40,10 @@ public sealed partial class MainMenuManager : NodeManager
     /// <summary>
     /// Initializes the callbacks used to start a new game, load an existing game, and shut down the application.
     /// </summary>
-    /// <param name="startNewGame">The action to invoke when starting a new game. Cannot be null.</param>
-    /// <param name="loadGame">The action to invoke when loading an existing game. Cannot be null.</param>
-    /// <param name="shutdown">The action to invoke when shutting down the application. Cannot be null.</param>
-    public void Initialize(Action startNewGame, Action loadGame, Action shutdown)
+    /// <param name="startNewGameCallback">The action to invoke when starting a new game. Cannot be null.</param>
+    public void Initialize(Action startNewGameCallback)
     {
-        _startNewGame = startNewGame;
-        _loadGame = loadGame;
-        _shutdown = shutdown;
+        StartNewGame = startNewGameCallback;
     }
 
     #endregion
@@ -48,8 +58,8 @@ public sealed partial class MainMenuManager : NodeManager
     {
         using (ConsoleLog.SystemScope(nameof(MainMenuManager)))
         {
-            _playButton = GetNode<Button>("Menu/PlayButton");
-            _playButton.Pressed += OnPlayPressed;
+            PlayButton = GetNode<Button>("Menu/PlayButton");
+            PlayButton.Pressed += OnPlayPressed;
         }
     }
 
@@ -59,7 +69,7 @@ public sealed partial class MainMenuManager : NodeManager
     /// </summary>
     public override void _ExitTree()
     {
-        _playButton.Pressed -= OnPlayPressed;
+        PlayButton.Pressed -= OnPlayPressed;
     }
 
     #endregion
@@ -72,7 +82,7 @@ public sealed partial class MainMenuManager : NodeManager
     /// </summary>
     private void OnPlayPressed()
     {
-        _startNewGame();
+        StartNewGame();
     }
 
     #endregion

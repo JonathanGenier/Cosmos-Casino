@@ -1,4 +1,3 @@
-using CosmosCasino.Core.Game.Floor;
 using CosmosCasino.Core.Game.Map.Cell;
 using System;
 
@@ -59,6 +58,7 @@ public static class SpawnResolver
         return key.Slot switch
         {
             MapCellSlot.Floor => ResolveFloorType(variant),
+            MapCellSlot.Wall => ResolveWallType(variant),
             _ => throw new InvalidOperationException(
                 $"Unsupported cell slot: {key.Slot}")
         };
@@ -88,13 +88,22 @@ public static class SpawnResolver
                 $"Unsupported floor variant: {variant.GetType().Name}");
         }
 
-        return floorVariant.FloorType switch
+        return "floor";
+    }
+
+    #endregion
+
+    #region Resolve Wall Types
+
+    private static string ResolveWallType(ISpawnVariant variant)
+    {
+        if (variant is not WallSpawnVariant wallVariant)
         {
-            FloorType.Metal => "floor_metal",
-            FloorType.Carbon => "floor_carbon",
-            _ => throw new InvalidOperationException(
-                $"Unsupported floor type: {floorVariant.FloorType}")
-        };
+            throw new InvalidOperationException(
+                $"Unsupported floor variant: {variant.GetType().Name}");
+        }
+
+        return "wall";
     }
 
     #endregion

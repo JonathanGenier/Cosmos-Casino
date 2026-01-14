@@ -27,11 +27,21 @@ public sealed partial class SpawnManager : InitializableNodeManager
     /// <summary>
     /// Catalog resolving spawn identifiers to spawnable scenes.
     /// </summary>
-    private SpawnCatalog _spawnCatalog;
+    private SpawnCatalog? _spawnCatalog;
 
     #endregion
 
-    #region Godot Process
+    #region Properties
+
+    private SpawnCatalog SpawnCatalog
+    {
+        get => _spawnCatalog ?? throw new InvalidOperationException($"{nameof(SpawnCatalog)} is not initialized.");
+        set => _spawnCatalog = value;
+    }
+
+    #endregion
+
+    #region Initialization
 
     /// <summary>
     /// Initializes the spawn manager with the specified spawn catalog.
@@ -45,8 +55,7 @@ public sealed partial class SpawnManager : InitializableNodeManager
             throw new InvalidOperationException($"{nameof(SpawnManager)} : Spawn Catalog already set.");
         }
 
-        _spawnCatalog = spawnCatalog;
-
+        SpawnCatalog = spawnCatalog;
         MarkInitialized();
     }
 
@@ -64,17 +73,12 @@ public sealed partial class SpawnManager : InitializableNodeManager
     /// <exception cref="InvalidOperationException">Thrown if the spawn manager is not configured or if the resolved spawn does not instantiate a Node3D.</exception>
     public void Spawn(ISpawnKey key, ISpawnVariant variant, Vector3 position, SpawnLayer layer)
     {
-        if (_spawnCatalog == null)
-        {
-            throw new InvalidOperationException("SpawnManager not configured.");
-        }
-
         var spawnId = SpawnResolver.Resolve(key, variant);
         var transform = new Transform3D(Basis.Identity, position);
 
         ReplaceIfExists(key);
 
-        var scene = _spawnCatalog.GetSpawnScene(spawnId);
+        var scene = SpawnCatalog.GetSpawnScene(spawnId);
         var instance = scene.Instantiate();
 
         if (instance is not Node3D node)
@@ -163,6 +167,11 @@ public sealed partial class SpawnManager : InitializableNodeManager
     {
         if (GodotObject.InstanceFromId(objectId) is Node node)
         {
+            if (node.IsQueuedForDeletion())
+            {
+                ConsoleLog.Warning(nameof(SpawnManager), $"Node {objectId} already queued for deletion.");
+            }
+
             node.QueueFree();
         }
     }

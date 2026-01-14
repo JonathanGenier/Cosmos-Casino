@@ -13,12 +13,6 @@ namespace CosmosCasino.Core.Game.Build
         Placed,
 
         /// <summary>
-        /// The build operation successfully replaced existing
-        /// content on the target cell.
-        /// </summary>
-        Replaced,
-
-        /// <summary>
         /// The build operation successfully removed existing
         /// content from the target cell.
         /// </summary>
