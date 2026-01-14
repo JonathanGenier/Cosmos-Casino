@@ -16,7 +16,7 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
 {
     #region Fields
 
-    private ClientBuildManager _clientBuildManager;
+    private BuildProcessManager _clientBuildManager;
     private SpawnManager _spawnManager;
 
     #endregion
@@ -29,7 +29,7 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
     /// </summary>
     /// <param name="clientBuildManager">The client build manager used to monitor and manage build completion events. Cannot be null.</param>
     /// <param name="spawnManager">The spawn manager responsible for handling spawn operations. Cannot be null.</param>
-    public BuildSpawnFlow(ClientBuildManager clientBuildManager, SpawnManager spawnManager)
+    public BuildSpawnFlow(BuildProcessManager clientBuildManager, SpawnManager spawnManager)
     {
         _clientBuildManager = clientBuildManager;
         _spawnManager = spawnManager;
@@ -111,12 +111,12 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
             case BuildOperationFailureReason.NoFloor:
             case BuildOperationFailureReason.Blocked:
             case BuildOperationFailureReason.None:
-                ConsoleLog.Info(nameof(ClientBuildManager), failureReason.ToString());
+                ConsoleLog.Info(nameof(BuildProcessManager), failureReason.ToString());
                 break;
 
             case BuildOperationFailureReason.InternalError:
             case BuildOperationFailureReason.NoCell:
-                ConsoleLog.Error(nameof(ClientBuildManager), failureReason.ToString());
+                ConsoleLog.Error(nameof(BuildProcessManager), failureReason.ToString());
                 break;
 
             default:

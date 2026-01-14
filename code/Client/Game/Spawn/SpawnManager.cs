@@ -27,16 +27,16 @@ public sealed partial class SpawnManager : InitializableNodeManager
     /// <summary>
     /// Catalog resolving spawn identifiers to spawnable scenes.
     /// </summary>
-    private SpawnCatalog? _spawnCatalog;
+    private SpawnResources? _spawnResources;
 
     #endregion
 
     #region Properties
 
-    private SpawnCatalog SpawnCatalog
+    private SpawnResources SpawnResources
     {
-        get => _spawnCatalog ?? throw new InvalidOperationException($"{nameof(SpawnCatalog)} is not initialized.");
-        set => _spawnCatalog = value;
+        get => _spawnResources ?? throw new InvalidOperationException($"{nameof(SpawnResources)} is not initialized.");
+        set => _spawnResources = value;
     }
 
     #endregion
@@ -46,16 +46,16 @@ public sealed partial class SpawnManager : InitializableNodeManager
     /// <summary>
     /// Initializes the spawn manager with the specified spawn catalog.
     /// </summary>
-    /// <param name="spawnCatalog">The spawn catalog to associate with the spawn manager. Cannot be null.</param>
+    /// <param name="spawnResources">The spawn catalog to associate with the spawn manager. Cannot be null.</param>
     /// <exception cref="InvalidOperationException">Thrown if the spawn manager has already been initialized with a spawn catalog.</exception>
-    public void Initialize(SpawnCatalog spawnCatalog)
+    public void Initialize(SpawnResources spawnResources)
     {
-        if (_spawnCatalog != null)
+        if (_spawnResources != null)
         {
             throw new InvalidOperationException($"{nameof(SpawnManager)} : Spawn Catalog already set.");
         }
 
-        SpawnCatalog = spawnCatalog;
+        SpawnResources = spawnResources;
         MarkInitialized();
     }
 
@@ -78,7 +78,7 @@ public sealed partial class SpawnManager : InitializableNodeManager
 
         ReplaceIfExists(key);
 
-        var scene = SpawnCatalog.GetSpawnScene(spawnId);
+        var scene = SpawnResources.GetSpawnScene(spawnId);
         var instance = scene.Instantiate();
 
         if (instance is not Node3D node)

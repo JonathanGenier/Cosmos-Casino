@@ -18,7 +18,7 @@ public sealed partial class GameManager : NodeManager
     private AppServices? _appServices;
     private GameSession? _gameSession;
     private CameraManager? _cameraManager;
-    private ClientBuildManager? _clientBuildManager;
+    private BuildProcessManager? _buildProcessManager;
     private GameUiManager? _gameUiManager;
     private InteractionManager? _interactionManager;
     private SpawnManager? _spawnManager;
@@ -27,7 +27,7 @@ public sealed partial class GameManager : NodeManager
     private BuildContextFlow? _buildContextFlow;
     private BuildRequestFlow? _buildRequestFlow;
     private BuildSpawnFlow? _buildSpawnFlow;
-    private ResourcePreloader? _spawnResourcesPreloader;
+    private ResourceAssembler? _resourceAssembler;
 #if DEBUG
     private CursorDebugVisualizer? _cursorDebugVisualizer;
 #endif
@@ -58,10 +58,10 @@ public sealed partial class GameManager : NodeManager
         set => _cameraManager = value;
     }
 
-    private ClientBuildManager ClientBuildManager
+    private BuildProcessManager BuildProcessManager
     {
-        get => _clientBuildManager ?? throw new InvalidOperationException($"{nameof(ClientBuildManager)} is not initialized.");
-        set => _clientBuildManager = value;
+        get => _buildProcessManager ?? throw new InvalidOperationException($"{nameof(BuildProcessManager)} is not initialized.");
+        set => _buildProcessManager = value;
     }
 
     private GameUiManager GameUiManager
@@ -112,10 +112,10 @@ public sealed partial class GameManager : NodeManager
         set => _buildSpawnFlow = value;
     }
 
-    private ResourcePreloader SpawnResourcesPreloader
+    private ResourceAssembler ResourceAssembler
     {
-        get => _spawnResourcesPreloader ?? throw new InvalidOperationException($"{nameof(SpawnResourcesPreloader)} is not initialized.");
-        set => _spawnResourcesPreloader = value;
+        get => _resourceAssembler ?? throw new InvalidOperationException($"{nameof(ResourceAssembler)} is not initialized.");
+        set => _resourceAssembler = value;
     }
 
 #if DEBUG
@@ -124,6 +124,7 @@ public sealed partial class GameManager : NodeManager
         get => _cursorDebugVisualizer ?? throw new InvalidOperationException($"{nameof(CursorDebugVisualizer)} is not initialized.");
         set => _cursorDebugVisualizer = value;
     }
+
 #endif
     #endregion
 
@@ -177,7 +178,7 @@ public sealed partial class GameManager : NodeManager
     /// method.</remarks>
     public override void _Ready()
     {
-        SpawnResourcesPreloader = GetNode<ResourcePreloader>("SpawnResources");
+        ResourceAssembler = GetNode<ResourceAssembler>("ResourceAssembler");
 
 #if DEBUG
         var cursorVisualizer = GD.Load<PackedScene>("res://scenes/game/debug/cursor_debug_visualizer.tscn");
@@ -226,14 +227,23 @@ public sealed partial class GameManager : NodeManager
 
         AppServices = appServices;
 
-        ClientBuildManager = AddInitializableNode<ClientBuildManager>(
-            cbm => cbm.Initialize(GameSession.BuildManager));
         CursorManager = AddInitializableNode<CursorManager>(
             cm => cm.Initialize(CollisionLayers.Buildable));
+
+        var buildProcessServices = new BuildProcessServices(
+            GameSession.BuildManager,
+            _buildContext,
+            CursorManager,
+            ResourceAssembler.PreviewResources);
+
+        BuildProcessManager = AddInitializableNode<BuildProcessManager>(
+            cbm => cbm.Initialize(buildProcessServices));
+
         InteractionManager = AddInitializableNode<InteractionManager>(
             im => im.Initialize(AppServices.InputManager, CursorManager, _buildContext));
+
         SpawnManager = AddInitializableNode<SpawnManager>(
-            sm => sm.Initialize(SpawnCatalog.LoadFromResourcePreloader(SpawnResourcesPreloader)));
+            sm => sm.Initialize(ResourceAssembler.SpawnResources));
 
         CameraManager = CreateNode<CameraManager>();
         GameUiManager = CreateInitializableNode<GameUiManager>(
@@ -258,8 +268,8 @@ public sealed partial class GameManager : NodeManager
         }
 
         BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, _buildContext, InteractionManager);
-        BuildRequestFlow = new BuildRequestFlow(InteractionManager, ClientBuildManager);
-        BuildSpawnFlow = new BuildSpawnFlow(ClientBuildManager, SpawnManager);
+        BuildRequestFlow = new BuildRequestFlow(InteractionManager, BuildProcessManager);
+        BuildSpawnFlow = new BuildSpawnFlow(BuildProcessManager, SpawnManager);
         CameraInputFlow = new CameraInputFlow(AppServices.InputManager, CameraManager);
     }
 
