@@ -1,5 +1,4 @@
 using CosmosCasino.Core.Game.Build;
-using Godot;
 using System;
 
 /// <summary>
@@ -31,16 +30,20 @@ public sealed partial class BuildProcessManager : InitializableNodeManager
 
     #region Properties
 
+    /// <summary>
+    /// Gets the current instance of the build preview manager used to manage and display build previews within the
+    /// application.
+    /// </summary>
+    public BuildPreviewManager BuildPreviewManager
+    {
+        get => buildPreviewManager ?? throw new InvalidOperationException($"{nameof(BuildPreviewManager)} has not been initialized.");
+        private set => buildPreviewManager = value;
+    }
+
     private BuildManager BuildManager
     {
         get => _buildManager ?? throw new InvalidOperationException($"{nameof(BuildManager)} has not been initialized.");
         set => _buildManager = value;
-    }
-
-    private BuildPreviewManager? BuildPreviewManager
-    {
-        get => buildPreviewManager ?? throw new InvalidOperationException($"{nameof(BuildPreviewManager)} has not been initialized.");
-        set => buildPreviewManager = value;
     }
 
     #endregion
@@ -82,10 +85,7 @@ public sealed partial class BuildProcessManager : InitializableNodeManager
 
         BuildManager = services.BuildManager;
         BuildPreviewManager = new BuildPreviewManager();
-        BuildPreviewManager.Initialize(
-            services.PreviewResources,
-            services.BuildContext,
-            services.CursorManager);
+        BuildPreviewManager.Initialize(services.PreviewResources);
 
         MarkInitialized();
     }

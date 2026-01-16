@@ -1,8 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Map.Cell;
-using CosmosCasino.Core.Game.Map.Grid;
 using Godot;
-using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -53,16 +51,32 @@ public sealed class FloorBuildContext : BuildContextBase
     #region Get Cells
 
     /// <summary>
-    /// Returns a read-only list of map cell coordinates that lie within the area defined by the specified start and end
-    /// world positions.
+    /// Returns a read-only list of map cell coordinates that lie within the rectangular area defined by the specified
+    /// start and end world positions.
     /// </summary>
-    /// <param name="startWorld">The world-space position representing one corner of the area to retrieve cells from.</param>
-    /// <param name="endWorld">The world-space position representing the opposite corner of the area to retrieve cells from.</param>
-    /// <returns>A read-only list of <see cref="MapCellCoord"/> values representing all cells within the specified area. The list
-    /// will be empty if no cells are found in the area.</returns>
-    protected override IReadOnlyList<MapCellCoord> GetCells(Vector3 startWorld, Vector3 endWorld)
+    /// <param name="startWorld">The world-space position representing one corner of the area to query for map cells.</param>
+    /// <param name="endWorld">The world-space position representing the opposite corner of the area to query for map cells.</param>
+    /// <returns>A read-only list of <see cref="MapCellCoord"/> values representing all map cells within the specified area. The
+    /// list will be empty if no cells are found within the area.</returns>
+    public override IReadOnlyList<MapCellCoord> GetCells(Vector3 startWorld, Vector3 endWorld)
     {
         return GetCellsArea(startWorld, endWorld);
+    }
+
+    /// <summary>
+    /// Returns a read-only list of map cell coordinates representing all cells within the rectangular area defined by
+    /// the specified start and end cells.
+    /// </summary>
+    /// <param name="startCell">The coordinate of the first cell that defines one corner of the area to retrieve. Must be within the bounds of
+    /// the map.</param>
+    /// <param name="endCell">The coordinate of the second cell that defines the opposite corner of the area to retrieve. Must be within the
+    /// bounds of the map.</param>
+    /// <returns>A read-only list of <see cref="MapCellCoord"/> objects representing all cells within the area defined by
+    /// <paramref name="startCell"/> and <paramref name="endCell"/>. The list will be empty if the area contains no
+    /// cells.</returns>
+    public override IReadOnlyList<MapCellCoord> GetCells(MapCellCoord startCell, MapCellCoord endCell)
+    {
+        return GetCellsArea(startCell, endCell);
     }
 
     #endregion

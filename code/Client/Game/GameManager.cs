@@ -9,6 +9,7 @@ using System;
 public sealed partial class GameManager : NodeManager
 {
     #region Fields
+
     private readonly BuildContext _buildContext = new();
 
     private bool _sceneReady = false;
@@ -27,10 +28,12 @@ public sealed partial class GameManager : NodeManager
     private BuildContextFlow? _buildContextFlow;
     private BuildRequestFlow? _buildRequestFlow;
     private BuildSpawnFlow? _buildSpawnFlow;
+    private BuildPreviewFlow? _buildPreviewFlow;
     private ResourceAssembler? _resourceAssembler;
 #if DEBUG
     private CursorDebugVisualizer? _cursorDebugVisualizer;
 #endif
+
     #endregion
 
     #region Properties
@@ -112,6 +115,12 @@ public sealed partial class GameManager : NodeManager
         set => _buildSpawnFlow = value;
     }
 
+    private BuildPreviewFlow BuildPreviewFlow
+    {
+        get => _buildPreviewFlow ?? throw new InvalidOperationException($"{nameof(BuildPreviewFlow)} is not initialized.");
+        set => _buildPreviewFlow = value;
+    }
+
     private ResourceAssembler ResourceAssembler
     {
         get => _resourceAssembler ?? throw new InvalidOperationException($"{nameof(ResourceAssembler)} is not initialized.");
@@ -124,8 +133,8 @@ public sealed partial class GameManager : NodeManager
         get => _cursorDebugVisualizer ?? throw new InvalidOperationException($"{nameof(CursorDebugVisualizer)} is not initialized.");
         set => _cursorDebugVisualizer = value;
     }
-
 #endif
+
     #endregion
 
     #region Godot Process
@@ -206,6 +215,21 @@ public sealed partial class GameManager : NodeManager
         State = GameState.Loading;
     }
 
+    /// <summary>
+    /// Performs per-frame processing for the node, updating the preview flow if the scene is ready, the simulation has
+    /// started, and the session is initialized.
+    /// </summary>
+    /// <param name="delta">The elapsed time, in seconds, since the previous frame. Used to synchronize updates with the frame rate.</param>
+    public override void _Process(double delta)
+    {
+        if (!_sceneReady || !_simulationHasStarted || !_sessionInitialized)
+        {
+            return;
+        }
+
+        BuildPreviewFlow.Process();
+    }
+
     #endregion
 
     #region Initialization
@@ -232,8 +256,6 @@ public sealed partial class GameManager : NodeManager
 
         var buildProcessServices = new BuildProcessServices(
             GameSession.BuildManager,
-            _buildContext,
-            CursorManager,
             ResourceAssembler.PreviewResources);
 
         BuildProcessManager = AddInitializableNode<BuildProcessManager>(
@@ -270,6 +292,7 @@ public sealed partial class GameManager : NodeManager
         BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, _buildContext, InteractionManager);
         BuildRequestFlow = new BuildRequestFlow(InteractionManager, BuildProcessManager);
         BuildSpawnFlow = new BuildSpawnFlow(BuildProcessManager, SpawnManager);
+        BuildPreviewFlow = new BuildPreviewFlow(_buildContext, BuildProcessManager.BuildPreviewManager, CursorManager);
         CameraInputFlow = new CameraInputFlow(AppServices.InputManager, CameraManager);
     }
 

@@ -15,10 +15,17 @@ public sealed class PreviewResources
     /// Initializes a new instance of the PreviewResources class with the specified grid preview scene.
     /// </summary>
     /// <param name="gridPreviewScene">The PackedScene instance to use for grid previews. Cannot be null.</param>
+    /// <param name="floorPreviewScene">The PackedScene instance to use for floor previews. Cannot be null.</param>
+    /// <param name="wallPreviewScene">The PackedScene instance to use for wall previews. Cannot be null.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="gridPreviewScene"/> is null.</exception>
-    private PreviewResources(PackedScene gridPreviewScene)
+    private PreviewResources(
+        PackedScene gridPreviewScene,
+        PackedScene floorPreviewScene,
+        PackedScene wallPreviewScene)
     {
         GridPreviewScene = gridPreviewScene ?? throw new ArgumentNullException(nameof(gridPreviewScene));
+        FloorPreviewScene = floorPreviewScene ?? throw new ArgumentNullException(nameof(floorPreviewScene));
+        WallPreviewScene = wallPreviewScene ?? throw new ArgumentNullException(nameof(wallPreviewScene));
     }
 
     #endregion
@@ -29,6 +36,16 @@ public sealed class PreviewResources
     /// Gets the packed scene used to display the grid preview in the editor.
     /// </summary>
     public PackedScene GridPreviewScene { get; }
+
+    /// <summary>
+    /// Gets the scene used to display a preview of the floor in the editor or during runtime.
+    /// </summary>
+    public PackedScene FloorPreviewScene { get; }
+
+    /// <summary>
+    /// Gets the scene resource used to display a preview of a wall in the editor or during placement operations.
+    /// </summary>
+    public PackedScene WallPreviewScene { get; }
 
     #endregion
 
@@ -45,7 +62,9 @@ public sealed class PreviewResources
         ArgumentNullException.ThrowIfNull(resources);
 
         return new PreviewResources(
-            ResourceResolver.GetPackedScene(resources, "build_grid_preview")
+            ResourceResolver.GetPackedScene(resources, "build_grid_preview"),
+            ResourceResolver.GetPackedScene(resources, "floor_preview"),
+            ResourceResolver.GetPackedScene(resources, "wall_preview")
         );
     }
 

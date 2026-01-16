@@ -1,8 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Map.Cell;
-using CosmosCasino.Core.Game.Map.Grid;
 using Godot;
-using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -63,9 +61,22 @@ public sealed class WallBuildContext : BuildContextBase
     /// <param name="endWorld">The world-space position representing the opposite corner of the rectangular area.</param>
     /// <returns>A read-only list of map cell coordinates that are contained within the rectangle defined by the two world
     /// positions. The list includes all cells between the two corners, inclusive.</returns>
-    protected override IReadOnlyList<MapCellCoord> GetCells(Vector3 startWorld, Vector3 endWorld)
+    public override IReadOnlyList<MapCellCoord> GetCells(Vector3 startWorld, Vector3 endWorld)
     {
         return GetCellsLine(startWorld, endWorld);
+    }
+
+    /// <summary>
+    /// Returns a read-only list of map cell coordinates representing the straight line path between the specified start
+    /// and end cells.
+    /// </summary>
+    /// <param name="startCell">The coordinate of the cell where the line starts.</param>
+    /// <param name="endCell">The coordinate of the cell where the line ends.</param>
+    /// <returns>A read-only list of <see cref="MapCellCoord"/> values that trace the line from <paramref name="startCell"/> to
+    /// <paramref name="endCell"/>. The list includes both endpoints.</returns>
+    public override IReadOnlyList<MapCellCoord> GetCells(MapCellCoord startCell, MapCellCoord endCell)
+    {
+        return GetCellsLine(startCell, endCell);
     }
 
     #endregion
