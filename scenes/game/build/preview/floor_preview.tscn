@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://rwqh6hpnfi1f"]
 
-[ext_resource type="Script" uid="uid://caw0onnyvswhh" path="res://code/Client/Game/Build/Preview/FloorPreview.cs" id="1_ibtf5"]
-[ext_resource type="Shader" uid="uid://up8bpo1po3fs" path="res://assets/shaders/preview.gdshader" id="1_usgch"]
+[ext_resource type="Script" uid="uid://b13nwfyjbtos0" path="res://code/Client/Game/Build/Preview/FloorPreview.cs" id="1_ibtf5"]
+[ext_resource type="Shader" uid="uid://bs0r3v7q262gr" path="res://assets/shaders/preview.gdshader" id="1_usgch"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_ackx7"]
 
