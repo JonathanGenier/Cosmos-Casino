@@ -1,0 +1,19 @@
+[gd_scene load_steps=5 format=3 uid="uid://rwqh6hpnfi1f"]
+
+[ext_resource type="Script" uid="uid://caw0onnyvswhh" path="res://code/Client/Game/Build/Preview/FloorPreview.cs" id="1_ibtf5"]
+[ext_resource type="Shader" uid="uid://up8bpo1po3fs" path="res://assets/shaders/preview.gdshader" id="1_usgch"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ackx7"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ibtf5"]
+render_priority = 0
+shader = ExtResource("1_usgch")
+shader_parameter/color = Color(1.2513996e-06, 0.57392997, 0.7894288, 0.047058824)
+
+[node name="FloorPreview" type="Node3D"]
+script = ExtResource("1_ibtf5")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.25, 0, 0, 0, 1, 0, -0.125, 0)
+mesh = SubResource("BoxMesh_ackx7")
+surface_material_override/0 = SubResource("ShaderMaterial_ibtf5")

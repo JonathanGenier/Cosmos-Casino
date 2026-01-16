@@ -51,8 +51,8 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// <param name="start">The context information associated with the start of the primary gesture.</param>
     public void OnPrimaryGestureStarted(CursorContext start)
     {
-        // No-op for now.
-        // Later: initialize preview state.
+        ConsoleLog.Warning("Start", $"{start.ToString()}");
+        _buildContext.BeginPreview(start);
     }
 
     /// <summary>
@@ -62,8 +62,8 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// <param name="current">The current cursor context representing the latest state of the gesture.</param>
     public void OnPrimaryGestureUpdated(CursorContext start, CursorContext current)
     {
-        // No-op for now.
-        // Later: update preview visuals.
+        ConsoleLog.Warning("Update", $"{start.ToString()} | {current.ToString()}");
+        _buildContext.UpdatePreview(current);
     }
 
     /// <summary>
@@ -78,15 +78,14 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// operation to proceed.</param>
     public void OnPrimaryGestureEnded(CursorContext start, CursorContext end)
     {
-        if (_buildContext.ActiveContext == null || !end.IsValid)
-        {
-            return;
-        }
+        var context = _buildContext.ActiveContext;
 
-        if (_buildContext.ActiveContext.TryCreateBuildIntent(start, end, out var intent))
+        if (context != null && context.TryCreateBuildIntent(start, end, out var intent))
         {
             BuildRequested?.Invoke(intent);
         }
+
+        _buildContext.ClearPreview();
     }
 
     /// <summary>
@@ -96,8 +95,7 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// <param name="start">The context associated with the cursor at the start of the gesture.</param>
     public void OnPrimaryGestureCancelled(CursorContext start)
     {
-        // No-op for now.
-        // Later: clear preview state.
+        _buildContext.ClearPreview();
     }
 
     #endregion
