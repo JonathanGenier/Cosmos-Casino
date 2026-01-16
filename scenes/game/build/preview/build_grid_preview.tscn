@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://c8q38ydbo13th"]
 
 [ext_resource type="Script" uid="uid://b3x7baereux0b" path="res://code/Client/Game/Build/Preview/BuildGridPreview.cs" id="1_o3sbj"]
-[ext_resource type="Shader" uid="uid://dgfgxskyrtpdp" path="res://assets/shaders/build_grid_preview.gdshader" id="2_xbpfe"]
+[ext_resource type="Shader" uid="uid://dkovf81o0o0lc" path="res://assets/shaders/build_grid_preview.gdshader" id="2_xbpfe"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_wa4d0"]
 size = Vector2(1, 1)
