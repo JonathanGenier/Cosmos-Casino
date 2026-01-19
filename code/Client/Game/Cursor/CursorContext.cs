@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Game.Map.Cell;
 using Godot;
 
 /// <summary>
@@ -44,6 +45,11 @@ public readonly struct CursorContext
     /// Gets a value indicating whether the current object is in a valid state.
     /// </summary>
     public bool IsValid { get; }
+
+    /// <summary>
+    /// Gets the cell coordinates corresponding to the current world position.
+    /// </summary>
+    public MapCellCoord CellPosition => MapToWorld.WorldToCell(WorldPosition);
 
     #endregion
 }

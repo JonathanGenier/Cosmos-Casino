@@ -1,4 +1,4 @@
-namespace CosmosCasino.Core.Game.Build
+namespace CosmosCasino.Core.Game.Build.Domain
 {
     /// <summary>
     /// Enumerates the possible reasons a build operation may fail
@@ -31,21 +31,9 @@ namespace CosmosCasino.Core.Game.Build
         Blocked,
 
         /// <summary>
-        /// An unexpected or invalid internal state was encountered.
-        /// Indicates a programmer error rather than gameplay behavior.
-        /// </summary>
-        InternalError,
-
-        /// <summary>
         /// The target cell does not exist and could not be resolved
         /// for the requested operation.
         /// </summary>
-        NoCell,
-
-        /// <summary>
-        /// The operation could not be completed due to insufficient
-        /// available funds.
-        /// </summary>
-        NoFunds
+        NoCell
     }
 }

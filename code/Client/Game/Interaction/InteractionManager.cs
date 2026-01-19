@@ -27,18 +27,6 @@ public sealed partial class InteractionManager : InitializableNodeManager
 
     #endregion
 
-    #region Events
-
-    /// <summary>
-    /// Occurs when a build is requested with the specified build intent.
-    /// </summary>
-    /// <remarks>Subscribers can handle this event to initiate or respond to build operations based on the
-    /// provided build intent. The event provides a BuildIntent parameter that describes the details of the requested
-    /// build.</remarks>
-    public event Action<BuildIntent>? BuildRequested;
-
-    #endregion
-
     #region Properties
 
     private InputManager InputManager
@@ -133,6 +121,8 @@ public sealed partial class InteractionManager : InitializableNodeManager
             InteractionTool.Build => BuildHandler,
             _ => throw new ArgumentOutOfRangeException(nameof(tool))
         };
+
+        ConsoleLog.Info(nameof(InteractionManager), $"Switched to {tool} tool.");
     }
 
     /// <summary>
@@ -162,7 +152,6 @@ public sealed partial class InteractionManager : InitializableNodeManager
             InputManager.PrimaryInteractionReleased += OnPrimaryInteractionReleased;
 
             InitializeHandlers();
-            BuildHandler.BuildRequested += OnBuildRequested;
 
             SetTool(InteractionTool.Selection);
         }
@@ -179,7 +168,6 @@ public sealed partial class InteractionManager : InitializableNodeManager
     {
         InputManager.PrimaryInteractionPressed -= OnPrimaryInteractionPressed;
         InputManager.PrimaryInteractionReleased -= OnPrimaryInteractionReleased;
-        BuildHandler.BuildRequested -= OnBuildRequested;
     }
 
     /// <summary>
@@ -196,7 +184,7 @@ public sealed partial class InteractionManager : InitializableNodeManager
             return;
         }
 
-        CursorContext currentContext = BuildCursorContext();
+        CursorManager.TryGetCursorContext(out var currentContext);
         ActiveHandler.OnPrimaryGestureUpdated(CursorContext, currentContext);
     }
 
@@ -212,9 +200,9 @@ public sealed partial class InteractionManager : InitializableNodeManager
     /// press.</remarks>
     private void OnPrimaryInteractionPressed()
     {
-        var context = BuildCursorContext();
+        CursorManager.TryGetCursorContext(out var pressedContext);
 
-        if (!context.IsValid)
+        if (!pressedContext.IsValid)
         {
             return;
         }
@@ -224,7 +212,7 @@ public sealed partial class InteractionManager : InitializableNodeManager
             throw new InvalidOperationException($"{nameof(InteractionManager)} has no active interaction handler.");
         }
 
-        _cursorContext = context;
+        _cursorContext = pressedContext;
         _isPrimaryHeld = true;
         ActiveHandler.OnPrimaryGestureStarted(CursorContext);
     }
@@ -241,44 +229,10 @@ public sealed partial class InteractionManager : InitializableNodeManager
 
         _isPrimaryHeld = false;
 
-        var releaseContext = BuildCursorContext();
+        CursorManager.TryGetCursorContext(out var releaseContext);
         ActiveHandler.OnPrimaryGestureEnded(startContext, releaseContext);
 
         _cursorContext = null;
-    }
-
-    #endregion
-
-    #region Cursor Context
-
-    /// <summary>
-    /// Creates a new instance of CursorContext containing the current mouse position and corresponding world
-    /// position, if available.
-    /// </summary>
-    /// <returns>A CursorContext object that includes the current screen position, the corresponding world position, and a value
-    /// indicating whether the world position is valid.</returns>
-    private CursorContext BuildCursorContext()
-    {
-        Vector2 screenPosition = GetViewport().GetMousePosition();
-        bool isValid = CursorManager.TryGetCursorPosition(out Vector3 worldPosition);
-
-        return new CursorContext(
-            screenPosition: screenPosition,
-            worldPosition: worldPosition,
-            isValid: isValid);
-    }
-
-    #endregion
-
-    #region Event handlers
-
-    /// <summary>
-    /// Handles a build request by invoking the BuildRequested event with the specified intent.
-    /// </summary>
-    /// <param name="intent">The build intent that describes the details of the requested build operation.</param>
-    private void OnBuildRequested(BuildIntent intent)
-    {
-        BuildRequested?.Invoke(intent);
     }
 
     #endregion

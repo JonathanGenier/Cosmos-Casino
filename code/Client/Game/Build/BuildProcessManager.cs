@@ -40,6 +40,9 @@ public sealed partial class BuildProcessManager : InitializableNodeManager
         private set => buildPreviewManager = value;
     }
 
+    /// <summary>
+    /// Gets or sets the build manager instance used to coordinate build operations.
+    /// </summary>
     private BuildManager BuildManager
     {
         get => _buildManager ?? throw new InvalidOperationException($"{nameof(BuildManager)} has not been initialized.");
@@ -49,6 +52,24 @@ public sealed partial class BuildProcessManager : InitializableNodeManager
     #endregion
 
     #region Build Processes
+
+    /// <summary>
+    /// Evaluates the specified build intent and returns the result of the build process.
+    /// </summary>
+    /// <param name="buildIntent">The build intent to evaluate. Cannot be null.</param>
+    /// <returns>A BuildResult object that contains the outcome of evaluating the specified build intent.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the BuildProcessManager is not initialized.</exception>
+    public BuildResult EvaluateBuildIntent(BuildIntent buildIntent)
+    {
+        ArgumentNullException.ThrowIfNull(buildIntent);
+
+        if (!IsInitialized)
+        {
+            throw new InvalidOperationException($"{nameof(BuildProcessManager)} is not initialized.");
+        }
+
+        return BuildManager.Evaluate(buildIntent);
+    }
 
     /// <summary>
     /// Executes the specified build intent by applying its operations and triggers the build completion event.
@@ -66,7 +87,7 @@ public sealed partial class BuildProcessManager : InitializableNodeManager
             throw new InvalidOperationException($"{nameof(BuildProcessManager)} is not initialized.");
         }
 
-        BuildResult buildResult = BuildManager.ApplyBuildOperations(buildIntent);
+        BuildResult buildResult = BuildManager.Execute(buildIntent);
         BuildCompleted?.Invoke(buildResult);
     }
 

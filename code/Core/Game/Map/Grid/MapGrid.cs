@@ -57,27 +57,24 @@ namespace CosmosCasino.Core.Game.Map.Grid
         }
 
         /// <summary>
-        /// Attempts to remove the cell at the given coordinate.
-        /// A cell can only be removed if it exists and is completely empty.
+        /// Removes the cell at the specified coordinate from the map. Throws an exception if the cell does not exist or
+        /// is not empty.
         /// </summary>
         /// <param name="coord">The coordinate of the cell to remove.</param>
-        /// <returns>
-        /// <c>true</c> if the cell was removed; otherwise <c>false</c>.
-        /// </returns>
-        internal bool TryRemoveCell(MapCellCoord coord)
+        /// <exception cref="InvalidOperationException">Thrown if the cell at the specified coordinate does not exist or is not empty.</exception>
+        internal void RemoveCell(MapCellCoord coord)
         {
             if (!_cells.TryGetValue(coord, out var cell))
             {
-                return false;
+                throw new InvalidOperationException($"Cell cleanup failed after floor removal at {coord}. Cell was expected to exists.");
             }
 
             if (!cell.IsEmpty)
             {
-                return false;
+                throw new InvalidOperationException($"Cell cleanup failed after floor removal at {coord}. Cell was expected to be empty.");
             }
 
             _cells.Remove(coord);
-            return true;
         }
 
         #endregion

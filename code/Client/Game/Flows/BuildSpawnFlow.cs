@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Game.Build;
+using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map.Cell;
 using Godot;
 using System;
@@ -68,23 +69,23 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
 
         foreach (BuildOperationResult result in buildResult.Results)
         {
-            switch (result.Outcome)
+            if (result.Outcome == BuildOperationOutcome.Invalid)
             {
-                case BuildOperationOutcome.Failed:
-                case BuildOperationOutcome.Skipped:
-                    DisplayFailureMessage(result.FailureReason);
-                    continue;
+                DisplayFailureMessage(result.FailureReason);
+            }
 
-                case BuildOperationOutcome.Placed:
+            if (result.Outcome == BuildOperationOutcome.Valid)
+            {
+                if (buildIntent.Operation == BuildOperation.Place)
+                {
                     SpawnBuild(result, buildIntent);
                     continue;
-
-                case BuildOperationOutcome.Removed:
+                }
+                else if (buildIntent.Operation == BuildOperation.Remove)
+                {
                     RemoveBuild(result, buildIntent.Kind);
                     continue;
-
-                default:
-                    throw new InvalidOperationException($"{result.Outcome} not implemented");
+                }
             }
         }
     }
@@ -107,14 +108,12 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
         switch (failureReason)
         {
             case BuildOperationFailureReason.NoWall:
-            case BuildOperationFailureReason.NoFunds:
             case BuildOperationFailureReason.NoFloor:
             case BuildOperationFailureReason.Blocked:
             case BuildOperationFailureReason.None:
                 ConsoleLog.Info(nameof(BuildProcessManager), failureReason.ToString());
                 break;
 
-            case BuildOperationFailureReason.InternalError:
             case BuildOperationFailureReason.NoCell:
                 ConsoleLog.Error(nameof(BuildProcessManager), failureReason.ToString());
                 break;
@@ -153,13 +152,7 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
 
     private CellSlotSpawnKey GetSpawnKey(BuildOperationResult result, BuildKind buildKind)
     {
-        if (result.Cell is null)
-        {
-            throw new InvalidOperationException(
-                $"Cannot resolve spawn key for {buildKind} build result without a target cell.");
-        }
-
-        MapCellCoord coord = result.Cell.Value;
+        MapCellCoord coord = result.Cell;
         MapCellSlot slot = buildKind switch
         {
             BuildKind.Floor => MapCellSlot.Floor,

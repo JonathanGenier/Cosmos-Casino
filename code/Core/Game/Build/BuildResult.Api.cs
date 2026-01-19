@@ -1,3 +1,5 @@
+using CosmosCasino.Core.Game.Build.Domain;
+
 namespace CosmosCasino.Core.Game.Build
 {
     /// <summary>
@@ -11,9 +13,7 @@ namespace CosmosCasino.Core.Game.Build
     {
         #region Constructor
 
-        private BuildResult(
-            BuildIntent intent,
-            IReadOnlyList<BuildOperationResult> results)
+        private BuildResult(BuildIntent intent, IReadOnlyList<BuildOperationResult> results)
         {
             Intent = intent;
             Results = results;

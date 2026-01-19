@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Game.Build;
+using CosmosCasino.Core.Game.Build.Domain;
 using System;
 
 /// <summary>

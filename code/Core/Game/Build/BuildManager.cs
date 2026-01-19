@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Cell;
 
@@ -37,106 +38,79 @@ namespace CosmosCasino.Core.Game.Build
 
         #region Floor Methods
 
-        /// <summary>
-        /// Resolves a floor-related build operation for a single target cell,
-        /// dispatching to the appropriate placement, replacement, or removal
-        /// logic based on the build intent.
-        /// </summary>
-        /// <param name="intent">
-        /// The build intent describing the requested floor operation.
-        /// </param>
-        /// <param name="coord">
-        /// The coordinate of the cell to process.
-        /// </param>
-        /// <returns>
-        /// A <see cref="BuildOperationResult"/> describing the outcome
-        /// of the operation for the specified cell.
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// Thrown when the specified build operation is not supported.
-        /// </exception>
-        private BuildOperationResult ResolveFloor(BuildIntent intent, MapCellCoord coord)
+        private BuildOperationResult EvaluateOperationOnFloor(BuildOperation buildOperation, MapCellCoord coord)
         {
-            switch (intent.Operation)
+            return buildOperation switch
             {
-                case BuildOperation.Place:
-                    return TryPlaceFloor(coord);
-
-                case BuildOperation.Remove:
-                    return TryRemoveFloor(coord);
-
-                default:
-                    throw new NotImplementedException($"{nameof(BuildOperation)} not implemented");
-            }
+                BuildOperation.Place => _mapManager.CanPlaceFloor(coord),
+                BuildOperation.Remove => _mapManager.CanRemoveFloor(coord),
+                _ => throw new NotImplementedException($"{nameof(buildOperation)} not implemented")
+            };
         }
 
-        /// <summary>
-        /// Attempts to place a new floor at the specified cell without
-        /// replacing any existing floor.
-        /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the target cell.
-        /// </param>
-        /// <returns>
-        /// A <see cref="BuildOperationResult"/> describing the outcome
-        /// of the placement attempt.
-        /// </returns>
+        private BuildOperationResult ExecuteOperationOnFloor(BuildOperation buildOperation, MapCellCoord coord)
+        {
+            return buildOperation switch
+            {
+                BuildOperation.Place => TryPlaceFloor(coord),
+                BuildOperation.Remove => TryRemoveFloor(coord),
+                _ => throw new NotImplementedException($"{nameof(buildOperation)} not implemented")
+            };
+        }
+
         private BuildOperationResult TryPlaceFloor(MapCellCoord coord)
         {
             // TODO: Calculate cost to place said floorType
             // TODO: Check if can afford cost
             // If Yes :
-            MapOperationResult mapResult = _mapManager.TryPlaceFloor(coord);
-            // Else BuildOperationResult NOFUNDS
+            BuildOperationResult actionResult = _mapManager.TryPlaceFloor(coord);
 
-            if (mapResult.Outcome == MapCellOutcome.Placed)
+
+            if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
                 // Deduct Cost (FloorType Cost)
             }
 
-            return BuildOperationResult.FromMapOperationResult(mapResult);
+            // Else BuildOperationResult NOFUNDS
+
+            return actionResult;
         }
 
-        /// <summary>
-        /// Attempts to remove the floor from the specified cell, triggering
-        /// cell cleanup if the removal succeeds and the cell becomes empty.
-        /// </summary>
-        /// <param name="coord">
-        /// The coordinate of the target cell.
-        /// </param>
-        /// <returns>
-        /// A <see cref="BuildOperationResult"/> describing the outcome
-        /// of the removal attempt.
-        /// </returns>
+
         private BuildOperationResult TryRemoveFloor(MapCellCoord coord)
         {
-            MapOperationResult mapResult = _mapManager.TryRemoveFloor(coord);
+            BuildOperationResult actionResult = _mapManager.TryRemoveFloor(coord);
 
-            if (mapResult.Outcome == MapCellOutcome.Removed)
+            if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
                 // Refund Cost
             }
 
-            return BuildOperationResult.FromMapOperationResult(mapResult);
+            return actionResult;
         }
 
         #endregion
 
         #region Wall Methods
 
-        private BuildOperationResult ResolveWall(BuildIntent intent, MapCellCoord coord)
+        private BuildOperationResult EvaluateOperationOnWall(BuildOperation buildOperation, MapCellCoord coord)
         {
-            switch (intent.Operation)
+            return buildOperation switch
             {
-                case BuildOperation.Place:
-                    return TryPlaceWall(coord);
+                BuildOperation.Place => _mapManager.CanPlaceWall(coord),
+                BuildOperation.Remove => _mapManager.CanRemoveWall(coord),
+                _ => throw new NotImplementedException($"{nameof(buildOperation)} not implemented")
+            };
+        }
 
-                case BuildOperation.Remove:
-                    return TryRemoveWall(coord);
-
-                default:
-                    throw new NotImplementedException($"{nameof(BuildOperation)} not implemented");
-            }
+        private BuildOperationResult ExecuteOperationOnWall(BuildOperation buildOperation, MapCellCoord coord)
+        {
+            return buildOperation switch
+            {
+                BuildOperation.Place => TryPlaceWall(coord),
+                BuildOperation.Remove => TryRemoveWall(coord),
+                _ => throw new NotImplementedException($"{nameof(buildOperation)} not implemented")
+            };
         }
 
         private BuildOperationResult TryPlaceWall(MapCellCoord coord)
@@ -144,27 +118,29 @@ namespace CosmosCasino.Core.Game.Build
             // TODO: Calculate cost to place said floorType
             // TODO: Check if can afford cost
             // If Yes :
-            MapOperationResult mapResult = _mapManager.TryPlaceWall(coord);
-            // Else BuildOperationResult NOFUNDS
+            BuildOperationResult actionResult = _mapManager.TryPlaceWall(coord);
 
-            if (mapResult.Outcome == MapCellOutcome.Placed)
+            if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
                 // Deduct Cost (FloorType Cost)
+
             }
 
-            return BuildOperationResult.FromMapOperationResult(mapResult);
+            // Else BuildOperationResult NOFUNDS
+
+            return actionResult;
         }
 
         private BuildOperationResult TryRemoveWall(MapCellCoord coord)
         {
-            MapOperationResult mapResult = _mapManager.TryRemoveWall(coord);
+            BuildOperationResult actionResult = _mapManager.TryRemoveWall(coord);
 
-            if (mapResult.Outcome == MapCellOutcome.Removed)
+            if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
                 // Refund Cost
             }
 
-            return BuildOperationResult.FromMapOperationResult(mapResult);
+            return actionResult;
         }
 
         #endregion

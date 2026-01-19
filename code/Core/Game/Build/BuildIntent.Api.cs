@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map.Cell;
 
 namespace CosmosCasino.Core.Game.Build
@@ -24,10 +25,7 @@ namespace CosmosCasino.Core.Game.Build
         /// <param name="operation">
         /// Operation to perform (place, replace, remove).
         /// </param>
-        private BuildIntent(
-            IReadOnlyList<MapCellCoord> cells,
-            BuildKind kind,
-            BuildOperation operation)
+        private BuildIntent(IReadOnlyList<MapCellCoord> cells, BuildKind kind, BuildOperation operation)
         {
             Cells = cells;
             Kind = kind;

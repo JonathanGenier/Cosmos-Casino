@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Build;
+using CosmosCasino.Core.Game.Build.Domain;
 using Godot;
 using System;
 

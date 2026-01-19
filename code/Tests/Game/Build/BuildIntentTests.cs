@@ -1,57 +1,171 @@
 using CosmosCasino.Core.Game.Build;
+using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map.Cell;
 using NUnit.Framework;
 
 namespace CosmosCasino.Tests.Game.Build
 {
     [TestFixture]
-    internal class BuildIntentTests
+    internal sealed class BuildIntentTests
     {
         #region BuildFloor
 
         [Test]
-        public void BuildFloor_ShouldThrowArgumentNullException_WhenCellsIsNull()
+        public void BuildFloor_NullCells_ThrowsArgumentNullException()
         {
+            // Arrange / Act / Assert
             Assert.Throws<ArgumentNullException>(() =>
                 BuildIntent.BuildFloor(null!));
         }
 
         [Test]
-        public void BuildFloor_ShouldThrowArgumentException_WhenCellsIsEmpty()
+        public void BuildFloor_EmptyCells_ThrowsArgumentException()
         {
+            // Arrange
+            var cells = new List<MapCellCoord>();
+
+            // Act / Assert
             Assert.Throws<ArgumentException>(() =>
-                BuildIntent.BuildFloor(new List<MapCellCoord>()));
+                BuildIntent.BuildFloor(cells));
         }
 
         [Test]
-        public void BuildFloor_ShouldCreateIntent_WithCorrectProperties()
+        public void BuildFloor_ValidCells_CreatesCorrectIntent()
         {
-            var cells = new List<MapCellCoord>
+            // Arrange
+            var cells = new[]
             {
                 new MapCellCoord(1, 2, 3)
             };
 
+            // Act
             var intent = BuildIntent.BuildFloor(cells);
 
+            // Assert
             Assert.That(intent.Kind, Is.EqualTo(BuildKind.Floor));
             Assert.That(intent.Operation, Is.EqualTo(BuildOperation.Place));
             Assert.That(intent.Cells, Has.Count.EqualTo(1));
+            Assert.That(intent.Cells[0], Is.EqualTo(cells[0]));
         }
 
         [Test]
-        public void BuildFloor_ShouldCopyCells_Defensively()
+        public void BuildFloor_CopiesCells_Defensively()
         {
+            // Arrange
             var cells = new List<MapCellCoord>
             {
                 new MapCellCoord(0, 0, 0)
             };
 
+            // Act
             var intent = BuildIntent.BuildFloor(cells);
-
             cells.Clear();
 
+            // Assert
             Assert.That(intent.Cells, Has.Count.EqualTo(1));
             Assert.That(intent.Cells, Is.Not.SameAs(cells));
+        }
+
+        #endregion
+
+        #region BuildWall
+
+        [Test]
+        public void BuildWall_NullCells_ThrowsArgumentNullException()
+        {
+            // Arrange / Act / Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                BuildIntent.BuildWall(null!));
+        }
+
+        [Test]
+        public void BuildWall_EmptyCells_ThrowsArgumentException()
+        {
+            // Arrange
+            var cells = new List<MapCellCoord>();
+
+            // Act / Assert
+            Assert.Throws<ArgumentException>(() =>
+                BuildIntent.BuildWall(cells));
+        }
+
+        [Test]
+        public void BuildWall_ValidCells_CreatesCorrectIntent()
+        {
+            // Arrange
+            var cells = new[]
+            {
+                new MapCellCoord(5, 0, 1)
+            };
+
+            // Act
+            var intent = BuildIntent.BuildWall(cells);
+
+            // Assert
+            Assert.That(intent.Kind, Is.EqualTo(BuildKind.Wall));
+            Assert.That(intent.Operation, Is.EqualTo(BuildOperation.Place));
+            Assert.That(intent.Cells, Has.Count.EqualTo(1));
+            Assert.That(intent.Cells[0], Is.EqualTo(cells[0]));
+        }
+
+        [Test]
+        public void BuildWall_CopiesCells_Defensively()
+        {
+            // Arrange
+            var cells = new List<MapCellCoord>
+            {
+                new MapCellCoord(2, 0, 0)
+            };
+
+            // Act
+            var intent = BuildIntent.BuildWall(cells);
+            cells.Clear();
+
+            // Assert
+            Assert.That(intent.Cells, Has.Count.EqualTo(1));
+            Assert.That(intent.Cells, Is.Not.SameAs(cells));
+        }
+
+        #endregion
+
+        #region General
+
+        [Test]
+        public void Intent_StoresMultipleCells_InOriginalOrder()
+        {
+            // Arrange
+            var cells = new[]
+            {
+                new MapCellCoord(0, 0, 0),
+                new MapCellCoord(1, 0, 0),
+                new MapCellCoord(2, 0, 0)
+            };
+
+            // Act
+            var intent = BuildIntent.BuildFloor(cells);
+
+            // Assert
+            Assert.That(intent.Cells.Count, Is.EqualTo(3));
+            Assert.That(intent.Cells.SequenceEqual(cells), Is.True);
+        }
+
+        [Test]
+        public void ToString_ReturnsReadableSummary()
+        {
+            // Arrange
+            var cells = new[]
+            {
+                new MapCellCoord(0, 0, 0),
+                new MapCellCoord(1, 0, 0)
+            };
+
+            var intent = BuildIntent.BuildWall(cells);
+
+            // Act
+            var text = intent.ToString();
+
+            // Assert
+            Assert.That(text, Is.EqualTo("Place Wall for 2 cells"));
         }
 
         #endregion

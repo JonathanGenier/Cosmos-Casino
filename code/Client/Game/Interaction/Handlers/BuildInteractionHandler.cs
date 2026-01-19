@@ -31,18 +31,6 @@ public sealed class BuildInteractionHandler : IInteractionHandler
 
     #endregion
 
-    #region Events
-
-    /// <summary>
-    /// Occurs when a build is requested with a specified build intent.
-    /// </summary>
-    /// <remarks>Subscribers can handle this event to initiate or respond to build operations based on the
-    /// provided build intent. The event provides a <see cref="BuildIntent"/> parameter that describes the details of
-    /// the requested build.</remarks>
-    public event Action<BuildIntent>? BuildRequested;
-
-    #endregion
-
     #region Input Gesture Handlers
 
     /// <summary>
@@ -51,8 +39,7 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// <param name="start">The context information associated with the start of the primary gesture.</param>
     public void OnPrimaryGestureStarted(CursorContext start)
     {
-        ConsoleLog.Warning("Start", $"{start.ToString()}");
-        _buildContext.BeginPreview(start);
+        _buildContext.BeginBuild(start);
     }
 
     /// <summary>
@@ -62,8 +49,7 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// <param name="current">The current cursor context representing the latest state of the gesture.</param>
     public void OnPrimaryGestureUpdated(CursorContext start, CursorContext current)
     {
-        ConsoleLog.Warning("Update", $"{start.ToString()} | {current.ToString()}");
-        _buildContext.UpdatePreview(current);
+        _buildContext.UpdateBuild(current);
     }
 
     /// <summary>
@@ -78,14 +64,7 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// operation to proceed.</param>
     public void OnPrimaryGestureEnded(CursorContext start, CursorContext end)
     {
-        var context = _buildContext.ActiveContext;
-
-        if (context != null && context.TryCreateBuildIntent(start, end, out var intent))
-        {
-            BuildRequested?.Invoke(intent);
-        }
-
-        _buildContext.ClearPreview();
+        _buildContext.EndBuild(end);
     }
 
     /// <summary>
@@ -95,7 +74,7 @@ public sealed class BuildInteractionHandler : IInteractionHandler
     /// <param name="start">The context associated with the cursor at the start of the gesture.</param>
     public void OnPrimaryGestureCancelled(CursorContext start)
     {
-        _buildContext.ClearPreview();
+        _buildContext.CancelBuild();
     }
 
     #endregion
