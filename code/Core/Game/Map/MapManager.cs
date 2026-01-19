@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map.Cell;
 using CosmosCasino.Core.Game.Map.Grid;
 using System.Diagnostics.CodeAnalysis;
@@ -35,39 +36,87 @@ namespace CosmosCasino.Core.Game.Map
         /// Determines whether the specified map cell contains a floor.
         /// </summary>
         /// <param name="coord">The coordinates of the map cell to check for a floor.</param>
-        /// <returns>true if the cell at the specified coordinates contains a floor; otherwise, false.</returns>
+        /// <returns>true if the cell at the specified coordinates exists and contains a floor; otherwise, false.</returns>
         internal bool HasFloor(MapCellCoord coord)
         {
             return TryGetCell(coord, out var cell) && cell.HasFloor;
         }
 
         /// <summary>
-        /// Attempts to place a floor at the specified map cell coordinate.
+        /// Determines whether a floor can be placed at the specified map cell coordinate.
         /// </summary>
-        /// <param name="coord">The coordinate of the map cell where the floor should be placed.</param>
-        /// <returns>A MapOperationResult indicating the outcome of the floor placement operation at the specified coordinate.</returns>
-        internal MapOperationResult TryPlaceFloor(MapCellCoord coord)
+        /// <param name="coord">The coordinate of the map cell to check for floor placement eligibility.</param>
+        /// <returns>A BuildOperationResult indicating whether a floor can be placed at the specified coordinate, including
+        /// validation details if placement is not allowed.</returns>
+        internal BuildOperationResult CanPlaceFloor(MapCellCoord coord)
         {
-            var cell = _grid.GetOrCreateCell(coord);
-            var cellResult = cell.TryPlaceFloor();
-            return MapOperationResult.FromMapCellResult(coord, cellResult);
+            if (TryGetCell(coord, out var cell))
+            {
+                var validationResult = cell.ValidatePlaceFloor();
+                return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
+            }
+
+            return BuildOperationResult.Valid(coord);
         }
 
         /// <summary>
-        /// Attempts to remove the floor from the specified map cell, if it exists.
+        /// Attempts to place a floor at the specified map cell coordinate.
         /// </summary>
-        /// <param name="coord">The coordinates of the map cell from which to remove the floor.</param>
-        /// <returns>A MapOperationResult indicating the outcome of the operation, including whether the floor was removed.</returns>
-        internal MapOperationResult TryRemoveFloor(MapCellCoord coord)
+        /// <param name="coord">The coordinate of the map cell where the floor should be placed.</param>
+        /// <returns>A BuildOperationResult indicating the outcome of the floor placement attempt, including validation details.</returns>
+        internal BuildOperationResult TryPlaceFloor(MapCellCoord coord)
         {
-            var result = WithExistingCell(coord, cell => cell.TryRemoveFloor());
+            var cell = _grid.GetOrCreateCell(coord);
+            var validationResult = cell.ValidatePlaceFloor();
 
-            if (result.Outcome == MapCellOutcome.Removed)
+            if (validationResult.Outcome == BuildOperationOutcome.Valid)
             {
-                CleanupEmptyCell(coord);
+                cell.PlaceFloor(validationResult);
             }
 
-            return result;
+            return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
+        }
+
+        /// <summary>
+        /// Determines whether the floor can be removed at the specified map cell coordinate and returns the result of
+        /// the validation.
+        /// </summary>
+        /// <param name="coord">The coordinate of the map cell to check for floor removal eligibility.</param>
+        /// <returns>A BuildOperationResult indicating whether the floor can be removed at the specified coordinate. Returns a
+        /// result with details if the operation is valid or not, or a no-op result if the cell does not exist.</returns>
+        internal BuildOperationResult CanRemoveFloor(MapCellCoord coord)
+        {
+            if (TryGetCell(coord, out var cell))
+            {
+                var validationResult = cell.ValidateRemoveFloor();
+                return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
+            }
+
+            return BuildOperationResult.NoOp(coord);
+        }
+
+        /// <summary>
+        /// Attempts to remove the floor from the specified map cell coordinate.
+        /// </summary>
+        /// <param name="coord">The coordinate of the map cell from which to attempt floor removal.</param>
+        /// <returns>A result indicating the outcome of the remove floor operation for the specified cell. Returns a no-op result
+        /// if the cell does not exist at the given coordinate.</returns>
+        internal BuildOperationResult TryRemoveFloor(MapCellCoord coord)
+        {
+            if (TryGetCell(coord, out var cell))
+            {
+                var validationResult = cell.ValidateRemoveFloor();
+
+                if (validationResult.Outcome == BuildOperationOutcome.Valid)
+                {
+                    cell.RemoveFloor(validationResult);
+                    _grid.RemoveCell(coord);
+                }
+
+                return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
+            }
+
+            return BuildOperationResult.NoOp(coord);
         }
 
         #endregion
@@ -78,49 +127,97 @@ namespace CosmosCasino.Core.Game.Map
         /// Determines whether the specified cell contains a wall.
         /// </summary>
         /// <param name="coord">The coordinates of the cell to check for a wall.</param>
-        /// <returns><see langword="true"/> if the cell at the specified coordinates contains a wall; otherwise, <see
-        /// langword="false"/>.</returns>
+        /// <returns>true if the cell at the specified coordinates contains a wall; otherwise, false.</returns>
         internal bool HasWall(MapCellCoord coord)
         {
             return TryGetCell(coord, out var cell) && cell.HasWall;
         }
 
         /// <summary>
-        /// Attempts to place a wall at the specified map cell coordinate.
+        /// Determines whether a wall can be placed at the specified map cell coordinate and returns the result of the
+        /// validation.
         /// </summary>
-        /// <param name="coord">The coordinate of the map cell where the wall should be placed.</param>
-        /// <returns>A MapOperationResult indicating the outcome of the wall placement attempt.</returns>
-        internal MapOperationResult TryPlaceWall(MapCellCoord coord)
+        /// <param name="coord">The coordinate of the map cell where the wall placement is to be validated.</param>
+        /// <returns>A BuildOperationResult indicating whether the wall can be placed at the specified coordinate. The result
+        /// includes the reason for failure if the operation is not valid.</returns>
+        internal BuildOperationResult CanPlaceWall(MapCellCoord coord)
         {
-            return WithExistingCell(coord, cell => cell.TryPlaceWall());
+            if (TryGetCell(coord, out var cell))
+            {
+                var validationResult = cell.ValidatePlaceWall();
+                return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
+            }
+
+            return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
         }
 
         /// <summary>
-        /// Attempts to remove a wall from the cell at the specified coordinates.
+        /// Attempts to place a wall at the specified map cell coordinate and returns the result of the operation.
         /// </summary>
-        /// <param name="coord">The coordinates of the cell from which to attempt to remove the wall.</param>
-        /// <returns>A MapOperationResult indicating whether the wall was successfully removed and providing additional
-        /// information about the operation.</returns>
-        internal MapOperationResult TryRemoveWall(MapCellCoord coord)
+        /// <param name="coord">The coordinate of the map cell where the wall should be placed.</param>
+        /// <returns>A BuildOperationResult indicating whether the wall placement was successful, including the outcome and
+        /// failure reason if applicable.</returns>
+        internal BuildOperationResult TryPlaceWall(MapCellCoord coord)
         {
-            return WithExistingCell(coord, cell => cell.TryRemoveWall());
+            if (TryGetCell(coord, out var cell))
+            {
+                var validationResult = cell.ValidatePlaceWall();
+
+                if (validationResult.Outcome == BuildOperationOutcome.Valid)
+                {
+                    cell.PlaceWall(validationResult);
+                }
+
+                return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
+            }
+
+            return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
+        }
+
+        /// <summary>
+        /// Determines whether a wall can be removed at the specified map cell coordinate and returns the result of the
+        /// validation.
+        /// </summary>
+        /// <param name="coord">The coordinate of the map cell to check for wall removal eligibility.</param>
+        /// <returns>A BuildOperationResult indicating whether the wall can be removed at the specified coordinate. The result
+        /// contains details about the validation outcome.</returns>
+        internal BuildOperationResult CanRemoveWall(MapCellCoord coord)
+        {
+            if (TryGetCell(coord, out var cell))
+            {
+                var validationResult = cell.ValidateRemoveWall();
+                return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
+            }
+
+            return BuildOperationResult.NoOp(coord);
+        }
+
+        /// <summary>
+        /// Attempts to remove a wall from the specified map cell and returns the result of the operation.
+        /// </summary>
+        /// <param name="coord">The coordinates of the map cell from which to attempt to remove the wall.</param>
+        /// <returns>A BuildOperationResult indicating the outcome of the wall removal attempt. Returns a result with outcome
+        /// NoOp if the specified cell does not exist.</returns>
+        internal BuildOperationResult TryRemoveWall(MapCellCoord coord)
+        {
+            if (TryGetCell(coord, out var cell))
+            {
+                var validationResult = cell.ValidateRemoveWall();
+
+                if (validationResult.Outcome == BuildOperationOutcome.Valid)
+                {
+                    cell.RemoveWall(validationResult);
+                }
+
+                return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
+            }
+
+            return BuildOperationResult.NoOp(coord);
         }
 
         #endregion
 
         #region Helper Methods
-
-        /// <summary>
-        /// Determines whether a cell exists at the specified coordinate.
-        /// </summary>
-        /// <param name="coord">The coordinate to check.</param>
-        /// <returns>
-        /// <c>true</c> if a cell exists at the coordinate; otherwise, <c>false</c>.
-        /// </returns>
-        internal bool CellExists(MapCellCoord coord)
-        {
-            return TryGetCell(coord, out var _);
-        }
 
         /// <summary>
         /// Attempts to retrieve the cell at the specified coordinate.
@@ -139,50 +236,6 @@ namespace CosmosCasino.Core.Game.Map
         {
             cell = _grid.GetCell(coord);
             return cell != null;
-        }
-
-        /// <summary>
-        /// Executes an operation against an existing cell, returning a failure
-        /// result if the cell does not exist.
-        /// </summary>
-        /// <param name="coord">The coordinate of the target cell.</param>
-        /// <param name="operation">The operation to execute on the cell.</param>
-        /// <returns>
-        /// A map operation result describing the outcome.
-        /// </returns>
-        private MapOperationResult WithExistingCell(MapCellCoord coord, Func<MapCell, MapCellResult> operation)
-        {
-            if (!TryGetCell(coord, out var cell))
-            {
-                return MapOperationResult.Skipped(coord, MapCellFailureReason.NoCell);
-            }
-
-            var cellResult = operation(cell);
-            return MapOperationResult.FromMapCellResult(coord, cellResult);
-        }
-
-        /// <summary>
-        /// Removes the specified cell from the grid if it is empty.
-        /// This is used to keep the grid sparse after destructive operations.
-        /// </summary>
-        /// <param name="coord">The coordinate of the cell to clean up.</param>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown in debug builds if the cell could not be removed when expected.
-        /// </exception>
-        private void CleanupEmptyCell(MapCellCoord coord)
-        {
-            if (!_grid.TryRemoveCell(coord))
-            {
-#if DEBUG
-                throw new InvalidOperationException(
-                    $"{nameof(CleanupEmptyCell)}: Cell cleanup failed after floor removal at {coord}. Cell was expected to be empty.");
-#else
-                    ConsoleLog.Error(
-                        nameof(MapManager),
-                        $"{nameof(CleanupEmptyCell)}: Cell cleanup failed after floor removal at {coord}. Cell was expected to be empty."
-                    );
-#endif
-            }
         }
 
         #endregion

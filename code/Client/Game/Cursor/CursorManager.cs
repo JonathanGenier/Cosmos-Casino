@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Game.Map.Cell;
 using Godot;
 using System;
 
@@ -12,6 +13,31 @@ public sealed partial class CursorManager : InitializableNodeManager
 
     private CursorResolver? _resolver;
 
+    private Vector3 _lastWorldPosition;
+    private bool _hasLastWorldPosition;
+
+    private MapCellCoord _lastCell;
+    private bool _hasLastCell;
+
+    #endregion
+
+    #region Events
+
+    /// <summary>
+    /// Occurs when the cursor moves to a different cell in the grid.
+    /// </summary>
+    /// <remarks>Subscribers can use this event to respond to changes in the cursor's position, such as
+    /// updating UI elements or triggering related actions. The event provides a <see cref="CursorContext"/> object
+    /// containing information about the new cell.</remarks>
+    public event Action<CursorContext>? CursorCellChanged;
+
+    /// <summary>
+    /// Occurs when the cursor context is lost.
+    /// </summary>
+    /// <remarks>Subscribers can use this event to perform cleanup or reset operations when the cursor context
+    /// is no longer valid. The event is raised without any event data.</remarks>
+    public event Action? CursorContextLost;
+
     #endregion
 
     #region Properties
@@ -21,7 +47,6 @@ public sealed partial class CursorManager : InitializableNodeManager
         get => _resolver ?? throw new InvalidOperationException($"{nameof(CursorManager)} not initialized.");
         set => _resolver = value;
     }
-
 
     #endregion
 
@@ -52,36 +77,99 @@ public sealed partial class CursorManager : InitializableNodeManager
     #region Cursor Position
 
     /// <summary>
-    /// Attempts to retrieve the current cursor position in world coordinates.
+    /// Attempts to retrieve the current cursor context, including the screen and world positions, if available.
     /// </summary>
-    /// <remarks>The method returns false if the viewport is unavailable or if the cursor is currently
-    /// hovering over a GUI control. In these cases, the output parameter is set to its default value.</remarks>
-    /// <param name="position">When this method returns, contains the cursor position as a <see cref="Vector3"/> if the operation succeeds;
-    /// otherwise, contains the default value.</param>
-    /// <returns>true if the cursor position was successfully retrieved; otherwise, false.</returns>
+    /// <remarks>If the cursor is currently hovering over a GUI control, the method returns <see
+    /// langword="false"/> and the world position in <paramref name="cursorContext"/> is not set. This method does not
+    /// modify the state of the cursor manager.</remarks>
+    /// <param name="cursorContext">When this method returns, contains a <see cref="CursorContext"/> structure with the current cursor's screen
+    /// position and, if resolved, the corresponding world position. If the method returns <see langword="false"/>, the
+    /// world position may be uninitialized.</param>
+    /// <returns><see langword="true"/> if the cursor context was successfully resolved and a valid world position is available;
+    /// otherwise, <see langword="false"/>.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the cursor manager has not been initialized.</exception>
-    public bool TryGetCursorPosition(out Vector3 position)
+    public bool TryGetCursorContext(out CursorContext cursorContext)
     {
         if (!IsInitialized)
         {
             throw new InvalidOperationException($"{nameof(CursorManager)} not initialized.");
         }
 
-        position = default;
-
         var viewport = GetViewport();
+
         if (viewport == null)
         {
+            cursorContext = default;
             return false;
         }
+
+        var screenPosition = viewport.GetMousePosition();
 
         if (viewport.GuiGetHoveredControl() != null)
         {
+            cursorContext = new CursorContext(screenPosition, default, false);
             return false;
         }
 
-        return Resolver.TryResolve(out position);
+        var isValid = Resolver.TryResolve(out var worldPosition);
+        cursorContext = new CursorContext(screenPosition, worldPosition, isValid);
+
+        return isValid;
     }
+
+    #endregion
+
+    #region Godot Processes
+
+    /// <summary>
+    /// Handles per-frame processing for cursor context updates, including tracking world and cell position changes.
+    /// </summary>
+    /// <remarks>This method is called automatically by the engine each frame. It manages state related to the
+    /// cursor's position in both world and cell coordinates, and raises events when the cursor context is lost or when
+    /// the cell position changes. Override this method to implement custom per-frame logic related to cursor
+    /// processing.</remarks>
+    /// <param name="delta">The elapsed time, in seconds, since the previous frame. This value can be used for time-based calculations.</param>
+    protected override void OnProcess(double delta)
+    {
+        if (!TryGetCursorContext(out var cursorContext))
+        {
+            if (_hasLastWorldPosition || _hasLastCell)
+            {
+                _hasLastWorldPosition = false;
+                _hasLastCell = false;
+                CursorContextLost?.Invoke();
+            }
+
+            return;
+        }
+
+        // World position change (continuous)
+        if (!_hasLastWorldPosition)
+        {
+            _hasLastWorldPosition = true;
+            _lastWorldPosition = cursorContext.WorldPosition;
+        }
+        else if (!cursorContext.WorldPosition.IsEqualApprox(_lastWorldPosition))
+        {
+            _lastWorldPosition = cursorContext.WorldPosition;
+        }
+
+        // Cell position change (discrete)
+        var cell = cursorContext.CellPosition;
+
+        if (!_hasLastCell)
+        {
+            _hasLastCell = true;
+            _lastCell = cell;
+            CursorCellChanged?.Invoke(cursorContext);
+        }
+        else if (cell != _lastCell)
+        {
+            _lastCell = cell;
+            CursorCellChanged?.Invoke(cursorContext);
+        }
+    }
+
 
     #endregion
 }

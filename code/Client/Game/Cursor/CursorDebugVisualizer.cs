@@ -97,9 +97,9 @@ public sealed partial class CursorDebugVisualizer : Node3D
             return;
         }
 
-        if (CursorManager.TryGetCursorPosition(out var position))
+        if (CursorManager.TryGetCursorContext(out var cursorContext))
         {
-            GlobalPosition = position;
+            GlobalPosition = cursorContext.WorldPosition;
             Visible = true;
         }
         else

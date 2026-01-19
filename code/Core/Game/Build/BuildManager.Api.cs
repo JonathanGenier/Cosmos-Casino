@@ -1,3 +1,5 @@
+using CosmosCasino.Core.Game.Build.Domain;
+
 namespace CosmosCasino.Core.Game.Build
 {
     /// <summary>
@@ -7,7 +9,37 @@ namespace CosmosCasino.Core.Game.Build
     /// </summary>
     public sealed partial class BuildManager
     {
-        #region Build Operation
+        #region Preview Operation
+
+        /// <summary>
+        /// Evaluates the specified build intent and returns the result of applying the requested operation to each
+        /// cell.
+        /// </summary>
+        /// <param name="intent">The build intent that specifies the operation to perform and the collection of target cells. Cannot be null.</param>
+        /// <returns>A BuildResult containing the outcome of the operation for each cell in the intent.</returns>
+        /// <exception cref="NotImplementedException">Thrown if the build kind specified in the intent is not supported.</exception>
+        public BuildResult Evaluate(BuildIntent intent)
+        {
+            var actionResults = new List<BuildOperationResult>(intent.Cells.Count);
+
+            foreach (var coord in intent.Cells)
+            {
+                var result = intent.Kind switch
+                {
+                    BuildKind.Floor => EvaluateOperationOnFloor(intent.Operation, coord),
+                    BuildKind.Wall => EvaluateOperationOnWall(intent.Operation, coord),
+                    _ => throw new NotImplementedException($"{nameof(BuildKind)} not implemented.")
+                };
+
+                actionResults.Add(result);
+            }
+
+            return BuildResult.Done(intent, actionResults);
+        }
+
+        #endregion
+
+        #region Commit Operation
 
         /// <summary>
         /// Applies the specified build intent to all target cells,
@@ -30,24 +62,24 @@ namespace CosmosCasino.Core.Game.Build
         /// Thrown when the build kind specified by the intent is not
         /// supported by the build manager.
         /// </exception>
-        public BuildResult ApplyBuildOperations(BuildIntent intent)
+        public BuildResult Execute(BuildIntent intent)
         {
-            var operationResults = new List<BuildOperationResult>(intent.Cells.Count);
+            var actionResults = new List<BuildOperationResult>(intent.Cells.Count);
+            var buildOperation = intent.Operation;
 
             foreach (var coord in intent.Cells)
             {
                 var result = intent.Kind switch
                 {
-                    BuildKind.Floor => ResolveFloor(intent, coord),
-                    BuildKind.Wall => ResolveWall(intent, coord),
-                    // BuildKind.Furniture => ResolveFurniture(...)
+                    BuildKind.Floor => ExecuteOperationOnFloor(buildOperation, coord),
+                    BuildKind.Wall => ExecuteOperationOnWall(buildOperation, coord),
                     _ => throw new NotImplementedException($"{nameof(BuildKind)} not implemented.")
                 };
 
-                operationResults.Add(result);
+                actionResults.Add(result);
             }
 
-            return BuildResult.Done(intent, operationResults);
+            return BuildResult.Done(intent, actionResults);
         }
 
         #endregion

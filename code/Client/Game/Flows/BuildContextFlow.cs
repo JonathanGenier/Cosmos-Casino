@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Build;
+using CosmosCasino.Core.Game.Build.Domain;
 using System;
 
 /// <summary>
@@ -74,7 +74,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
             $"Build kind '{buildKind}' is not supported.")
         };
 
-        _buildContext.Set(context);
+        _buildContext.SetContext(context);
         _interactionManager.SetTool(InteractionTool.Build);
     }
 
@@ -86,7 +86,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
     /// workflow.</remarks>
     private void OnBuildCancelled()
     {
-        _buildContext.Clear();
+        _buildContext.CancelBuild();
         _interactionManager.ResetTool();
     }
 

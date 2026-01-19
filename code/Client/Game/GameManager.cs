@@ -29,6 +29,7 @@ public sealed partial class GameManager : NodeManager
     private BuildRequestFlow? _buildRequestFlow;
     private BuildSpawnFlow? _buildSpawnFlow;
     private BuildPreviewFlow? _buildPreviewFlow;
+    private CursorPreviewFlow? _cursorPreviewFlow;
     private ResourceAssembler? _resourceAssembler;
 #if DEBUG
     private CursorDebugVisualizer? _cursorDebugVisualizer;
@@ -127,12 +128,19 @@ public sealed partial class GameManager : NodeManager
         set => _resourceAssembler = value;
     }
 
+    private CursorPreviewFlow CursorPreviewFlow
+    {
+        get => _cursorPreviewFlow ?? throw new InvalidOperationException($"{nameof(CursorPreviewFlow)} is not initialized.");
+        set => _cursorPreviewFlow = value;
+    }
+
 #if DEBUG
     private CursorDebugVisualizer CursorDebugVisualizer
     {
         get => _cursorDebugVisualizer ?? throw new InvalidOperationException($"{nameof(CursorDebugVisualizer)} is not initialized.");
         set => _cursorDebugVisualizer = value;
     }
+
 #endif
 
     #endregion
@@ -210,6 +218,9 @@ public sealed partial class GameManager : NodeManager
         BuildRequestFlow?.Dispose();
         BuildSpawnFlow?.Dispose();
         CameraInputFlow?.Dispose();
+        BuildPreviewFlow?.Dispose();
+        CursorPreviewFlow?.Dispose();
+
         _sessionInitialized = false;
         _simulationHasStarted = false;
         State = GameState.Loading;
@@ -226,8 +237,6 @@ public sealed partial class GameManager : NodeManager
         {
             return;
         }
-
-        BuildPreviewFlow.Process();
     }
 
     #endregion
@@ -290,9 +299,10 @@ public sealed partial class GameManager : NodeManager
         }
 
         BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, _buildContext, InteractionManager);
-        BuildRequestFlow = new BuildRequestFlow(InteractionManager, BuildProcessManager);
+        BuildRequestFlow = new BuildRequestFlow(BuildProcessManager, _buildContext);
         BuildSpawnFlow = new BuildSpawnFlow(BuildProcessManager, SpawnManager);
-        BuildPreviewFlow = new BuildPreviewFlow(_buildContext, BuildProcessManager.BuildPreviewManager, CursorManager);
+        BuildPreviewFlow = new BuildPreviewFlow(_buildContext, BuildProcessManager.BuildPreviewManager, BuildProcessManager);
+        CursorPreviewFlow = new CursorPreviewFlow(_buildContext, BuildProcessManager.BuildPreviewManager, CursorManager, BuildProcessManager);
         CameraInputFlow = new CameraInputFlow(AppServices.InputManager, CameraManager);
     }
 

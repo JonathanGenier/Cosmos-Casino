@@ -12,7 +12,7 @@ public class BuildPreviewFlow : IGameFlow, IDisposable
 
     private readonly BuildContext _buildContext;
     private readonly BuildPreviewManager _buildPreviewManager;
-    private readonly CursorManager _cursorManager;
+    private readonly BuildProcessManager _buildProcessManager;
 
     private bool _isDisposed;
 
@@ -26,48 +26,20 @@ public class BuildPreviewFlow : IGameFlow, IDisposable
     /// </summary>
     /// <param name="buildContext">The build context to use for managing build-related state and operations. Cannot be null.</param>
     /// <param name="buildPreviewManager">The manager responsible for handling build preview functionality. Cannot be null.</param>
-    /// <param name="cursorManager">The cursor manager used to control cursor behavior during the build preview flow. Cannot be null.</param>
-    public BuildPreviewFlow(
-      BuildContext buildContext,
-      BuildPreviewManager buildPreviewManager,
-      CursorManager cursorManager)
+    /// <param name="buildProcessManager">The manager responsible for evaluating build intents and processing build operations. Cannot be null.</param>
+    public BuildPreviewFlow(BuildContext buildContext, BuildPreviewManager buildPreviewManager, BuildProcessManager buildProcessManager)
     {
         ArgumentNullException.ThrowIfNull(buildContext);
         ArgumentNullException.ThrowIfNull(buildPreviewManager);
-        ArgumentNullException.ThrowIfNull(cursorManager);
+        ArgumentNullException.ThrowIfNull(buildProcessManager);
 
         _buildContext = buildContext;
         _buildPreviewManager = buildPreviewManager;
-        _cursorManager = cursorManager;
+        _buildProcessManager = buildProcessManager;
 
-        Subscribe();
-    }
-
-    #endregion
-
-    #region Godot Process
-
-    /// <summary>
-    /// Updates the build preview based on the current cursor position and active build context.
-    /// </summary>
-    /// <remarks>Call this method once per frame to ensure that the build preview accurately reflects the
-    /// user's current cursor position and the active build context. If there is no active build context, the method
-    /// does nothing. If the cursor position cannot be determined, all build previews are hidden.</remarks>
-    public void Process()
-    {
-        if (_buildContext.ActiveContext == null)
-        {
-            return;
-        }
-
-        if (_cursorManager.TryGetCursorPosition(out var worldPos))
-        {
-            _buildPreviewManager.ShowPreview(_buildContext.ActiveContext.Kind, worldPos);
-        }
-        else
-        {
-            _buildPreviewManager.HideAllPreviews();
-        }
+        _buildContext.BuildStarted += OnBuildStarted;
+        _buildContext.BuildChanged += OnBuildChanged;
+        _buildContext.BuildCleared += OnBuildCleared;
     }
 
     #endregion
@@ -87,68 +59,47 @@ public class BuildPreviewFlow : IGameFlow, IDisposable
             return;
         }
 
-        Unsubscribe();
+        _buildContext.BuildStarted -= OnBuildStarted;
+        _buildContext.BuildChanged -= OnBuildChanged;
+        _buildContext.BuildCleared -= OnBuildCleared;
         _isDisposed = true;
-    }
-
-    #endregion
-
-    #region Subscription
-
-    /// <summary>
-    /// Subscribes to context and preview change events on the build context.
-    /// </summary>
-    /// <remarks>This method enables the current instance to respond to changes in the build context by
-    /// attaching event handlers. It should be called when event notifications are required and unsubscribed
-    /// appropriately to avoid memory leaks.</remarks>
-    private void Subscribe()
-    {
-        _buildContext.ContextChanged += OnBuildContextChanged;
-        _buildContext.PreviewChanged += OnPreviewChanged;
-    }
-
-    /// <summary>
-    /// Unsubscribes from build context and preview change notifications to stop receiving related events.
-    /// </summary>
-    /// <remarks>Call this method to detach event handlers when they are no longer needed, such as during
-    /// cleanup or disposal, to prevent memory leaks and unintended event processing.</remarks>
-    private void Unsubscribe()
-    {
-        _buildContext.ContextChanged -= OnBuildContextChanged;
-        _buildContext.PreviewChanged -= OnPreviewChanged;
     }
 
     #endregion
 
     #region Event Handlers
 
-    /// <summary>
-    /// Handles changes to the build context by updating the build preview state.
-    /// </summary>
-    /// <param name="buildContext">The new build context. If <see langword="null"/>, all build previews are hidden and cleared.</param>
-    private void OnBuildContextChanged(BuildContextBase? buildContext)
+    private void OnBuildStarted()
     {
-        if (buildContext == null)
-        {
-            _buildPreviewManager.HideAllPreviews();
-            _buildPreviewManager.ClearBuildPreview();
-        }
+        _buildPreviewManager.EnterDragMode();
+        OnBuildChanged();
     }
 
     /// <summary>
     /// Handles changes to the build preview state and updates the build preview display accordingly.
     /// </summary>
-    private void OnPreviewChanged()
+    private void OnBuildChanged()
     {
-        if (!_buildContext.HasPreview || _buildContext.ActiveContext == null)
+        if (_buildPreviewManager.CurrentMode != BuildPreviewMode.Drag)
         {
-            _buildPreviewManager.ClearBuildPreview();
             return;
         }
 
-        var cells = _buildContext.GetCells();
+        var buildIntent = _buildContext.TryCreateBuildIntent();
 
-        _buildPreviewManager.ShowBuildPreview(_buildContext.ActiveContext.Kind, cells);
+        if (buildIntent == null)
+        {
+            _buildPreviewManager.ClearDragPreview();
+            return;
+        }
+
+        var buildResult = _buildProcessManager.EvaluateBuildIntent(buildIntent);
+        _buildPreviewManager.ShowPreview(buildResult);
+    }
+
+    private void OnBuildCleared()
+    {
+        _buildPreviewManager.ExitDragMode();
     }
 
     #endregion

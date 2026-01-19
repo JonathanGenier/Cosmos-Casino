@@ -1,4 +1,4 @@
-namespace CosmosCasino.Core.Game.Build
+namespace CosmosCasino.Core.Game.Build.Domain
 {
     /// <summary>
     /// Specifies the type of build action to perform for a given

@@ -1,4 +1,4 @@
-namespace CosmosCasino.Core.Game.Build
+namespace CosmosCasino.Core.Game.Build.Domain
 {
     /// <summary>
     /// Identifies the high-level category of buildable content
@@ -15,10 +15,5 @@ namespace CosmosCasino.Core.Game.Build
         /// Wall-related build operations (place or remove walls).
         /// </summary>
         Wall,
-
-        /// <summary>
-        /// Furniture-related build operations (placeable objects).
-        /// </summary>
-        Furniture,
     }
 }

@@ -13,8 +13,9 @@ public class BuildRequestFlow : IGameFlow, IDisposable
 {
     #region Fields
 
-    private readonly InteractionManager _interactionManager;
     private readonly BuildProcessManager _clientBuildManager;
+    private readonly BuildContext _buildContext;
+
     private bool _isDisposed;
 
     #endregion
@@ -22,19 +23,20 @@ public class BuildRequestFlow : IGameFlow, IDisposable
     #region Constructor
 
     /// <summary>
-    /// Initializes a new instance of the BuildRequestFlow class with the specified interaction and build managers.
+    /// Initializes a new instance of the BuildRequestFlow class with the specified build process manager and build
+    /// context.
     /// </summary>
-    /// <param name="interactionManager">The InteractionManager instance used to handle user interactions and build requests. Cannot be null.</param>
-    /// <param name="clientBuildManager">The ClientBuildManager instance responsible for managing build operations. Cannot be null.</param>
-    public BuildRequestFlow(InteractionManager interactionManager, BuildProcessManager clientBuildManager)
+    /// <param name="clientBuildManager">The build process manager used to coordinate and manage build operations. Cannot be null.</param>
+    /// <param name="buildContext">The build context that provides information and state for the build process. Cannot be null.</param>
+    public BuildRequestFlow(BuildProcessManager clientBuildManager, BuildContext buildContext)
     {
-        ArgumentNullException.ThrowIfNull(interactionManager);
         ArgumentNullException.ThrowIfNull(clientBuildManager);
+        ArgumentNullException.ThrowIfNull(buildContext);
 
-        _interactionManager = interactionManager;
         _clientBuildManager = clientBuildManager;
+        _buildContext = buildContext;
 
-        _interactionManager.BuildRequested += OnBuildRequested;
+        _buildContext.BuildEnded += OnBuildEnded;
     }
 
     #endregion
@@ -54,19 +56,22 @@ public class BuildRequestFlow : IGameFlow, IDisposable
         }
 
         _isDisposed = true;
-        _interactionManager.BuildRequested -= OnBuildRequested;
+        _buildContext.BuildEnded -= OnBuildEnded;
     }
 
     #endregion
 
     #region BuildRequest Methods
 
-    /// <summary>
-    /// Handles a build request by executing the specified build intent.
-    /// </summary>
-    /// <param name="buildIntent">The build intent that defines the parameters and actions for the build operation. Cannot be null.</param>
-    private void OnBuildRequested(BuildIntent buildIntent)
+    private void OnBuildEnded()
     {
+        var buildIntent = _buildContext.TryCreateBuildIntent();
+
+        if (buildIntent == null)
+        {
+            throw new InvalidOperationException("Build intent should be available when build ends.");
+        }
+
         _clientBuildManager.ExecuteBuildIntent(buildIntent);
     }
 

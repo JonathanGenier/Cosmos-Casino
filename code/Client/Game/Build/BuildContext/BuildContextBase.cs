@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Game.Build;
+using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map.Cell;
 using CosmosCasino.Core.Game.Map.Grid;
 using Godot;
@@ -28,23 +29,14 @@ public abstract class BuildContextBase
     #region Abstract Methods
 
     /// <summary>
-    /// Attempts to create a build intent based on the specified start and end cursor contexts.
+    /// Attempts to create a build intent between the specified start and end map cells.
     /// </summary>
-    /// <param name="start">The starting cursor context that defines the beginning of the range for intent creation.</param>
-    /// <param name="end">The ending cursor context that defines the end of the range for intent creation.</param>
-    /// <param name="intent">When this method returns, contains the resulting build intent if creation was successful; otherwise, null.</param>
+    /// <param name="startCell">The coordinates of the starting map cell for the build intent.</param>
+    /// <param name="endCell">The coordinates of the ending map cell for the build intent.</param>
+    /// <param name="intent">When this method returns, contains the resulting build intent if the operation succeeds; otherwise, the default
+    /// value.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
-    public abstract bool TryCreateBuildIntent(CursorContext start, CursorContext end, out BuildIntent intent);
-
-    /// <summary>
-    /// Returns a read-only list of map cell coordinates that intersect the line segment between the specified start and
-    /// end world positions.
-    /// </summary>
-    /// <param name="startWorld">The world-space position representing the start point of the line segment.</param>
-    /// <param name="endWorld">The world-space position representing the end point of the line segment.</param>
-    /// <returns>A read-only list of <see cref="MapCellCoord"/> values corresponding to each map cell intersected by the line
-    /// segment. The list will be empty if no cells are intersected.</returns>
-    public abstract IReadOnlyList<MapCellCoord> GetCells(Vector3 startWorld, Vector3 endWorld);
+    public abstract bool TryCreateBuildIntent(MapCellCoord startCell, MapCellCoord endCell, out BuildIntent intent);
 
     /// <summary>
     /// Returns a read-only list of map cell coordinates representing the path or sequence of cells between the

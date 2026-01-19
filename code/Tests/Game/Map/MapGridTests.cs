@@ -86,48 +86,44 @@ namespace CosmosCasino.Tests.Game.Map
 
         #endregion
 
-        #region TryRemoveCell
+        #region RemoveCell
 
         [Test]
-        public void TryRemoveCell_ShouldReturnFalse_WhenCellDoesNotExist()
+        public void RemoveCell_ShouldThrow_WhenCellDoesNotExist()
         {
             // Arrange
             var coord = new MapCellCoord(1, 1, 1);
 
-            // Act
-            var result = _mapGrid!.TryRemoveCell(coord);
-
             // Assert
-            Assert.That(result, Is.False);
+            Assert.That(() => _mapGrid!.RemoveCell(coord), Throws.InvalidOperationException);
         }
 
         [Test]
-        public void TryRemoveCell_ShouldReturnFalse_WhenCellIsNotEmpty()
+        public void RemoveCell_ShouldThrow_WhenCellIsNotEmpty()
         {
             // Arrange
             var coord = new MapCellCoord(1, 1, 1);
             var cell = _mapGrid!.GetOrCreateCell(coord);
-            cell.TryPlaceFloor();
-
-            // Act
-            var result = _mapGrid!.TryRemoveCell(coord);
+            var validationResult = cell.ValidatePlaceFloor();
+            cell.PlaceFloor(validationResult);
 
             // Assert
-            Assert.That(result, Is.False);
+            Assert.That(() => _mapGrid!.RemoveCell(coord), Throws.InvalidOperationException);
         }
 
         [Test]
-        public void TryRemoveCell_ShouldRemoveCellAndReturnTrue_WhenCellIsEmpty()
+        public void RemoveCell_ShouldRemoveCell_WhenCellIsEmpty()
         {
             // Arrange
             var coord = new MapCellCoord(1, 1, 1);
             _mapGrid!.GetOrCreateCell(coord);
+            var prevCellCount = _mapGrid.CellCount;
 
             // Act
-            var result = _mapGrid!.TryRemoveCell(coord);
+            _mapGrid!.RemoveCell(coord);
 
             // Assert
-            Assert.That(result, Is.True);
+            Assert.That(_mapGrid.CellCount, Is.EqualTo(prevCellCount - 1));
             Assert.That(_mapGrid!.GetCell(coord), Is.Null);
         }
 

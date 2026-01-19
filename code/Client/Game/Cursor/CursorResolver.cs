@@ -48,24 +48,24 @@ public sealed class CursorResolver
     /// it tries to resolve a position using the physics resolver, and if that fails, it attempts to resolve using the
     /// plane resolver. The method does not throw exceptions for failure; callers should check the return value to
     /// determine success.</remarks>
-    /// <param name="position">When this method returns, contains the resolved 3D position if the operation succeeds; otherwise, contains the
+    /// <param name="worldPosition">When this method returns, contains the resolved 3D position if the operation succeeds; otherwise, contains the
     /// default value for <see cref="Vector3"/>. This parameter is passed uninitialized.</param>
     /// <returns>true if a position was successfully resolved; otherwise, false.</returns>
-    public bool TryResolve(out Vector3 position)
+    public bool TryResolve(out Vector3 worldPosition)
     {
-        position = default;
+        worldPosition = default;
 
         if (!_rayProvider.TryGetRay(out Ray3D ray))
         {
             return false;
         }
 
-        if (_physicsResolver.TryResolve(ray, out position))
+        if (_physicsResolver.TryResolve(ray, out worldPosition))
         {
             return true;
         }
 
-        if (_planeResolver.TryResolve(ray, out position))
+        if (_planeResolver.TryResolve(ray, out worldPosition))
         {
             return true;
         }

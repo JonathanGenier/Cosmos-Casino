@@ -34,13 +34,13 @@ public sealed class CursorPlaneResolver
     /// Attempts to find the intersection point between the specified ray and the plane.
     /// </summary>
     /// <param name="ray">The ray to test for intersection with the plane.</param>
-    /// <param name="position">When this method returns, contains the intersection point if the ray intersects the plane; otherwise, contains
+    /// <param name="worldPosition">When this method returns, contains the intersection point if the ray intersects the plane; otherwise, contains
     /// <see cref="Vector3"/>.</param>
     /// <returns><see langword="true"/> if the ray intersects the plane and the intersection point is found; otherwise, <see
     /// langword="false"/>.</returns>
-    public bool TryResolve(in Ray3D ray, out Vector3 position)
+    public bool TryResolve(in Ray3D ray, out Vector3 worldPosition)
     {
-        position = default;
+        worldPosition = default;
 
         Vector3? hit = _plane.IntersectsRay(ray.Origin, ray.Direction);
         if (hit == null)
@@ -48,7 +48,7 @@ public sealed class CursorPlaneResolver
             return false;
         }
 
-        position = hit.Value;
+        worldPosition = hit.Value;
         return true;
     }
 

@@ -38,13 +38,13 @@ public sealed class CursorPhysicsResolver
     /// test is limited by the configured maximum distance and collision mask. If the scene tree or world is not
     /// available, the method returns <see langword="false"/>.</remarks>
     /// <param name="ray">The ray to cast into the scene. Specifies the origin and direction for the intersection test.</param>
-    /// <param name="position">When this method returns, contains the position of the first intersection point if an intersection is found;
+    /// <param name="worldPosition">When this method returns, contains the position of the first intersection point if an intersection is found;
     /// otherwise, contains <see cref="Vector3.Zero"/>.</param>
     /// <returns><see langword="true"/> if the ray intersects a physics body and the intersection position is found; otherwise,
     /// <see langword="false"/>.</returns>
-    public bool TryResolve(in Ray3D ray, out Vector3 position)
+    public bool TryResolve(in Ray3D ray, out Vector3 worldPosition)
     {
-        position = default;
+        worldPosition = default;
 
         var tree = Engine.GetMainLoop() as SceneTree;
         if (tree == null)
@@ -70,7 +70,7 @@ public sealed class CursorPhysicsResolver
             return false;
         }
 
-        position = (Vector3)result["position"];
+        worldPosition = (Vector3)result["position"];
         return true;
     }
 
