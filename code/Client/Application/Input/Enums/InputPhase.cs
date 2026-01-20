@@ -24,13 +24,9 @@ public enum InputPhase
     Camera = 1,
 
     /// <summary>
-    /// Input phase reserved for primary world interaction intent.
-    /// Modules in this phase are responsible for translating player input
-    /// into interaction gestures such as selection, building, or other
-    /// tool-driven world interactions, without executing gameplay logic
-    /// directly.
-    /// Interaction input is processed after camera input and before any
-    /// higher-level gameplay or command resolution systems.
+    /// Input phase reserved for build and construction-related gameplay input.
+    /// Modules in this phase emit semantic build intent such as placement,
+    /// removal, or modification of world elements.
     /// </summary>
-    Interaction = 2,
+    Build = 2,
 }

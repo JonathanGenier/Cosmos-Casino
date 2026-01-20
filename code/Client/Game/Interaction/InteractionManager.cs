@@ -1,6 +1,4 @@
 using System;
-using CosmosCasino.Core.Game.Build;
-using Godot;
 
 /// <summary>
 /// Manages user interaction modes and gesture handling for primary input actions, coordinating between selection and
@@ -148,8 +146,8 @@ public sealed partial class InteractionManager : InitializableNodeManager
     {
         using (ConsoleLog.SystemScope(nameof(InteractionManager)))
         {
-            InputManager.PrimaryInteractionPressed += OnPrimaryInteractionPressed;
-            InputManager.PrimaryInteractionReleased += OnPrimaryInteractionReleased;
+            InputManager.BuildPrimaryPressed += OnPrimaryInteractionPressed;
+            InputManager.BuildPrimaryReleased += OnPrimaryInteractionReleased;
 
             InitializeHandlers();
 
@@ -166,8 +164,8 @@ public sealed partial class InteractionManager : InitializableNodeManager
     /// lifetime.</remarks>
     protected override void OnExit()
     {
-        InputManager.PrimaryInteractionPressed -= OnPrimaryInteractionPressed;
-        InputManager.PrimaryInteractionReleased -= OnPrimaryInteractionReleased;
+        InputManager.BuildPrimaryPressed -= OnPrimaryInteractionPressed;
+        InputManager.BuildPrimaryReleased -= OnPrimaryInteractionReleased;
     }
 
     /// <summary>
