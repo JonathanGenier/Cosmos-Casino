@@ -15,7 +15,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
 
     private readonly BuildUiManager _buildUiManager;
     private readonly BuildContext _buildContext;
-    private readonly InteractionManager _interactionManager;
+
     private bool _disposed;
 
     #endregion
@@ -28,12 +28,10 @@ public class BuildContextFlow : IGameFlow, IDisposable
     /// </summary>
     /// <param name="ui">The UI manager responsible for handling build-related user interface events and interactions. Cannot be null.</param>
     /// <param name="context">The build context containing the current state and configuration for the build process. Cannot be null.</param>
-    /// <param name="interaction">The interaction manager used to coordinate user interactions during the build process. Cannot be null.</param>
-    public BuildContextFlow(BuildUiManager ui, BuildContext context, InteractionManager interaction)
+    public BuildContextFlow(BuildUiManager ui, BuildContext context)
     {
         _buildUiManager = ui;
         _buildContext = context;
-        _interactionManager = interaction;
 
         _buildUiManager.BuildKindSelected += OnBuildKindSelected;
         _buildUiManager.BuildCancelled += OnBuildCancelled;
@@ -70,12 +68,10 @@ public class BuildContextFlow : IGameFlow, IDisposable
         {
             BuildKind.Floor => new FloorBuildContext(),
             BuildKind.Wall => new WallBuildContext(),
-            _ => throw new NotSupportedException(
-            $"Build kind '{buildKind}' is not supported.")
+            _ => throw new NotSupportedException($"Build kind '{buildKind}' is not supported.")
         };
 
         _buildContext.SetContext(context);
-        _interactionManager.SetTool(InteractionTool.Build);
     }
 
     /// <summary>
@@ -86,8 +82,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
     /// workflow.</remarks>
     private void OnBuildCancelled()
     {
-        _buildContext.CancelBuild();
-        _interactionManager.ResetTool();
+        _buildContext.CancelContext();
     }
 
     #endregion
