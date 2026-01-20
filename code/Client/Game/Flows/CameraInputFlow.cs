@@ -81,7 +81,7 @@ public class CameraInputFlow : IGameFlow, IDisposable
     /// <param name="v">The amount to change the camera's zoom level. Positive values zoom in; negative values zoom out.</param>
     private void OnZoomCamera(float v)
     {
-        _cameraManager.Zoom(v);
+        _cameraManager.Zoom(-v);
     }
 
     #endregion

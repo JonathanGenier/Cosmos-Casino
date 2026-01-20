@@ -15,9 +15,11 @@ public sealed partial class InputManager : Node
 {
     #region Fields
 
+    private readonly InputState _inputState = new();
+    private readonly InputState _previousInputState = new();
     private readonly List<IInputModule> _modules = new();
-    private readonly List<IProcessInputModule> _processModules = new();
-    private readonly List<IUnhandledInputModule> _unhandledInputModules = new();
+
+    private bool _isInputBlockedByUi;
 
     #endregion
 
@@ -58,7 +60,7 @@ public sealed partial class InputManager : Node
     /// <remarks>This delegate is typically used to subscribe to events triggered by a primary user action,
     /// such as a unit selection or build input gesture. The event does not provide additional event data.</remarks>
     [Signal]
-    public delegate void PrimaryInteractionPressedEventHandler();
+    public delegate void BuildPrimaryPressedEventHandler();
 
     /// <summary>
     /// Emitted when the primary interaction input is released (for example: left mouse button or primary touch).
@@ -66,7 +68,61 @@ public sealed partial class InputManager : Node
     /// drag, or build action should be finalized or cancelled by listeners.
     /// </summary>
     [Signal]
-    public delegate void PrimaryInteractionReleasedEventHandler();
+    public delegate void BuildPrimaryReleasedEventHandler();
+
+    #endregion
+
+    #region Properties
+
+    /// <summary>
+    /// Gets the current input state for the component.
+    /// </summary>
+    public InputState State => _inputState;
+
+    /// <summary>
+    /// Gets a value indicating whether user input is currently blocked by the user interface.
+    /// </summary>
+    public bool IsInputBlockedByUi => _isInputBlockedByUi;
+
+    /// <summary>
+    /// Gets a value indicating whether the primary input button is currently pressed.
+    /// </summary>
+    public bool IsPrimaryPressed => IsPressed(_inputState[InputButton.Primary], _previousInputState[InputButton.Primary]);
+
+    /// <summary>
+    /// Gets a value indicating whether the primary input button was released during the current input update.
+    /// </summary>
+    public bool IsPrimaryReleased => IsReleased(_inputState[InputButton.Primary], _previousInputState[InputButton.Primary]);
+
+    /// <summary>
+    /// Gets a value indicating whether the primary input button is currently held down.
+    /// </summary>
+    public bool IsPrimaryHeld => IsHeld(_inputState[InputButton.Primary]);
+
+    /// <summary>
+    /// Gets a value indicating whether the secondary input button is currently pressed.
+    /// </summary>
+    public bool IsSecondaryPressed => IsPressed(_inputState[InputButton.Secondary], _previousInputState[InputButton.Secondary]);
+
+    /// <summary>
+    /// Gets a value indicating whether the secondary input button was released during the current input update.
+    /// </summary>
+    public bool IsSecondaryReleased => IsReleased(_inputState[InputButton.Secondary], _previousInputState[InputButton.Secondary]);
+
+    /// <summary>
+    /// Gets a value indicating whether the secondary input button is currently held down.
+    /// </summary>
+    public bool IsSecondaryHeld => IsHeld(_inputState[InputButton.Secondary]);
+
+    /// <summary>
+    /// Gets a value indicating whether the Shift key is currently held down.
+    /// </summary>
+    public bool IsShiftHeld => IsHeld(_inputState[InputButton.Shift]);
+
+    /// <summary>
+    /// Gets a value indicating whether the toggle console input button was pressed during the current input state.
+    /// </summary>
+    public bool IsToggleConsolePressed => IsPressed(_inputState[InputButton.ToggleConsole], _previousInputState[InputButton.ToggleConsole]);
 
     #endregion
 
@@ -95,7 +151,7 @@ public sealed partial class InputManager : Node
     /// <param name="delta">The elapsed time, in seconds, since the previous frame. Used to update module logic based on frame timing.</param>
     public override void _Process(double delta)
     {
-        foreach (var module in _processModules)
+        foreach (var module in _modules)
         {
             if (!module.IsEnabled)
             {
@@ -104,42 +160,115 @@ public sealed partial class InputManager : Node
 
             module.Process(delta);
         }
+
+        _inputState.CopyTo(_previousInputState);
+        _inputState.ResetFrameState();
+        _isInputBlockedByUi = GetViewport().GuiGetHoveredControl() != null;
     }
 
     /// <summary>
-    /// Handles input events that were not consumed by other input handlers.
+    /// Processes input events to update the internal input state based on keyboard and mouse actions.
     /// </summary>
-    /// <remarks>This method is typically called by the engine when an input event is not handled by any other
-    /// input handler. It delegates the unhandled input event to all enabled modules registered for unhandled input
-    /// processing. Override this method to customize how unhandled input events are processed in your
-    /// application.</remarks>
-    /// <param name="event">The input event that was not handled by previous input processing. Cannot be null.</param>
-    public override void _UnhandledInput(InputEvent @event)
+    /// <param name="event">The input event to process. This can be a keyboard event or a mouse button event; other event types are ignored.</param>
+    public override void _Input(InputEvent @event)
     {
-        foreach (var module in _unhandledInputModules)
+        if (@event is InputEventKey key)
         {
-            if (!module.IsEnabled)
+            if (key.Echo)
             {
-                continue;
+                return;
             }
 
-            module.UnhandledInput(@event);
+            bool pressed = key.Pressed;
+
+            switch (key.Keycode)
+            {
+                // ─────────────────────────────
+                // Modifiers
+                // ─────────────────────────────
+                case Key.Shift:
+                    _inputState[InputButton.Shift] = pressed;
+                    break;
+
+                case Key.Ctrl:
+                    _inputState[InputButton.Ctrl] = pressed;
+                    break;
+
+                case Key.Alt:
+                    _inputState[InputButton.Alt] = pressed;
+                    break;
+
+                // ─────────────────────────────
+                // Movement
+                // ─────────────────────────────
+                case Key.W:
+                    _inputState[InputButton.MoveForward] = pressed;
+                    break;
+
+                case Key.S:
+                    _inputState[InputButton.MoveBackward] = pressed;
+                    break;
+
+                case Key.A:
+                    _inputState[InputButton.MoveLeft] = pressed;
+                    break;
+
+                case Key.D:
+                    _inputState[InputButton.MoveRight] = pressed;
+                    break;
+
+                // ─────────────────────────────
+                // Rotation
+                // ─────────────────────────────
+                case Key.Q:
+                    _inputState[InputButton.RotateLeft] = pressed;
+                    break;
+
+                case Key.E:
+                    _inputState[InputButton.RotateRight] = pressed;
+                    break;
+
+                // ─────────────────────────────
+                // Console
+                // ─────────────────────────────
+                case Key.F1:
+                    _inputState[InputButton.ToggleConsole] = pressed;
+                    break;
+            }
         }
-    }
+        else if (@event is InputEventMouseButton mouse)
+        {
+            bool pressed = mouse.Pressed;
 
-    #endregion
+            switch (mouse.ButtonIndex)
+            {
+                // ─────────────────────────────
+                // Mouse Buttons
+                // ─────────────────────────────
+                case MouseButton.Left:
+                    _inputState[InputButton.Primary] = pressed;
+                    break;
 
-    #region Input Blockers
+                case MouseButton.Right:
+                    _inputState[InputButton.Secondary] = pressed;
+                    break;
 
-    /// <summary>
-    /// Determines whether user input is currently blocked by a UI control.
-    /// </summary>
-    /// <remarks>This method can be used to check if input events should be ignored due to UI interaction,
-    /// such as when a menu or dialog is open and under the pointer.</remarks>
-    /// <returns>true if a UI control is currently hovered and input is blocked; otherwise, false.</returns>
-    public bool IsInputBlockedByUi()
-    {
-        return GetViewport().GuiGetHoveredControl() != null;
+                case MouseButton.Middle:
+                    _inputState[InputButton.Middle] = pressed;
+                    break;
+
+                // ─────────────────────────────
+                // Mouse Wheel (frame-based)
+                // ─────────────────────────────
+                case MouseButton.WheelUp:
+                    _inputState.ScrollDelta += 1f;
+                    break;
+
+                case MouseButton.WheelDown:
+                    _inputState.ScrollDelta -= 1f;
+                    break;
+            }
+        }
     }
 
     #endregion
@@ -166,6 +295,49 @@ public sealed partial class InputManager : Node
 
     #endregion
 
+    #region Input State Helpers
+
+    /// <summary>
+    /// Determines whether an input has transitioned from a released state to a pressed state.
+    /// </summary>
+    /// <param name="current">The current state of the input. Specify <see langword="true"/> if the input is currently pressed; otherwise,
+    /// <see langword="false"/>.</param>
+    /// <param name="previous">The previous state of the input. Specify <see langword="true"/> if the input was pressed in the previous check;
+    /// otherwise, <see langword="false"/>.</param>
+    /// <returns>Returns <see langword="true"/> if the input is currently pressed and was not pressed in the previous state;
+    /// otherwise, <see langword="false"/>.</returns>
+    private static bool IsPressed(bool current, bool previous)
+    {
+        return current && !previous;
+    }
+
+    /// <summary>
+    /// Determines whether a transition from pressed to released state has occurred between two boolean values.
+    /// </summary>
+    /// <param name="current">The current state value. Specify <see langword="true"/> if pressed; otherwise, <see langword="false"/>.</param>
+    /// <param name="previous">The previous state value. Specify <see langword="true"/> if pressed; otherwise, <see langword="false"/>.</param>
+    /// <returns>Returns <see langword="true"/> if the state has changed from pressed (<paramref name="previous"/> is <see
+    /// langword="true"/>) to released (<paramref name="current"/> is <see langword="false"/>); otherwise, <see
+    /// langword="false"/>.</returns>
+    private static bool IsReleased(bool current, bool previous)
+    {
+        return !current && previous;
+    }
+
+    /// <summary>
+    /// Determines whether the resource is currently held based on the specified state.
+    /// </summary>
+    /// <param name="current">A value indicating the current state of the resource. Specify <see langword="true"/> if the resource is held;
+    /// otherwise, <see langword="false"/>.</param>
+    /// <returns>A value indicating whether the resource is held. Returns <see langword="true"/> if the resource is held;
+    /// otherwise, <see langword="false"/>.</returns>
+    private static bool IsHeld(bool current)
+    {
+        return current;
+    }
+
+    #endregion
+
     #region Module Registration
 
     /// <summary>
@@ -179,7 +351,7 @@ public sealed partial class InputManager : Node
         {
             new ConsoleInputModule(this),
             new CameraInputModule(this),
-            new InteractionInputModule(this),
+            new BuildInputModule(this),
         };
 
         foreach (IInputModule module in modules)
@@ -190,21 +362,9 @@ public sealed partial class InputManager : Node
             }
 
             _modules.Add(module);
-
-            if (module is IProcessInputModule processInputModule)
-            {
-                _processModules.Add(processInputModule);
-            }
-
-            if (module is IUnhandledInputModule unhandledInputModule)
-            {
-                _unhandledInputModules.Add(unhandledInputModule);
-            }
         }
 
         _modules.Sort((a, b) => a.Phase.CompareTo(b.Phase));
-        _processModules.Sort((a, b) => a.Phase.CompareTo(b.Phase));
-        _unhandledInputModules.Sort((a, b) => a.Phase.CompareTo(b.Phase));
     }
 
     #endregion

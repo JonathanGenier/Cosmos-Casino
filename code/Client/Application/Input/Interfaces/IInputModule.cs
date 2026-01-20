@@ -20,4 +20,10 @@ public interface IInputModule
     /// Gets a value indicating whether the module is enabled.
     /// </summary>
     bool IsEnabled { get; }
+
+    /// <summary>
+    /// Performs processing for the specified time interval.
+    /// </summary>
+    /// <param name="delta">The elapsed time, in seconds, since the last call to this method. Must be a non-negative value.</param>
+    void Process(double delta);
 }

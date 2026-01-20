@@ -8,7 +8,7 @@ using Godot;
 /// control. It processes both continuous input (such as movement and rotation) and discrete actions (such as zoom)
 /// during the appropriate input phases. The module respects UI blocking states to prevent camera input when user
 /// interface elements require exclusive input focus.</remarks>
-public sealed class CameraInputModule : IProcessInputModule, IUnhandledInputModule, IGameInputModule
+public sealed class CameraInputModule : IInputModule, IGameInputModule
 {
     #region Fields
 
@@ -61,33 +61,16 @@ public sealed class CameraInputModule : IProcessInputModule, IUnhandledInputModu
     /// independent.</param>
     public void Process(double delta)
     {
-        Vector2 moveDirection = Input.GetVector("camera_move_left", "camera_move_right", "camera_move_backward", "camera_move_forward");
-        float rotateDirection = Input.GetAxis("camera_rotate_right", "camera_rotate_left");
-        _inputManager.EmitSignal(InputManager.SignalName.MoveCamera, moveDirection);
-        _inputManager.EmitSignal(InputManager.SignalName.RotateCamera, rotateDirection);
-    }
-
-    /// <summary>
-    /// Handles unhandled input events related to camera zoom actions.
-    /// </summary>
-    /// <remarks>This method should be called to process input events that have not been handled elsewhere. If
-    /// input is currently blocked by the UI, the method ignores the event.</remarks>
-    /// <param name="event">The input event to process. Represents a user action that may trigger camera zoom in or out.</param>
-    public void UnhandledInput(InputEvent @event)
-    {
-        if (_inputManager.IsInputBlockedByUi())
+        if (!_isEnabled)
         {
             return;
         }
 
-        if (@event.IsActionPressed("camera_zoom_in"))
-        {
-            _inputManager.EmitSignal(InputManager.SignalName.ZoomCamera, -1.0f);
-        }
-        else if (@event.IsActionPressed("camera_zoom_out"))
-        {
-            _inputManager.EmitSignal(InputManager.SignalName.ZoomCamera, 1.0f);
-        }
+        var inputState = _inputManager.State;
+
+        MoveCamera(inputState);
+        RotateCamera(inputState);
+        ZoomCamera(inputState);
     }
 
     #endregion
@@ -103,6 +86,84 @@ public sealed class CameraInputModule : IProcessInputModule, IUnhandledInputModu
     public void OnGameStateChanged(GameState state)
     {
         _isEnabled = state != GameState.Loading;
+    }
+
+    #endregion
+
+    #region Camera Input Methods
+
+    /// <summary>
+    /// Processes camera movement input and emits a signal indicating the desired movement direction.
+    /// </summary>
+    /// <param name="inputState">The current input state containing button presses that determine camera movement. Must not be null.</param>
+    private void MoveCamera(InputState inputState)
+    {
+        Vector2 moveDirection = Vector2.Zero;
+
+        if (inputState[InputButton.MoveLeft])
+        {
+            moveDirection.X -= 1;
+        }
+
+        if (inputState[InputButton.MoveRight])
+        {
+            moveDirection.X += 1;
+        }
+
+        if (inputState[InputButton.MoveForward])
+        {
+            moveDirection.Y += 1;
+        }
+
+        if (inputState[InputButton.MoveBackward])
+        {
+            moveDirection.Y -= 1;
+        }
+
+        _inputManager.EmitSignal(InputManager.SignalName.MoveCamera, moveDirection);
+    }
+
+    /// <summary>
+    /// Processes input to determine the camera rotation direction and emits a signal to rotate the camera accordingly.
+    /// </summary>
+    /// <param name="inputState">The current input state containing button presses. Used to detect whether the rotate left or rotate right
+    /// buttons are pressed.</param>
+    private void RotateCamera(InputState inputState)
+    {
+        float rotationDirection = 0f;
+
+        if (inputState[InputButton.RotateLeft])
+        {
+            rotationDirection -= 1;
+        }
+
+        if (inputState[InputButton.RotateRight])
+        {
+            rotationDirection += 1;
+        }
+
+        _inputManager.EmitSignal(InputManager.SignalName.RotateCamera, rotationDirection);
+    }
+
+    /// <summary>
+    /// Processes camera zoom input based on the current input state. Emits a zoom signal if the UI is not blocking
+    /// input and a scroll action is detected.
+    /// </summary>
+    /// <remarks>No zoom signal is emitted if input is blocked by the UI. This method should be called in
+    /// response to input events where camera zooming is appropriate.</remarks>
+    /// <param name="inputState">The current input state containing user interaction data. The scroll delta value determines whether a zoom
+    /// signal is emitted.</param>
+    private void ZoomCamera(InputState inputState)
+    {
+        if (_inputManager.IsInputBlockedByUi)
+        {
+            return;
+        }
+
+        if (inputState.ScrollDelta != 0f)
+        {
+            _inputManager.EmitSignal(InputManager.SignalName.ZoomCamera, inputState.ScrollDelta);
+        }
     }
 
     #endregion

@@ -1,5 +1,3 @@
-using Godot;
-
 /// <summary>
 /// Provides an input module that processes console-related debug input and emits intent signals for toggling the
 /// in-application console UI.
@@ -7,11 +5,11 @@ using Godot;
 /// <remarks>This module is intended for use in development or debug builds to facilitate quick access to console
 /// functionality via input actions. It processes input early in the frame to ensure responsive handling of
 /// developer-facing controls. The module is always enabled and operates within the application input scope.</remarks>
-public sealed class ConsoleInputModule : IProcessInputModule
+public sealed class ConsoleInputModule : IInputModule
 {
     #region Fields
 
-    private readonly InputManager _input;
+    private readonly InputManager _inputManager;
 
     #endregion
 
@@ -20,10 +18,10 @@ public sealed class ConsoleInputModule : IProcessInputModule
     /// <summary>
     /// Initializes a new instance of the ConsoleInputModule class using the specified input manager.
     /// </summary>
-    /// <param name="input">The input manager that provides input handling for the console module. Cannot be null.</param>
-    public ConsoleInputModule(InputManager input)
+    /// <param name="inputManager">The input manager that provides input handling for the console module. Cannot be null.</param>
+    public ConsoleInputModule(InputManager inputManager)
     {
-        _input = input;
+        _inputManager = inputManager;
     }
 
     #endregion
@@ -59,9 +57,9 @@ public sealed class ConsoleInputModule : IProcessInputModule
     /// <param name="delta">The elapsed time, in seconds, since the previous frame. This value can be used for frame-dependent calculations.</param>
     public void Process(double delta)
     {
-        if (Input.IsActionJustPressed("toggle_console"))
+        if (_inputManager.IsToggleConsolePressed)
         {
-            _input.EmitSignal(InputManager.SignalName.ToggleConsoleUi);
+            _inputManager.EmitSignal(InputManager.SignalName.ToggleConsoleUi);
         }
     }
 
