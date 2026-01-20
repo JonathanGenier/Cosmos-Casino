@@ -21,7 +21,6 @@ public sealed partial class GameManager : NodeManager
     private CameraManager? _cameraManager;
     private BuildProcessManager? _buildProcessManager;
     private GameUiManager? _gameUiManager;
-    private InteractionManager? _interactionManager;
     private SpawnManager? _spawnManager;
     private CursorManager? _cursorManager;
     private CameraInputFlow? _cameraInputFlow;
@@ -29,6 +28,7 @@ public sealed partial class GameManager : NodeManager
     private BuildRequestFlow? _buildRequestFlow;
     private BuildSpawnFlow? _buildSpawnFlow;
     private BuildPreviewFlow? _buildPreviewFlow;
+    private BuildInputFlow? _buildInputFlow;
     private CursorPreviewFlow? _cursorPreviewFlow;
     private ResourceAssembler? _resourceAssembler;
 #if DEBUG
@@ -74,12 +74,6 @@ public sealed partial class GameManager : NodeManager
         set => _gameUiManager = value;
     }
 
-    private InteractionManager InteractionManager
-    {
-        get => _interactionManager ?? throw new InvalidOperationException($"{nameof(InteractionManager)} is not initialized.");
-        set => _interactionManager = value;
-    }
-
     private SpawnManager SpawnManager
     {
         get => _spawnManager ?? throw new InvalidOperationException($"{nameof(SpawnManager)} is not initialized.");
@@ -122,6 +116,12 @@ public sealed partial class GameManager : NodeManager
         set => _buildPreviewFlow = value;
     }
 
+    private BuildInputFlow? BuildInputFlow
+    {
+        get => _buildInputFlow ?? throw new InvalidOperationException($"{nameof(BuildInputFlow)} is not initialized.");
+        set => _buildInputFlow = value;
+    }
+
     private ResourceAssembler ResourceAssembler
     {
         get => _resourceAssembler ?? throw new InvalidOperationException($"{nameof(ResourceAssembler)} is not initialized.");
@@ -140,6 +140,7 @@ public sealed partial class GameManager : NodeManager
         get => _cursorDebugVisualizer ?? throw new InvalidOperationException($"{nameof(CursorDebugVisualizer)} is not initialized.");
         set => _cursorDebugVisualizer = value;
     }
+
 
 #endif
 
@@ -219,6 +220,7 @@ public sealed partial class GameManager : NodeManager
         BuildSpawnFlow?.Dispose();
         CameraInputFlow?.Dispose();
         BuildPreviewFlow?.Dispose();
+        BuildInputFlow?.Dispose();
         CursorPreviewFlow?.Dispose();
 
         _sessionInitialized = false;
@@ -270,9 +272,6 @@ public sealed partial class GameManager : NodeManager
         BuildProcessManager = AddInitializableNode<BuildProcessManager>(
             cbm => cbm.Initialize(buildProcessServices));
 
-        InteractionManager = AddInitializableNode<InteractionManager>(
-            im => im.Initialize(AppServices.InputManager, CursorManager, _buildContext));
-
         SpawnManager = AddInitializableNode<SpawnManager>(
             sm => sm.Initialize(ResourceAssembler.SpawnResources));
 
@@ -298,10 +297,11 @@ public sealed partial class GameManager : NodeManager
             throw new InvalidOperationException($"Cannot initialize flows before {nameof(GameManager)} initialization.");
         }
 
-        BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, _buildContext, InteractionManager);
+        BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, _buildContext);
         BuildRequestFlow = new BuildRequestFlow(BuildProcessManager, _buildContext);
         BuildSpawnFlow = new BuildSpawnFlow(BuildProcessManager, SpawnManager);
         BuildPreviewFlow = new BuildPreviewFlow(_buildContext, BuildProcessManager.BuildPreviewManager, BuildProcessManager);
+        BuildInputFlow = new BuildInputFlow(AppServices.InputManager, CursorManager, _buildContext);
         CursorPreviewFlow = new CursorPreviewFlow(_buildContext, BuildProcessManager.BuildPreviewManager, CursorManager, BuildProcessManager);
         CameraInputFlow = new CameraInputFlow(AppServices.InputManager, CameraManager);
     }

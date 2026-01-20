@@ -55,8 +55,8 @@ public class BuildRequestFlow : IGameFlow, IDisposable
             return;
         }
 
-        _isDisposed = true;
         _buildContext.BuildEnded -= OnBuildEnded;
+        _isDisposed = true;
     }
 
     #endregion

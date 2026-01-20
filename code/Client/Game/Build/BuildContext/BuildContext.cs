@@ -22,6 +22,18 @@ public sealed class BuildContext
     #region Events
 
     /// <summary>
+    /// Occurs when a context is activated.
+    /// </summary>
+    /// <remarks>This event is raised when a BuildContext is set.</remarks>
+    public event Action? ContextActivated;
+
+    /// <summary>
+    /// Occurs when the current context is deactivated.
+    /// </summary>
+    /// <remarks>This event is raised when the active BuildContext is cleared.</remarks>
+    public event Action? ContextDeactivated;
+
+    /// <summary>
     /// Occurs when a build process is started.
     /// </summary>
     /// <remarks>This event is raised before any build steps are executed.</remarks>
@@ -78,6 +90,7 @@ public sealed class BuildContext
 
         Clear();
         _activeContext = context;
+        ContextActivated?.Invoke();
     }
 
     #endregion
@@ -159,7 +172,7 @@ public sealed class BuildContext
     /// <remarks>Use this method to reset any ongoing preview operation. If no preview is currently active,
     /// the method has no effect. Calling this method triggers the <c>PreviewChanged</c> event only if a preview was
     /// previously set.</remarks>
-    public void CancelBuild()
+    public void CancelContext()
     {
         Clear();
     }
@@ -231,8 +244,15 @@ public sealed class BuildContext
     /// </summary>
     private void Clear()
     {
-        _activeContext = null;
         ClearBuild();
+
+        if (_activeContext == null)
+        {
+            return;
+        }
+
+        _activeContext = null;
+        ContextDeactivated?.Invoke();
     }
 
     /// <summary>
@@ -242,6 +262,11 @@ public sealed class BuildContext
     /// has been cleared. This method is typically used to reset the build process to its initial state.</remarks>
     private void ClearBuild()
     {
+        if (_startCell == null && _currentCell == null)
+        {
+            return;
+        }
+
         _startCell = null;
         _currentCell = null;
         BuildCleared?.Invoke();
