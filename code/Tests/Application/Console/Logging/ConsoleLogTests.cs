@@ -38,7 +38,7 @@ namespace CosmosCasino.Tests.Application.Console.Logging
         public void UnsafeLogs_AreRecorded_InStaging()
         {
             // Act
-            ConsoleLog.Verbose("Unsafe", "Unsafe message");
+            ConsoleLog.Verbose("Unsafe message");
 
             // Assert
             Assert.That(_consoleManager!.Count, Is.EqualTo(1));
@@ -50,7 +50,7 @@ namespace CosmosCasino.Tests.Application.Console.Logging
         public void UnsafeLogs_AreNotRecorded_InProduction()
         {
             // Act
-            ConsoleLog.Verbose("Unsafe", "Unsafe message");
+            ConsoleLog.Verbose("Unsafe message");
 
             // Assert
             Assert.That(_consoleManager!.Count, Is.EqualTo(0));
@@ -61,7 +61,7 @@ namespace CosmosCasino.Tests.Application.Console.Logging
         public void SafeLogs_AreRecorded_InAllEnvironments()
         {
             // Act
-            ConsoleLog.Info("Unsafe", "Unsafe message");
+            ConsoleLog.Info("Safe message");
 
             // Assert
             Assert.That(_consoleManager!.Count, Is.EqualTo(1));
@@ -71,21 +71,22 @@ namespace CosmosCasino.Tests.Application.Console.Logging
         public void ConsoleLog_UsesCorrectDefaultSafetyPerApi()
         {
             // Act
-            ConsoleLog.Info("Test", "Safe");
-            ConsoleLog.Warning("Test", "Safe");
-            ConsoleLog.Error("Test", "Safe");
-            ConsoleLog.Event("Test", "Safe");
-            ConsoleLog.Verbose("Test", "Unsafe");
-            ConsoleLog.System("Test", "Unsafe");
+            ConsoleLog.Info("Safe");
+            ConsoleLog.Warning("Safe");
+            ConsoleLog.Error("Safe");
+            ConsoleLog.Event("Safe");
+            ConsoleLog.Verbose("Unsafe");
+            ConsoleLog.System("Unsafe");
+            ConsoleLog.Debug("Unsafe");
 
             var logs = _consoleManager!.GetLogs();
 
             // Assert
             // In prod, unsafe logs are dropped.
 #if DEBUG
-            Assert.That(logs.Count, Is.EqualTo(6));
+            Assert.That(logs.Count, Is.EqualTo(7));
             Assert.That(logs.Count(e => e.Safety == ConsoleLogSafety.Safe), Is.EqualTo(4));
-            Assert.That(logs.Count(e => e.Safety == ConsoleLogSafety.Unsafe), Is.EqualTo(2));
+            Assert.That(logs.Count(e => e.Safety == ConsoleLogSafety.Unsafe), Is.EqualTo(3));
 #else
             Assert.That(logs.Count, Is.EqualTo(4));
             Assert.That(logs.All(e => e.Safety == ConsoleLogSafety.Safe));
@@ -100,20 +101,21 @@ namespace CosmosCasino.Tests.Application.Console.Logging
         public void LogEntries_UsesCorrectDefaultLogLevelPerApi()
         {
             // Act 
-            ConsoleLog.Info("Test", "Info");
-            ConsoleLog.Verbose("Test", "Verbose");  // Unsafe
-            ConsoleLog.Warning("Test", "Warning");
-            ConsoleLog.Error("Test", "Error");
-            ConsoleLog.Event("Test", "Info");
-            ConsoleLog.System("Test", "Info");      // Unsafe
+            ConsoleLog.Info("Info");
+            ConsoleLog.Verbose("Verbose");  // Unsafe
+            ConsoleLog.Warning("Warning");
+            ConsoleLog.Error("Error");
+            ConsoleLog.Event("Info");
+            ConsoleLog.System("Info");      // Unsafe
+            ConsoleLog.Debug("Verbose");    // Unsafe
 
             var logs = _consoleManager!.GetLogs();
 
             // Assert
 #if DEBUG
-            Assert.That(logs.Count, Is.EqualTo(6));
+            Assert.That(logs.Count, Is.EqualTo(7));
             Assert.That(logs.Count(e => e.Level == ConsoleLogLevel.Info), Is.EqualTo(3));
-            Assert.That(logs.Count(e => e.Level == ConsoleLogLevel.Verbose), Is.EqualTo(1));
+            Assert.That(logs.Count(e => e.Level == ConsoleLogLevel.Verbose), Is.EqualTo(2));
             Assert.That(logs.Count(e => e.Level == ConsoleLogLevel.Warning), Is.EqualTo(1));
             Assert.That(logs.Count(e => e.Level == ConsoleLogLevel.Error), Is.EqualTo(1));
 #else
@@ -132,22 +134,23 @@ namespace CosmosCasino.Tests.Application.Console.Logging
         public void LogEntry_UsesCorrectDefaultLogKindPerApi()
         {
             // Act
-            // Verbose is explicitly forced to Safe to avoid prod stripping
-            ConsoleLog.Info("Test", "General");
-            ConsoleLog.Verbose("Test", "General");
-            ConsoleLog.Warning("Test", "General");
-            ConsoleLog.Error("Test", "General");
-            ConsoleLog.Event("Test", "Event");
-            ConsoleLog.System("Test", "Info");
+            ConsoleLog.Info("General");
+            ConsoleLog.Verbose("General");  // Unsafe
+            ConsoleLog.Warning("General");
+            ConsoleLog.Error("General");
+            ConsoleLog.Event("Event");
+            ConsoleLog.System("System");    // Unsafe
+            ConsoleLog.Debug("Debug");      // Unsafe
 
             var logs = _consoleManager!.GetLogs();
 
             // Assert
 #if DEBUG
-            Assert.That(logs.Count, Is.EqualTo(6));
+            Assert.That(logs.Count, Is.EqualTo(7));
             Assert.That(logs.Count(e => e.Kind == ConsoleLogKind.General), Is.EqualTo(4));
             Assert.That(logs.Count(e => e.Kind == ConsoleLogKind.Event), Is.EqualTo(1));
             Assert.That(logs.Count(e => e.Kind == ConsoleLogKind.System), Is.EqualTo(1));
+            Assert.That(logs.Count(e => e.Kind == ConsoleLogKind.Debug), Is.EqualTo(1));
 #else
             Assert.That(logs.Count, Is.EqualTo(4));
             Assert.That(logs.Count(e => e.Kind == ConsoleLogKind.General), Is.EqualTo(3));

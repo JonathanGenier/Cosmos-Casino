@@ -350,7 +350,7 @@ public sealed partial class GameManager : NodeManager
 
         State = newState;
         AppServices.InputManager.OnGameStateChanged(newState);
-        ConsoleLog.System(nameof(GameManager), $"GameState → {State}");
+        ConsoleLog.System($"GameState: {State}");
     }
 
     #endregion

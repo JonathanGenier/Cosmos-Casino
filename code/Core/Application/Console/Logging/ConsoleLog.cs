@@ -122,52 +122,5 @@ namespace CosmosCasino.Core.Application.Console.Logging
         }
 
         #endregion
-
-        #region CLASSES
-
-        /// <summary>
-        /// Internal disposable scope used to bracket system initialization
-        /// with deterministic lifecycle logging.
-        /// Emits a "Setting Up" message on creation and a matching "Ready"
-        /// message exactly once when the scope is disposed.
-        /// </summary>
-        private sealed class SystemLogScope : IDisposable
-        {
-            private readonly string _category;
-            private bool _disposed;
-
-            /// <summary>
-            /// Initializes a new system log scope for the specified category
-            /// and immediately records the beginning of its setup phase.
-            /// </summary>
-            /// <param name="category">
-            /// Logical system or service name whose initialization lifecycle
-            /// is being logged.
-            /// </param>
-            public SystemLogScope(string category)
-            {
-                _category = category;
-                System(_category, "Setting up...");
-            }
-
-            /// <summary>
-            /// Completes the system log scope by emitting the corresponding
-            /// "Ready" message.
-            /// Ensures idempotent disposal so lifecycle completion is logged
-            /// at most once.
-            /// </summary>
-            public void Dispose()
-            {
-                if (_disposed)
-                {
-                    return;
-                }
-
-                _disposed = true;
-                System(_category, "Ready!");
-            }
-        }
-
-        #endregion
     }
 }

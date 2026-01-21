@@ -34,13 +34,10 @@ namespace CosmosCasino.Core.Application.Services
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(savePath);
 
-            using (ConsoleLog.SystemScope(nameof(CoreServices)))
-            {
-                JsonSaveSerializer serializer = new();
-                SaveManager = new SaveManager(serializer, savePath);
-                ConsoleManager = new ConsoleManager();
-                _consoleManagerDisposable = ConsoleManager;
-            }
+            JsonSaveSerializer serializer = new();
+            SaveManager = new SaveManager(serializer, savePath);
+            ConsoleManager = new ConsoleManager();
+            _consoleManagerDisposable = ConsoleManager;
         }
 
         #endregion

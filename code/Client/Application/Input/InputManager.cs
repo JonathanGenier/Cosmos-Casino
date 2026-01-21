@@ -156,10 +156,7 @@ public sealed partial class InputManager : Node
     /// manager.</remarks>
     public override void _Ready()
     {
-        using (ConsoleLog.SystemScope(nameof(InputManager)))
-        {
-            RegisterInputModules();
-        }
+        RegisterInputModules();
     }
 
     /// <summary>

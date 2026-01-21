@@ -35,7 +35,7 @@ namespace CosmosCasino.Tests.Application.Console
         public void Console_ReceivesLogs_FromConsoleLog()
         {
             // Act
-            ConsoleLog.Info("Test", "Hello");
+            ConsoleLog.Info("Hello");
 
             // Assert
             Assert.That(_consoleManager!.Count, Is.EqualTo(1));
@@ -49,7 +49,7 @@ namespace CosmosCasino.Tests.Application.Console
             _consoleManager!.EntryAdded += e => received = e;
 
             // Act
-            ConsoleLog.Info("Test", "Hello");
+            ConsoleLog.Info("Hello");
 
             // Assert
             Assert.That(received, Is.Not.Null);
@@ -74,7 +74,7 @@ namespace CosmosCasino.Tests.Application.Console
         public void TryClearLogs_ClearsBuffer()
         {
             // Act
-            ConsoleLog.Info("Test", "Hello");
+            ConsoleLog.Info("Hello");
             Assert.That(_consoleManager!.Count, Is.EqualTo(1));
 
             var success = _consoleManager.TryClearLogs();

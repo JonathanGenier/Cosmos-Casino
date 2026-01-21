@@ -111,11 +111,11 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
             case BuildOperationFailureReason.NoFloor:
             case BuildOperationFailureReason.Blocked:
             case BuildOperationFailureReason.None:
-                ConsoleLog.Info(nameof(BuildProcessManager), failureReason.ToString());
+                ConsoleLog.Info(failureReason.ToString());
                 break;
 
             case BuildOperationFailureReason.NoCell:
-                ConsoleLog.Error(nameof(BuildProcessManager), failureReason.ToString());
+                ConsoleLog.Error(failureReason.ToString());
                 break;
 
             default:

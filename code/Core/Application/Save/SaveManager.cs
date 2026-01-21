@@ -43,11 +43,8 @@ namespace CosmosCasino.Core.Application.Save
             ArgumentNullException.ThrowIfNull(serializer, nameof(serializer));
             ArgumentException.ThrowIfNullOrWhiteSpace(path, nameof(path));
 
-            using (ConsoleLog.SystemScope(nameof(SaveManager)))
-            {
-                _serializer = serializer;
-                _path = path;
-            }
+            _serializer = serializer;
+            _path = path;
         }
 
         #endregion
@@ -73,7 +70,7 @@ namespace CosmosCasino.Core.Application.Save
 
             if (_participants.Contains(participant))
             {
-                ConsoleLog.Warning(nameof(SaveManager), $"Participant is already registered to {nameof(SaveManager)}. No consequences, just a useless call.");
+                ConsoleLog.Warning($"Participant is already registered to {nameof(SaveManager)}. No consequences, just a useless call.");
 #if DEBUG
                 throw new InvalidOperationException($"Participant is already registered to {nameof(SaveManager)}.");
 #else
