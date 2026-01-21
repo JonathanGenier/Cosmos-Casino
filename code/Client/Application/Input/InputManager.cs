@@ -55,20 +55,39 @@ public sealed partial class InputManager : Node
     public delegate void ZoomCameraEventHandler(float direction);
 
     /// <summary>
-    /// Represents the method that handles the event when the primary interaction (Mouse Left Click) is pressed.
+    /// Emitted when the primary build action is initiated (for example: left mouse button pressed).
+    /// This signal marks the start of a build placement gesture.
     /// </summary>
-    /// <remarks>This delegate is typically used to subscribe to events triggered by a primary user action,
-    /// such as a unit selection or build input gesture. The event does not provide additional event data.</remarks>
     [Signal]
-    public delegate void BuildPrimaryPressedEventHandler();
+    public delegate void BuildPlacePressedEventHandler();
 
     /// <summary>
-    /// Emitted when the primary interaction input is released (for example: left mouse button or primary touch).
-    /// This signal marks the completion of a primary interaction gesture and indicates that any ongoing selection,
-    /// drag, or build action should be finalized or cancelled by listeners.
+    /// Emitted when the primary build action is released.
+    /// This signal finalizes the current build placement gesture.
     /// </summary>
     [Signal]
-    public delegate void BuildPrimaryReleasedEventHandler();
+    public delegate void BuildPlaceReleasedEventHandler();
+
+    /// <summary>
+    /// Emitted when the remove build action is initiated (for example: right mouse button pressed).
+    /// This signal marks the start of a build removal gesture.
+    /// </summary>
+    [Signal]
+    public delegate void BuildRemovePressedEventHandler();
+
+    /// <summary>
+    /// Emitted when the remove build action is released.
+    /// This signal finalizes the current build removal gesture.
+    /// </summary>
+    [Signal]
+    public delegate void BuildRemoveReleasedEventHandler();
+
+    /// <summary>
+    /// Emitted when the current build operation is canceled.
+    /// This signal aborts any active build or removal gesture and resets build state.
+    /// </summary>
+    [Signal]
+    public delegate void BuildCanceledEventHandler();
 
     #endregion
 

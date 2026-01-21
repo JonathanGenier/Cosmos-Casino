@@ -34,7 +34,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCells();
-            var intent = BuildIntent.BuildFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells);
 
             // Act
             var result = _buildManager.Evaluate(intent);
@@ -50,7 +50,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCells(3);
-            var intent = BuildIntent.BuildFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells);
 
             // Act
             var result = _buildManager.Evaluate(intent);
@@ -67,7 +67,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = CreateCells();
             PlaceFloor(cells);
-            var intent = BuildIntent.BuildFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells);
 
             // Act
             var result = _buildManager.Evaluate(intent);
@@ -87,7 +87,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = CreateCells();
             PlaceFloor(cells);
-            var intent = BuildIntent.BuildWall(cells);
+            var intent = BuildIntent.PlaceWall(cells);
 
             // Act
             var result = _buildManager.Evaluate(intent);
@@ -102,7 +102,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCells(2);
-            var intent = BuildIntent.BuildWall(cells);
+            var intent = BuildIntent.PlaceWall(cells);
 
             // Act
             var result = _buildManager.Evaluate(intent);
@@ -122,7 +122,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCells();
-            var intent = BuildIntent.BuildFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells);
 
             // Act
             var result = _buildManager.Execute(intent);
@@ -137,7 +137,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCells(3);
-            var intent = BuildIntent.BuildFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells);
 
             // Act
             var result = _buildManager.Execute(intent);
@@ -153,7 +153,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cell = new MapCellCoord(0, 0, 0);
-            var intent = BuildIntent.BuildFloor([cell, cell]);
+            var intent = BuildIntent.PlaceFloor([cell, cell]);
 
             // Act
             var result = _buildManager.Execute(intent);
@@ -175,7 +175,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = CreateCells();
             PlaceFloor(cells);
-            var intent = BuildIntent.BuildWall(cells);
+            var intent = BuildIntent.PlaceWall(cells);
 
             // Act
             var result = _buildManager.Execute(intent);
@@ -190,7 +190,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCells(2);
-            var intent = BuildIntent.BuildWall(cells);
+            var intent = BuildIntent.PlaceWall(cells);
 
             // Act
             var result = _buildManager.Execute(intent);

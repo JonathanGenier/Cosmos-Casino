@@ -1,7 +1,7 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map.Cell;
-using Godot;
+using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -29,11 +29,12 @@ public sealed class WallBuildContext : BuildContextBase
     /// </summary>
     /// <param name="startCell">The starting cell coordinate for the wall.</param>
     /// <param name="endCell">The ending cell coordinate for the wall.</param>
+    /// <param name="buildOperation">The type of build operation to perform.</param>
     /// <param name="intent">When this method returns, contains the created build intent if successful; otherwise, null.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
-    public override bool TryCreateBuildIntent(MapCellCoord startCell, MapCellCoord endCell, out BuildIntent intent)
+    public override bool TryCreateBuildIntent(MapCellCoord startCell, MapCellCoord endCell, BuildOperation buildOperation, out BuildIntent intent)
     {
-        var cells = GetCells(startCell, endCell);
+        var cells = GetCells(startCell, endCell, buildOperation);
 
         if (cells.Count == 0)
         {
@@ -41,7 +42,21 @@ public sealed class WallBuildContext : BuildContextBase
             return false;
         }
 
-        intent = BuildIntent.BuildWall(cells);
+        switch (buildOperation)
+        {
+            case BuildOperation.Place:
+                intent = BuildIntent.PlaceWall(cells);
+                return true;
+            case BuildOperation.Remove:
+                intent = BuildIntent.RemoveWall(cells);
+                return true;
+            case BuildOperation.None:
+                intent = null!;
+                break;
+            default:
+                throw new InvalidOperationException($"Unsupported build operation: {buildOperation}");
+        }
+
         return true;
     }
 
@@ -50,16 +65,32 @@ public sealed class WallBuildContext : BuildContextBase
     #region Get Cells
 
     /// <summary>
-    /// Returns a read-only list of map cell coordinates representing the straight line path between the specified start
-    /// and end cells.
+    /// Returns a read-only list of map cell coordinates affected by the specified build operation between the given
+    /// start and end cells.
     /// </summary>
-    /// <param name="startCell">The coordinate of the cell where the line starts.</param>
-    /// <param name="endCell">The coordinate of the cell where the line ends.</param>
-    /// <returns>A read-only list of <see cref="MapCellCoord"/> values that trace the line from <paramref name="startCell"/> to
-    /// <paramref name="endCell"/>. The list includes both endpoints.</returns>
-    public override IReadOnlyList<MapCellCoord> GetCells(MapCellCoord startCell, MapCellCoord endCell)
+    /// <remarks>If <paramref name="buildOperation"/> is <see cref="BuildOperation.Place"/>, the returned
+    /// cells form a line between <paramref name="startCell"/> and <paramref name="endCell"/>. If <paramref
+    /// name="buildOperation"/> is <see cref="BuildOperation.Remove"/>, the returned cells cover the area defined by the
+    /// two coordinates.</remarks>
+    /// <param name="startCell">The starting cell coordinate for the operation. Defines one endpoint of the affected area or line.</param>
+    /// <param name="endCell">The ending cell coordinate for the operation. Defines the other endpoint of the affected area or line.</param>
+    /// <param name="buildOperation">The type of build operation to perform. Determines how the affected cells are selected.</param>
+    /// <returns>A read-only list of <see cref="MapCellCoord"/> values representing the cells affected by the operation. Returns
+    /// an empty list if <paramref name="buildOperation"/> is <see cref="BuildOperation.None"/>.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if <paramref name="buildOperation"/> is not a supported value.</exception>
+    public override IReadOnlyList<MapCellCoord> GetCells(MapCellCoord startCell, MapCellCoord endCell, BuildOperation buildOperation)
     {
-        return GetCellsLine(startCell, endCell);
+        switch (buildOperation)
+        {
+            case BuildOperation.Place:
+                return GetCellsLine(startCell, endCell);
+            case BuildOperation.Remove:
+                return GetCellsArea(startCell, endCell);
+            case BuildOperation.None:
+                return Array.Empty<MapCellCoord>();
+            default:
+                throw new InvalidOperationException($"Unsupported build operation: {buildOperation}");
+        }
     }
 
     #endregion

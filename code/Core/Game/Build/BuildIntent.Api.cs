@@ -61,7 +61,7 @@ namespace CosmosCasino.Core.Game.Build
         /// </summary>
         /// <param name="cells">A read-only list of map cell coordinates where the floor will be placed. Cannot be null or empty.</param>
         /// <returns>A BuildIntent representing the operation to place a floor on the specified cells.</returns>
-        public static BuildIntent BuildFloor(IReadOnlyList<MapCellCoord> cells)
+        public static BuildIntent PlaceFloor(IReadOnlyList<MapCellCoord> cells)
         {
             ValidateCells(cells);
 
@@ -72,11 +72,27 @@ namespace CosmosCasino.Core.Game.Build
         }
 
         /// <summary>
+        /// Creates a build intent that removes the floor from the specified map cells.
+        /// </summary>
+        /// <param name="cells">A read-only list of map cell coordinates identifying the cells from which the floor should be removed.
+        /// Cannot be null or empty.</param>
+        /// <returns>A BuildIntent representing the removal of the floor from the specified cells.</returns>
+        public static BuildIntent RemoveFloor(IReadOnlyList<MapCellCoord> cells)
+        {
+            ValidateCells(cells);
+
+            return new BuildIntent(
+                cells.ToArray(),
+                BuildKind.Floor,
+                BuildOperation.Remove);
+        }
+
+        /// <summary>
         /// Creates a build intent to place a wall on the specified map cells.
         /// </summary>
         /// <param name="cells">A read-only list of map cell coordinates where the wall will be placed. Cannot be null or empty.</param>
         /// <returns>A BuildIntent representing the action to place a wall on the specified cells.</returns>
-        public static BuildIntent BuildWall(IReadOnlyList<MapCellCoord> cells)
+        public static BuildIntent PlaceWall(IReadOnlyList<MapCellCoord> cells)
         {
             ValidateCells(cells);
 
@@ -84,6 +100,22 @@ namespace CosmosCasino.Core.Game.Build
                 cells.ToArray(),
                 BuildKind.Wall,
                 BuildOperation.Place);
+        }
+
+        /// <summary>
+        /// Creates a build intent to remove wall structures from the specified map cells.
+        /// </summary>
+        /// <param name="cells">A read-only list of map cell coordinates that identify the locations from which walls should be removed.
+        /// Cannot be null or empty.</param>
+        /// <returns>A BuildIntent representing the removal of walls from the specified cells.</returns>
+        public static BuildIntent RemoveWall(IReadOnlyList<MapCellCoord> cells)
+        {
+            ValidateCells(cells);
+
+            return new BuildIntent(
+                cells.ToArray(),
+                BuildKind.Wall,
+                BuildOperation.Remove);
         }
 
         #endregion

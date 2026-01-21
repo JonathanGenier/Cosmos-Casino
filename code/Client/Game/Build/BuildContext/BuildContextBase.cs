@@ -33,10 +33,11 @@ public abstract class BuildContextBase
     /// </summary>
     /// <param name="startCell">The coordinates of the starting map cell for the build intent.</param>
     /// <param name="endCell">The coordinates of the ending map cell for the build intent.</param>
+    /// <param name="buildOperation">The type of build operation to perform (e.g., place, remove).</param>
     /// <param name="intent">When this method returns, contains the resulting build intent if the operation succeeds; otherwise, the default
     /// value.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
-    public abstract bool TryCreateBuildIntent(MapCellCoord startCell, MapCellCoord endCell, out BuildIntent intent);
+    public abstract bool TryCreateBuildIntent(MapCellCoord startCell, MapCellCoord endCell, BuildOperation buildOperation, out BuildIntent intent);
 
     /// <summary>
     /// Returns a read-only list of map cell coordinates representing the path or sequence of cells between the
@@ -44,9 +45,10 @@ public abstract class BuildContextBase
     /// </summary>
     /// <param name="startCell">The coordinate of the starting cell. Must be a valid map cell within the bounds of the map.</param>
     /// <param name="endCell">The coordinate of the ending cell. Must be a valid map cell within the bounds of the map.</param>
+    /// <param name="buildOperation">The type of build operation to consider when determining the path between the cells.</param>
     /// <returns>A read-only list of <see cref="MapCellCoord"/> objects representing the cells between <paramref
     /// name="startCell"/> and <paramref name="endCell"/>. The list may be empty if no valid path exists.</returns>
-    public abstract IReadOnlyList<MapCellCoord> GetCells(MapCellCoord startCell, MapCellCoord endCell);
+    public abstract IReadOnlyList<MapCellCoord> GetCells(MapCellCoord startCell, MapCellCoord endCell, BuildOperation buildOperation);
 
     #endregion
 

@@ -1,7 +1,7 @@
 using CosmosCasino.Core.Game.Build;
+using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map.Cell;
 using System;
-using System.Collections.Generic;
 
 /// <summary>
 /// Provides methods and properties for managing the current build context within an application.
@@ -16,6 +16,7 @@ public sealed class BuildContext
     private BuildContextBase? _activeContext;
     private MapCellCoord? _startCell;
     private MapCellCoord? _currentCell;
+    private BuildOperation _currentBuildOperation;
 
     #endregion
 
@@ -98,13 +99,14 @@ public sealed class BuildContext
     #region Build Management
 
     /// <summary>
-    /// Begins a preview operation at the specified cursor context, allowing users to visualize changes before
-    /// committing them.
+    /// Begins a new build operation at the specified starting context using the provided build operation.
     /// </summary>
-    /// <remarks>This method has no effect if there is no active context or if a preview is already in
-    /// progress. Typically used to initiate a visual preview in response to user interaction.</remarks>
-    /// <param name="start">The cursor context that specifies the starting world position for the preview operation. Cannot be null.</param>
-    public void BeginBuild(CursorContext start)
+    /// <remarks>If a build is already in progress or the starting cell is already set, this method does
+    /// nothing. The build operation is initiated at the cell corresponding to the provided world position, and any
+    /// registered build start event handlers are invoked.</remarks>
+    /// <param name="start">The context representing the starting position for the build operation. Must specify a valid world position.</param>
+    /// <param name="buildOperation">The build operation to perform. Determines the type of build action that will be initiated.</param>
+    public void BeginBuild(CursorContext start, BuildOperation buildOperation)
     {
         if (_activeContext == null || _startCell != null)
         {
@@ -113,16 +115,16 @@ public sealed class BuildContext
 
         _startCell = MapToWorld.WorldToCell(start.WorldPosition);
         _currentCell = _startCell;
+        _currentBuildOperation = buildOperation;
         BuildStarted?.Invoke();
     }
 
     /// <summary>
-    /// Updates the preview state based on the specified cursor context.
+    /// Updates the current build state based on the specified cursor context.
     /// </summary>
-    /// <remarks>If the preview state changes, the method triggers the PreviewChanged event. No action is
-    /// taken if the active context or preview start cell is not set, or if the cursor position has not
-    /// changed.</remarks>
-    /// <param name="current">The current cursor context containing the world position used to update the preview.</param>
+    /// <remarks>If the cursor has not moved to a new cell or if the build context is not active, this method
+    /// performs no action. Triggers the build changed event only when the cursor enters a different cell.</remarks>
+    /// <param name="current">The current cursor context containing the world position to evaluate for build updates.</param>
     public void UpdateBuild(CursorContext current)
     {
         if (_activeContext == null || _startCell == null)
@@ -177,26 +179,19 @@ public sealed class BuildContext
         Clear();
     }
 
+    /// <summary>
+    /// Cancels the current build operation and resets the build state.
+    /// </summary>
+    /// <remarks>Call this method to abort an in-progress build and clear any associated resources or state.
+    /// After calling this method, the build cannot be resumed and must be started again if needed.</remarks>
+    public void CancelBuild()
+    {
+        ClearBuild();
+    }
+
     #endregion
 
     #region Active Context 
-
-    /// <summary>
-    /// Returns a read-only list of map cell coordinates representing the current selection preview.
-    /// </summary>
-    /// <remarks>The returned list reflects the current preview state and may change as the selection is
-    /// updated. If the selection preview is not active, the list will be empty.</remarks>
-    /// <returns>An <see cref="IReadOnlyList{MapCellCoord}"/> containing the coordinates of the selected cells. Returns an empty
-    /// list if no selection preview is active.</returns>
-    public IReadOnlyList<MapCellCoord> GetCells()
-    {
-        if (_activeContext == null || _startCell == null || _currentCell == null)
-        {
-            return Array.Empty<MapCellCoord>();
-        }
-
-        return _activeContext.GetCells(_startCell.Value, _currentCell.Value);
-    }
 
     /// <summary>
     /// Attempts to create a new build intent based on the current context and cell selection.
@@ -206,12 +201,12 @@ public sealed class BuildContext
     /// <returns>A <see cref="BuildIntent"/> instance if a build intent can be created; otherwise, <see langword="null"/>.</returns>
     public BuildIntent? TryCreateBuildIntent()
     {
-        if (_activeContext == null || _startCell == null || _currentCell == null)
+        if (_activeContext == null || _startCell == null || _currentCell == null || _currentBuildOperation == BuildOperation.None)
         {
             return null;
         }
 
-        _activeContext.TryCreateBuildIntent(_startCell.Value, _currentCell.Value, out var intent);
+        _activeContext.TryCreateBuildIntent(_startCell.Value, _currentCell.Value, _currentBuildOperation, out var intent);
         return intent;
     }
 
@@ -222,7 +217,7 @@ public sealed class BuildContext
     /// a build intent.</param>
     /// <returns>A <see cref="BuildIntent"/> representing the build action to perform if the context is valid; otherwise, <see
     /// langword="null"/>.</returns>
-    public BuildIntent? TryCreateBuildIntent(CursorContext cursorContext)
+    public BuildIntent? TryCreateCursorPreviewIntent(CursorContext cursorContext)
     {
         if (!cursorContext.IsValid || _activeContext == null)
         {
@@ -231,7 +226,7 @@ public sealed class BuildContext
 
         var cell = cursorContext.CellPosition;
 
-        _activeContext.TryCreateBuildIntent(cell, cell, out var intent);
+        _activeContext.TryCreateBuildIntent(cell, cell, BuildOperation.Place, out var intent);
         return intent;
     }
 
@@ -262,13 +257,14 @@ public sealed class BuildContext
     /// has been cleared. This method is typically used to reset the build process to its initial state.</remarks>
     private void ClearBuild()
     {
-        if (_startCell == null && _currentCell == null)
+        if (_startCell == null && _currentCell == null && _currentBuildOperation == BuildOperation.None)
         {
             return;
         }
 
         _startCell = null;
         _currentCell = null;
+        _currentBuildOperation = BuildOperation.None;
         BuildCleared?.Invoke();
     }
 

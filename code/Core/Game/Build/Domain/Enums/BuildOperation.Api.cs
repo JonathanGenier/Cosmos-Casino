@@ -7,6 +7,11 @@ namespace CosmosCasino.Core.Game.Build.Domain
     public enum BuildOperation
     {
         /// <summary>
+        /// Represents a default value with no associated build operation.
+        /// </summary>
+        None,
+
+        /// <summary>
         /// Places new content on the target cells or replaces
         /// existing content when allowed by the build rules.
         /// </summary>

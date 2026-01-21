@@ -1,7 +1,9 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map.Cell;
+using System;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 
 /// <summary>
 /// Provides build context and logic for constructing floor elements within a map grid.
@@ -27,12 +29,13 @@ public sealed class FloorBuildContext : BuildContextBase
     /// </summary>
     /// <param name="startCell">The starting cell coordinate of the intended floor area.</param>
     /// <param name="endCell">The ending cell coordinate of the intended floor area.</param>
+    /// <param name="buildOperation">The type of build operation to perform (e.g., place or remove).</param>
     /// <param name="intent">When this method returns, contains the build intent for the floor if the operation succeeds; otherwise, null.
     /// This parameter is passed uninitialized.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
-    public override bool TryCreateBuildIntent(MapCellCoord startCell, MapCellCoord endCell, out BuildIntent intent)
+    public override bool TryCreateBuildIntent(MapCellCoord startCell, MapCellCoord endCell, BuildOperation buildOperation, out BuildIntent intent)
     {
-        var cells = GetCells(startCell, endCell);
+        var cells = GetCells(startCell, endCell, buildOperation);
 
         if (cells.Count == 0)
         {
@@ -40,7 +43,21 @@ public sealed class FloorBuildContext : BuildContextBase
             return false;
         }
 
-        intent = BuildIntent.BuildFloor(cells);
+        switch (buildOperation)
+        {
+            case BuildOperation.Place:
+                intent = BuildIntent.PlaceFloor(cells);
+                break;
+            case BuildOperation.Remove:
+                intent = BuildIntent.RemoveFloor(cells);
+                break;
+            case BuildOperation.None:
+                intent = null!;
+                break;
+            default:
+                throw new InvalidOperationException($"Unsupported build operation: {buildOperation}");
+        }
+
         return true;
     }
 
@@ -49,19 +66,28 @@ public sealed class FloorBuildContext : BuildContextBase
     #region Get Cells
 
     /// <summary>
-    /// Returns a read-only list of map cell coordinates representing all cells within the rectangular area defined by
-    /// the specified start and end cells.
+    /// Returns a read-only list of map cell coordinates representing the area between the specified start and end
+    /// cells, based on the given build operation.
     /// </summary>
-    /// <param name="startCell">The coordinate of the first cell that defines one corner of the area to retrieve. Must be within the bounds of
-    /// the map.</param>
-    /// <param name="endCell">The coordinate of the second cell that defines the opposite corner of the area to retrieve. Must be within the
-    /// bounds of the map.</param>
-    /// <returns>A read-only list of <see cref="MapCellCoord"/> objects representing all cells within the area defined by
-    /// <paramref name="startCell"/> and <paramref name="endCell"/>. The list will be empty if the area contains no
-    /// cells.</returns>
-    public override IReadOnlyList<MapCellCoord> GetCells(MapCellCoord startCell, MapCellCoord endCell)
+    /// <param name="startCell">The coordinate of the starting cell that defines one corner of the area to retrieve.</param>
+    /// <param name="endCell">The coordinate of the ending cell that defines the opposite corner of the area to retrieve.</param>
+    /// <param name="buildOperation">The build operation to perform. Determines whether cells are returned for placement, removal, or if no operation
+    /// is performed.</param>
+    /// <returns>A read-only list of map cell coordinates within the specified area if the build operation is Place or Remove;
+    /// otherwise, an empty list.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the specified build operation is not supported.</exception>
+    public override IReadOnlyList<MapCellCoord> GetCells(MapCellCoord startCell, MapCellCoord endCell, BuildOperation buildOperation)
     {
-        return GetCellsArea(startCell, endCell);
+        switch (buildOperation)
+        {
+            case BuildOperation.Place:
+            case BuildOperation.Remove:
+                return GetCellsArea(startCell, endCell);
+            case BuildOperation.None:
+                return Array.Empty<MapCellCoord>();
+            default:
+                throw new InvalidOperationException($"Unsupported build operation: {buildOperation}");
+        }
     }
 
     #endregion
