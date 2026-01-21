@@ -43,6 +43,7 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
 
         _cursorManager.CursorCellChanged += OnCursorCellChanged;
         _cursorManager.CursorContextLost += OnCursorContextLost;
+        _buildContext.BuildCleared += OnBuildCleared;
     }
 
     #endregion
@@ -64,14 +65,15 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
 
         _cursorManager.CursorCellChanged -= OnCursorCellChanged;
         _cursorManager.CursorContextLost -= OnCursorContextLost;
+        _buildContext.BuildCleared -= OnBuildCleared;
         _isDisposed = true;
     }
 
     #endregion
 
-    #region Event Handlers
+    #region Cursor Preview Methods
 
-    private void OnCursorCellChanged(CursorContext cursorContext)
+    private void UpdateCursorPreview(CursorContext cursorContext)
     {
         if (_buildContext.ActiveContext == null)
         {
@@ -86,7 +88,7 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
             return;
         }
 
-        var buildIntent = _buildContext.TryCreateBuildIntent(cursorContext);
+        var buildIntent = _buildContext.TryCreateCursorPreviewIntent(cursorContext);
 
         if (buildIntent == null)
         {
@@ -98,9 +100,26 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
         _buildPreviewManager.ShowPreview(buildResult);
     }
 
+    #endregion
+
+    #region Event Handlers
+
+    private void OnCursorCellChanged(CursorContext cursorContext)
+    {
+        UpdateCursorPreview(cursorContext);
+    }
+
     private void OnCursorContextLost()
     {
         _buildPreviewManager.ClearGridAndCursorPreviews();
+    }
+
+    private void OnBuildCleared()
+    {
+        if (_cursorManager.TryGetCursorContext(out var cursorContext))
+        {
+            UpdateCursorPreview(cursorContext);
+        }
     }
 
     #endregion

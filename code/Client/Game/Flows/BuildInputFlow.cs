@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Game.Build.Domain;
 using System;
 
 /// <summary>
@@ -13,6 +14,7 @@ public sealed class BuildInputFlow : IDisposable
     private readonly BuildContext _buildContext;
 
     private bool _isPrimaryHeld;
+    private bool _isSecondaryHeld;
     private bool _isSubscribed;
     private bool _isDisposed;
 
@@ -65,6 +67,16 @@ public sealed class BuildInputFlow : IDisposable
 
     #endregion
 
+    #region State Management
+
+    private void ResetState()
+    {
+        _isPrimaryHeld = false;
+        _isSecondaryHeld = false;
+    }
+
+    #endregion
+
     #region Event Handlers
 
     /// <summary>
@@ -80,8 +92,13 @@ public sealed class BuildInputFlow : IDisposable
             return;
         }
 
-        _inputManager.BuildPrimaryPressed += OnBuildPrimaryPressed;
-        _inputManager.BuildPrimaryReleased += OnBuildPrimaryReleased;
+        ResetState();
+
+        _inputManager.BuildPlacePressed += OnBuildPlacePressed;
+        _inputManager.BuildPlaceReleased += OnBuildPlaceReleased;
+        _inputManager.BuildRemovePressed += OnBuildRemovePressed;
+        _inputManager.BuildRemoveReleased += OnBuildRemoveReleased;
+        _inputManager.BuildCanceled += OnBuildCanceled;
         _cursorManager.CursorCellChanged += OnCursorCellChanged;
         _isSubscribed = true;
     }
@@ -99,10 +116,14 @@ public sealed class BuildInputFlow : IDisposable
             return;
         }
 
-        _inputManager.BuildPrimaryPressed -= OnBuildPrimaryPressed;
-        _inputManager.BuildPrimaryReleased -= OnBuildPrimaryReleased;
+        ResetState();
+
+        _inputManager.BuildPlacePressed -= OnBuildPlacePressed;
+        _inputManager.BuildPlaceReleased -= OnBuildPlaceReleased;
+        _inputManager.BuildRemovePressed -= OnBuildRemovePressed;
+        _inputManager.BuildRemoveReleased -= OnBuildRemoveReleased;
+        _inputManager.BuildCanceled -= OnBuildCanceled;
         _cursorManager.CursorCellChanged -= OnCursorCellChanged;
-        _isPrimaryHeld = false;
         _isSubscribed = false;
     }
 
@@ -110,37 +131,28 @@ public sealed class BuildInputFlow : IDisposable
     /// Initiates the build process when the primary build input is pressed, using the current cursor context if
     /// available.
     /// </summary>
-    private void OnBuildPrimaryPressed()
+    private void OnBuildPlacePressed()
     {
+        if (_isSecondaryHeld)
+        {
+            return;
+        }
+
         if (!_cursorManager.TryGetCursorContext(out var startContext))
         {
             return;
         }
 
         _isPrimaryHeld = true;
-        _buildContext.BeginBuild(startContext);
-    }
-
-    /// <summary>
-    /// Handles updates when the cursor cell changes during a primary action.
-    /// </summary>
-    /// <param name="current">The current cursor context representing the new cell position.</param>
-    private void OnCursorCellChanged(CursorContext current)
-    {
-        if (!_isPrimaryHeld)
-        {
-            return;
-        }
-
-        _buildContext.UpdateBuild(current);
+        _buildContext.BeginBuild(startContext, BuildOperation.Place);
     }
 
     /// <summary>
     /// Handles the release of the primary build action, finalizing the build process if it is currently active.
     /// </summary>
-    private void OnBuildPrimaryReleased()
+    private void OnBuildPlaceReleased()
     {
-        if (!_isPrimaryHeld)
+        if (!_isPrimaryHeld || _isSecondaryHeld)
         {
             return;
         }
@@ -152,14 +164,62 @@ public sealed class BuildInputFlow : IDisposable
 
         _isPrimaryHeld = false;
         _buildContext.EndBuild(endContext);
+
+    }
+
+    private void OnBuildRemovePressed()
+    {
+        if (_isPrimaryHeld)
+        {
+            return;
+        }
+
+        if (!_cursorManager.TryGetCursorContext(out var startContext))
+        {
+            return;
+        }
+
+        _isSecondaryHeld = true;
+        _buildContext.BeginBuild(startContext, BuildOperation.Remove);
+    }
+
+    private void OnBuildRemoveReleased()
+    {
+        if (!_isSecondaryHeld || _isPrimaryHeld)
+        {
+            return;
+        }
+
+        if (!_cursorManager.TryGetCursorContext(out var endContext))
+        {
+            return;
+        }
+
+        _isSecondaryHeld = false;
+        _buildContext.EndBuild(endContext);
+    }
+
+    /// <summary>
+    /// Handles updates when the cursor cell changes during a primary action.
+    /// </summary>
+    /// <param name="currentContext">The current cursor context representing the new cell position.</param>
+    private void OnCursorCellChanged(CursorContext currentContext)
+    {
+        if (_isPrimaryHeld == _isSecondaryHeld)
+        {
+            return;
+        }
+
+        _buildContext.UpdateBuild(currentContext);
     }
 
     /// <summary>
     /// Cancels the current build operation.
     /// </summary>
-    private void OnCancel()
+    private void OnBuildCanceled()
     {
-        _buildContext.CancelContext();
+        _buildContext.CancelBuild();
+        ResetState();
     }
 
     #endregion
