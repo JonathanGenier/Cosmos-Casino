@@ -38,5 +38,10 @@ namespace CosmosCasino.Core.Application.Console.Logging
         /// Display style for errors indicating failures or critical issues.
         /// </summary>
         Error,
+
+        /// <summary>
+        /// Display style for debug logs indicating development-time diagnostics.
+        /// </summary>
+        Debug,
     }
 }

@@ -54,10 +54,7 @@ public sealed partial class AppUiManager : InitializableNodeManager
     /// tree.</remarks>
     protected override void OnReady()
     {
-        using (ConsoleLog.SystemScope(nameof(AppUiManager)))
-        {
-            AddChild(ConsoleUiManager);
-        }
+        AddChild(ConsoleUiManager);
     }
 
     #endregion

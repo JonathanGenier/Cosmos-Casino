@@ -71,14 +71,10 @@ public sealed partial class ConsoleUiManager : InitializableNodeManager
     /// additional initialization when extending this class.</remarks>
     protected override void OnReady()
     {
-        using (ConsoleLog.SystemScope(nameof(ConsoleUiManager)))
-        {
-            ConsoleUi = AddNode(GD.Load<PackedScene>(AppUiPaths.Console).Instantiate<ConsoleUi>());
-            ConsoleUi.Toggle();
-            ConsoleAdapter = new ConsoleAdapter(ConsoleUi, ConsoleManager);
-
-            InputManager.ToggleConsoleUi += OnToggleConsoleUi;
-        }
+        ConsoleUi = AddNode(GD.Load<PackedScene>(AppUiPaths.Console).Instantiate<ConsoleUi>());
+        ConsoleUi.Toggle();
+        ConsoleAdapter = new ConsoleAdapter(ConsoleUi, ConsoleManager);
+        InputManager.ToggleConsoleUi += OnToggleConsoleUi;
     }
 
     /// <summary>

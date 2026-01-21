@@ -125,7 +125,12 @@ public sealed class ConsoleAdapter : IDisposable
         var timeSpan = TimeSpan.FromMilliseconds(entry.TimestampMs);
         string time = timeSpan.ToString(@"hh\:mm\:ss");
 
+        // Remove Categories in Production builds
+#if DEBUG
         return $"[color={timeColor}][{time}][/color] [color={color}] [{entry.Category}] {entry.Message}[/color]";
+#else
+        return $"[color={timeColor}][{time}][/color] [color={color}] {entry.Message}[/color]";
+#endif
     }
 
     /// <summary>
@@ -145,13 +150,14 @@ public sealed class ConsoleAdapter : IDisposable
     {
         return displayKind switch
         {
-            ConsoleLogDisplayKind.General => "#ffffff",
-            ConsoleLogDisplayKind.Event => "#38e1ff",
-            ConsoleLogDisplayKind.System => "#f58d42",
-            ConsoleLogDisplayKind.Muted => "#8c00ff",
-            ConsoleLogDisplayKind.Warning => "#f5f542",
-            ConsoleLogDisplayKind.Error => "#eb2323",
-            _ => "#ffffff",
+            ConsoleLogDisplayKind.General => "#ffffff", // White 
+            ConsoleLogDisplayKind.Event => "#38e1ff",   // Cyan
+            ConsoleLogDisplayKind.System => "#f58d42",  // Orange
+            ConsoleLogDisplayKind.Muted => "#8c00ff",   // Purple
+            ConsoleLogDisplayKind.Warning => "#f5f542", // Yellow
+            ConsoleLogDisplayKind.Error => "#eb2323",   // Red
+            ConsoleLogDisplayKind.Debug => "#ff2fd2",   // Magenta
+            _ => "#ffffff",                             // White
         };
     }
 

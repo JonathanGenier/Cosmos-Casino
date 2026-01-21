@@ -169,7 +169,7 @@ public sealed partial class SpawnManager : InitializableNodeManager
         {
             if (node.IsQueuedForDeletion())
             {
-                ConsoleLog.Warning(nameof(SpawnManager), $"Node {objectId} already queued for deletion.");
+                ConsoleLog.Warning($"Node {objectId} already queued for deletion.");
             }
 
             node.QueueFree();

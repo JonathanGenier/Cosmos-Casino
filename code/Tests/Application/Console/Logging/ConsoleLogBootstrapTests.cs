@@ -14,7 +14,7 @@ namespace CosmosCasino.Tests.Application.Console.Logging
         [SetUp]
         public void Setup()
         {
-            ConsoleLog.ResetForUnitTests(); // Only exists in Debug
+            ConsoleLog.ResetForUnitTests();
         }
 
         #endregion
@@ -26,15 +26,14 @@ namespace CosmosCasino.Tests.Application.Console.Logging
         {
             // Assemble
 
-            ConsoleLog.Info("Boot", "Early log");
+            ConsoleLog.Info("Early log");
 
             // Act
             var consoleManager = new ConsoleManager();
 
             // Assert
             var logs = consoleManager.GetLogs();
-            Assert.That(logs.Count, Is.EqualTo(3)); // ConsoleManager init emit 2 logs.
-            Assert.That(logs[0].Category, Is.EqualTo("Boot"));
+            Assert.That(logs.Count, Is.EqualTo(1));
         }
 
         #endregion

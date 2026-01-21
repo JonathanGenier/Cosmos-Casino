@@ -56,11 +56,8 @@ public sealed partial class MainMenuManager : NodeManager
     /// </summary>
     public override void _Ready()
     {
-        using (ConsoleLog.SystemScope(nameof(MainMenuManager)))
-        {
-            PlayButton = GetNode<Button>("Menu/PlayButton");
-            PlayButton.Pressed += OnPlayPressed;
-        }
+        PlayButton = GetNode<Button>("Menu/PlayButton");
+        PlayButton.Pressed += OnPlayPressed;
     }
 
     /// <summary>

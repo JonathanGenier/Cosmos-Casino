@@ -50,7 +50,6 @@ public abstract partial class InitializableNodeManager : NodeManager
         OnReady();
 
         _isReady = true;
-        ConsoleLog.System(GetType().Name, "Ready");
     }
 
     /// <summary>
@@ -103,7 +102,6 @@ public abstract partial class InitializableNodeManager : NodeManager
         }
 
         _isInitialized = true;
-        ConsoleLog.System(GetType().Name, "Initialized");
     }
 
     /// <summary>
@@ -118,7 +116,6 @@ public abstract partial class InitializableNodeManager : NodeManager
         }
 
         _isReady = true;
-        ConsoleLog.System(GetType().Name, "Ready");
     }
 
     #endregion

@@ -26,5 +26,12 @@ namespace CosmosCasino.Core.Application.Console.Logging
         /// diagnostics that are not part of normal gameplay flow.
         /// </summary>
         System,
+
+        /// <summary>
+        /// Debug-purpose log entry. Used for developement and troubleshooting.
+        /// Debug logs should be removed as soon the issue is resolved.
+        /// Should never be included in production builds.
+        /// </summary>
+        Debug,
     }
 }

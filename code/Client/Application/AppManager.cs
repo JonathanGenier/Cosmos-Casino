@@ -87,10 +87,7 @@ public sealed partial class AppManager : NodeManager
             throw new InvalidOperationException($"An instances of {nameof(AppManager)} already exists.");
         }
 
-        using (ConsoleLog.SystemScope(nameof(AppManager)))
-        {
-            _instance = this;
-        }
+        _instance = this;
     }
 
     /// <summary>

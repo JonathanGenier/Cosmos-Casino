@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+
 namespace CosmosCasino.Core.Application.Console.Logging
 {
     /// <summary>
@@ -9,133 +12,122 @@ namespace CosmosCasino.Core.Application.Console.Logging
         #region METHODS
 
         /// <summary>
-        /// Writes a general informational log entry.
-        /// Used for normal application flow and high-level state changes.
+        /// Writes an informational message to the console log, including the source file name for context.
         /// </summary>
-        /// <param name="category">
-        /// Logical subsystem producing the log (e.g. AI, World, Save).
-        /// </param>
-        /// <param name="message">
-        /// Human-readable diagnostic message.
-        /// </param>
+        /// <remarks>Use this method to record general informational events or status updates. The log
+        /// entry will include the name of the source file from which the method was called, aiding in traceability
+        /// during debugging or monitoring.</remarks>
+        /// <param name="message">The message text to log at the informational level.</param>
+        /// <param name="file">The full path of the source file invoking the log method. This parameter is automatically supplied by the
+        /// compiler and is used to display the file name in the log entry.</param>
         public static void Info(
-            string category,
-            string message)
+            string message,
+            [CallerFilePath] string file = "")
         {
-            Write(ConsoleLogLevel.Info, ConsoleLogSafety.Safe, ConsoleLogKind.General, category, message);
+            Write(ConsoleLogLevel.Info, ConsoleLogSafety.Safe, ConsoleLogKind.General, $"{Path.GetFileName(file)}", message);
         }
 
         /// <summary>
-        /// Writes a developer-focused log entry.
-        /// Intended for deep diagnostics and internal reasoning.
-        /// Unsafe by default and stripped in production builds.
+        /// Writes a verbose-level log message to the console output.
         /// </summary>
-        /// <param name="category">
-        /// Logical subsystem producing the log (e.g. AI, World, Save).
-        /// </param>
-        /// <param name="message">
-        /// Human-readable diagnostic message.
-        /// </param>
+        /// <remarks>Use this method to record detailed diagnostic information that is typically only
+        /// needed during development or troubleshooting. Verbose messages are intended for low-level events and may
+        /// produce extensive output.</remarks>
+        /// <param name="message">The message to log at the verbose level.</param>
+        /// <param name="file">The full path of the source file that invoked the log method. This parameter is automatically supplied by
+        /// the compiler and should not be set manually.</param>
         public static void Verbose(
-            string category,
-            string message)
+            string message,
+            [CallerFilePath] string file = "")
         {
-            Write(ConsoleLogLevel.Verbose, ConsoleLogSafety.Unsafe, ConsoleLogKind.General, category, message);
+            Write(ConsoleLogLevel.Verbose, ConsoleLogSafety.Unsafe, ConsoleLogKind.General, $"{Path.GetFileName(file)}", message);
         }
 
         /// <summary>
-        /// Writes a warning log entry.
-        /// Indicates unexpected or recoverable situations that may
-        /// require attention but do not halt execution.
-        /// Warnings should always appear in all environments.
+        /// Writes a warning-level message to the console log, including the source file name for context.
         /// </summary>
-        /// <param name="category">
-        /// Logical subsystem producing the log (e.g. AI, World, Save).
-        /// </param>
-        /// <param name="message">
-        /// Human-readable diagnostic message.
-        /// </param>
+        /// <remarks>Use this method to highlight potential issues or important events that do not prevent
+        /// normal operation but may require attention. The source file name is included in the log output to aid in
+        /// identifying the origin of the warning.</remarks>
+        /// <param name="message">The message to log at the warning level. This should describe the warning condition or issue.</param>
+        /// <param name="file">The full path of the source file from which the log method is called. This parameter is automatically
+        /// supplied by the compiler and is used to display the file name in the log entry.</param>
         public static void Warning(
-            string category,
-            string message)
+            string message,
+            [CallerFilePath] string file = "")
         {
-            Write(ConsoleLogLevel.Warning, ConsoleLogSafety.Safe, ConsoleLogKind.General, category, message);
+            Write(ConsoleLogLevel.Warning, ConsoleLogSafety.Safe, ConsoleLogKind.General, $"{Path.GetFileName(file)}", message);
         }
 
         /// <summary>
-        /// Writes an error log entry.
-        /// Indicates a failure or critical issue that prevents
-        /// an operation from completing successfully.
-        /// Errors should always appear in all environments.
+        /// Writes an error-level log message to the console, including the source file name for context.
         /// </summary>
-        /// <param name="category">
-        /// Logical subsystem producing the log (e.g. AI, World, Save).
-        /// </param>
-        /// <param name="message">
-        /// Human-readable diagnostic message.
-        /// </param>
+        /// <remarks>Use this method to record errors that require attention or indicate failures in
+        /// application logic. The log entry will include the name of the source file to help identify the origin of the
+        /// error. This method is intended for general error reporting and does not throw exceptions.</remarks>
+        /// <param name="message">The error message to log. This should describe the issue or exception encountered.</param>
+        /// <param name="file">The full path of the source file from which the log is generated. This parameter is automatically supplied
+        /// by the compiler and is used to display the file name in the log output.</param>
         public static void Error(
-            string category,
-            string message)
+            string message,
+            [CallerFilePath] string file = "")
         {
-            Write(ConsoleLogLevel.Error, ConsoleLogSafety.Safe, ConsoleLogKind.General, category, message);
+            Write(ConsoleLogLevel.Error, ConsoleLogSafety.Safe, ConsoleLogKind.General, $"{Path.GetFileName(file)}", message);
         }
 
         /// <summary>
-        /// Writes a semantic event log entry.
-        /// Events represent discrete, meaningful occurrences such as
-        /// lifecycle transitions or world state changes.
+        /// Writes an gameplay event message to the console log.
         /// </summary>
-        /// <param name="category">
-        /// Logical subsystem producing the log (e.g. AI, World, Save).
-        /// </param>
-        /// <param name="message">
-        /// Human-readable diagnostic message.
-        /// </param>
+        /// <remarks>Use this method to record significant events or actions in the game for
+        /// informational purposes. The log entry includes the name of the source file to help trace the origin of the
+        /// event.</remarks>
+        /// <param name="message">The event message to log. This value is displayed in the console output.</param>
+        /// <param name="file">The full path of the source file that invoked the method. This parameter is automatically supplied by the
+        /// compiler and is used to identify the origin of the log entry.</param>
         public static void Event(
-            string category,
-            string message)
+            string message,
+            [CallerFilePath] string file = "")
         {
-            Write(ConsoleLogLevel.Info, ConsoleLogSafety.Safe, ConsoleLogKind.Event, category, message);
+            Write(ConsoleLogLevel.Info, ConsoleLogSafety.Safe, ConsoleLogKind.Event, $"{Path.GetFileName(file)}", message);
         }
 
         /// <summary>
-        /// Writes a system-level diagnostic log entry.
-        /// System logs are intended for low-level application and infrastructure
-        /// lifecycle events such as boot sequencing, service initialization,
-        /// and internal state transitions.
-        /// These entries are marked as unsafe by default and are therefore
-        /// stripped from production builds.
+        /// Writes a system-level informational message to the console log.
         /// </summary>
-        /// <param name="category">
-        /// Logical subsystem producing the log entry
-        /// (e.g. BootController, AppManager, ClientServices).
-        /// </param>
-        /// <param name="message">
-        /// Human-readable diagnostic message describing the system action.
-        /// </param>
+        /// <remarks>Use this method to log messages that represent system events or status updates. The
+        /// log entry will include the name of the source file for context.</remarks>
+        /// <param name="message">The message text to be logged as a system event.</param>
+        /// <param name="file">The full file path of the source code file that invoked this method. This parameter is automatically
+        /// supplied by the compiler and is used for log context.</param>
         public static void System(
-            string category,
-            string message)
+            string message,
+            [CallerFilePath] string file = "")
         {
-            Write(ConsoleLogLevel.Info, ConsoleLogSafety.Unsafe, ConsoleLogKind.System, category, message);
+            Write(ConsoleLogLevel.Info, ConsoleLogSafety.Unsafe, ConsoleLogKind.System, $"{Path.GetFileName(file)}", message);
         }
 
         /// <summary>
-        /// Creates a scoped system log context that automatically emits
-        /// standardized "Setting up" and "Ready" system messages for the
-        /// specified category when entered and exited.
+        /// Writes a debug-level message to the console output when the application is compiled in debug mode.
         /// </summary>
-        /// <param name="category">
-        /// Logical system or service name used to group lifecycle log output.
-        /// </param>
-        /// <returns>
-        /// A disposable scope that completes the lifecycle log when disposed.
-        /// </returns>
-        public static IDisposable SystemScope(string category)
+        /// <remarks>This method is only included in builds where the DEBUG conditional compilation symbol
+        /// is defined. It is intended for diagnostic purposes and will not log messages in release builds. Caller
+        /// information parameters are automatically populated and typically do not need to be specified
+        /// manually.</remarks>
+        /// <param name="message">The message to log at the debug level. This should describe the event or state to be recorded.</param>
+        /// <param name="file">The full path of the source file that invoked the method. This parameter is automatically supplied by the
+        /// compiler and is used to identify the origin of the log entry.</param>
+        /// <param name="line">The line number in the source file where the method was called. This parameter is automatically supplied by
+        /// the compiler and helps pinpoint the location of the log entry.</param>
+        /// <param name="member">The name of the member (method, property, etc.) that invoked the method. This parameter is automatically
+        /// supplied by the compiler and provides context for the log entry.</param>
+        [Conditional("DEBUG")]
+        public static void Debug(
+            string message,
+            [CallerFilePath] string file = "",
+            [CallerLineNumber] int line = 0,
+            [CallerMemberName] string member = "")
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(category);
-            return new SystemLogScope(category);
+            Write(ConsoleLogLevel.Verbose, ConsoleLogSafety.Unsafe, ConsoleLogKind.Debug, $"{Path.GetFileName(file)}:{line}::{member}", message);
         }
 
         #endregion

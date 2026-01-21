@@ -73,19 +73,32 @@ namespace CosmosCasino.Core.Application.Console.Logging
 
         #region METHODS
 
+        /// <summary>
+        /// Maps the specified log level and log kind to a corresponding display kind for console output.
+        /// </summary>
+        /// <param name="level">The severity level of the log entry to map.</param>
+        /// <param name="kind">The kind of log entry, used to further refine the display kind mapping for certain log levels.</param>
+        /// <returns>A value of <see cref="ConsoleLogDisplayKind"/> that represents how the log entry should be displayed in the
+        /// console.</returns>
         private static ConsoleLogDisplayKind MapDisplayKind(ConsoleLogLevel level, ConsoleLogKind kind)
         {
             return level switch
             {
                 ConsoleLogLevel.Error => ConsoleLogDisplayKind.Error,
                 ConsoleLogLevel.Warning => ConsoleLogDisplayKind.Warning,
-                ConsoleLogLevel.Verbose => ConsoleLogDisplayKind.Muted,
-                ConsoleLogLevel.Info => MapByLogKind(kind),
+                ConsoleLogLevel.Verbose => MapVerboseByLogKind(kind),
+                ConsoleLogLevel.Info => MapInfoByLogKind(kind),
                 _ => ConsoleLogDisplayKind.General
             };
         }
 
-        private static ConsoleLogDisplayKind MapByLogKind(ConsoleLogKind kind)
+        /// <summary>
+        /// Maps a specified log kind to its corresponding console log display kind.
+        /// </summary>
+        /// <param name="kind">The log kind to map to a display kind.</param>
+        /// <returns>The corresponding <see cref="ConsoleLogDisplayKind"/> value for the specified log kind. Returns <see
+        /// cref="ConsoleLogDisplayKind.General"/> if the log kind is not recognized.</returns>
+        private static ConsoleLogDisplayKind MapInfoByLogKind(ConsoleLogKind kind)
         {
             return kind switch
             {
@@ -93,6 +106,22 @@ namespace CosmosCasino.Core.Application.Console.Logging
                 ConsoleLogKind.Event => ConsoleLogDisplayKind.Event,
                 ConsoleLogKind.System => ConsoleLogDisplayKind.System,
                 _ => ConsoleLogDisplayKind.General
+            };
+        }
+
+        /// <summary>
+        /// Maps a specified log kind to its corresponding verbose display kind for console output.
+        /// </summary>
+        /// <param name="kind">The log kind to map to a verbose display kind.</param>
+        /// <returns>A value of <see cref="ConsoleLogDisplayKind"/> that represents the verbose display kind for the specified
+        /// log kind. Returns <see cref="ConsoleLogDisplayKind.Debug"/> if <paramref name="kind"/> is <see
+        /// cref="ConsoleLogKind.Debug"/>; otherwise, returns <see cref="ConsoleLogDisplayKind.Muted"/>.</returns>
+        private static ConsoleLogDisplayKind MapVerboseByLogKind(ConsoleLogKind kind)
+        {
+            return kind switch
+            {
+                ConsoleLogKind.Debug => ConsoleLogDisplayKind.Debug,
+                _ => ConsoleLogDisplayKind.Muted
             };
         }
 
