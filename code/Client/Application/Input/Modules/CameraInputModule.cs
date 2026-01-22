@@ -61,7 +61,7 @@ public sealed class CameraInputModule : IInputModule, IGameInputModule
     /// independent.</param>
     public void Process(double delta)
     {
-        if (!_isEnabled)
+        if (!_isEnabled || _inputManager.IsUserTyping)
         {
             return;
         }

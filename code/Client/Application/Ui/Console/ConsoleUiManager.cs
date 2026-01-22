@@ -14,7 +14,6 @@ public sealed partial class ConsoleUiManager : InitializableNodeManager
 {
     #region FIELDS
 
-    private InputManager? _inputManager;
     private ConsoleManager? _consoleManager;
     private ConsoleUi? _consoleUi;
     private ConsoleAdapter? _consoleAdapter;
@@ -23,11 +22,10 @@ public sealed partial class ConsoleUiManager : InitializableNodeManager
 
     #region Properties
 
-    private InputManager InputManager
-    {
-        get => _inputManager ?? throw new InvalidOperationException($"{nameof(InputManager)} has not been initialized.");
-        set => _inputManager = value;
-    }
+    /// <summary>
+    /// Gets a value indicating whether the console user interface is currently visible.
+    /// </summary>
+    public bool IsConsoleUiVisible => ConsoleUi.Visible;
 
     private ConsoleManager ConsoleManager
     {
@@ -49,19 +47,48 @@ public sealed partial class ConsoleUiManager : InitializableNodeManager
 
     #endregion
 
-    #region METHODS
+    #region Public API
 
     /// <summary>
     /// Initializes the component with the specified input and console managers.
     /// </summary>
-    /// <param name="inputManager">The input manager to be used for handling user input. Cannot be null.</param>
     /// <param name="consoleManager">The console manager to be used for console operations. Cannot be null.</param>
-    public void Initialize(InputManager inputManager, ConsoleManager consoleManager)
+    public void Initialize(ConsoleManager consoleManager)
     {
-        InputManager = inputManager;
         ConsoleManager = consoleManager;
         MarkInitialized();
     }
+
+    /// <summary>
+    /// Displays the console user interface for the application.
+    /// </summary>
+    public void ShowConsoleUi()
+    {
+        ConsoleUi.ShowConsoleUi();
+    }
+
+    /// <summary>
+    /// Hides the console user interface, preventing it from being displayed to the user.
+    /// </summary>
+    public void HideConsoleUi()
+    {
+        ConsoleUi.HideConsoleUi();
+    }
+
+    /// <summary>
+    /// Forces the current UI element to release input focus immediately.
+    /// </summary>
+    /// <remarks>Call this method to programmatically remove focus from the active UI element, which may be
+    /// necessary in scenarios where focus management is not handled automatically. This method has no effect if no
+    /// element currently holds focus.</remarks>
+    public void ForceToReleaseFocus()
+    {
+        ConsoleUi.ForceReleaseFocus();
+    }
+
+    #endregion
+
+    #region Godot Processes
 
     /// <summary>
     /// Initializes the console UI components and subscribes to input events when the node is ready.
@@ -72,9 +99,8 @@ public sealed partial class ConsoleUiManager : InitializableNodeManager
     protected override void OnReady()
     {
         ConsoleUi = AddNode(GD.Load<PackedScene>(AppUiPaths.Console).Instantiate<ConsoleUi>());
-        ConsoleUi.Toggle();
+        ConsoleUi.HideConsoleUi();
         ConsoleAdapter = new ConsoleAdapter(ConsoleUi, ConsoleManager);
-        InputManager.ToggleConsoleUi += OnToggleConsoleUi;
     }
 
     /// <summary>
@@ -84,16 +110,7 @@ public sealed partial class ConsoleUiManager : InitializableNodeManager
     /// detach event handlers. Override this method to implement additional cleanup logic if necessary.</remarks>
     protected override void OnExit()
     {
-        InputManager.ToggleConsoleUi -= OnToggleConsoleUi;
         ConsoleAdapter?.Dispose();
-    }
-
-    /// <summary>
-    /// Toggles the visibility of the console user interface.
-    /// </summary>
-    private void OnToggleConsoleUi()
-    {
-        ConsoleUi.Toggle();
     }
 
     #endregion

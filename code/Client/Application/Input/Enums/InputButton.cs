@@ -24,6 +24,15 @@ public enum InputButton
 
     #endregion
 
+    #region Abort Input
+
+    /// <summary>
+    /// Represents the Escape abort key.
+    /// </summary>
+    Escape,
+
+    #endregion
+
     #region Mouse Input
 
     /// <summary>

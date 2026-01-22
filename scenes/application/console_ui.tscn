@@ -31,3 +31,4 @@ scroll_following = true
 [node name="LineEdit" type="LineEdit" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 placeholder_text = "Enter command here..."
+keep_editing_on_text_submit = true

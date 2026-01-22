@@ -61,6 +61,19 @@ public sealed class ConsoleInputModule : IInputModule
         {
             _inputManager.EmitSignal(InputManager.SignalName.ToggleConsoleUi);
         }
+
+        if (_inputManager.IsPrimaryPressed || _inputManager.IsSecondaryPressed)
+        {
+            if (_inputManager.GetViewport().GuiGetHoveredControl() == null)
+            {
+                _inputManager.EmitSignal(InputManager.SignalName.ForceConsoleUiToReleaseFocus);
+            }
+        }
+
+        if (_inputManager.IsEscapeKeyPressed)
+        {
+            _inputManager.EmitSignal(InputManager.SignalName.ForceConsoleUiToHide);
+        }
     }
 
     #endregion
