@@ -179,7 +179,7 @@ public sealed class ConsoleAdapter : IDisposable
     /// </summary>
     private void OnCleared()
     {
-        _consoleUi.Clear();
+        _consoleUi.ClearLogs();
     }
 
     /// <summary>

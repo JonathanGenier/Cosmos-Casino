@@ -48,7 +48,7 @@ public sealed partial class ConsoleUi : Control
 
     #endregion
 
-    #region Godot Process
+    #region Godot Processes
 
     /// <summary>
     /// Called when the node enters the scene tree for the first time. Use this method to perform initialization that
@@ -85,27 +85,39 @@ public sealed partial class ConsoleUi : Control
 
     #endregion
 
-    #region Console Toggling
+    #region Public API
 
     /// <summary>
-    /// Toggles the visibility state of the console.
+    /// Displays the control and resets the input field to its default state.
     /// </summary>
-    /// <remarks>If the console is currently visible, calling this method hides it; if it is hidden, calling
-    /// this method shows it. This method is typically used to quickly show or hide the console in response to user
-    /// input.</remarks>
-    public void Toggle()
+    public void ShowConsoleUi()
     {
-        Visible = !Visible;
-
-        if (Visible)
-        {
-            LineEdit.GrabFocus();
-        }
+        Visible = true;
+        LineEdit.ReleaseFocus();
     }
 
-    #endregion
+    /// <summary>
+    /// Hides the control and resets the input field to its default state.
+    /// </summary>
+    /// <remarks>This method sets the control's visibility to hidden, clears the contents of the associated
+    /// text input, and removes keyboard focus from the input field. Call this method to reset the input state and hide
+    /// the control from the user interface.</remarks>
+    public void HideConsoleUi()
+    {
+        Visible = false;
+        LineEdit.Clear();
+        LineEdit.ReleaseFocus();
+    }
 
-    #region Logging
+    /// <summary>
+    /// Forcibly releases ui focus from the associated line edit control.
+    /// </summary>
+    /// <remarks>Call this method to remove focus from the line edit, even if it is currently active. This can
+    /// be useful when programmatically managing input focus in custom UI workflows.</remarks>
+    public void ForceReleaseFocus()
+    {
+        LineEdit.ReleaseFocus();
+    }
 
     /// <summary>
     /// Appends the specified log message to the end of the log display.
@@ -122,7 +134,7 @@ public sealed partial class ConsoleUi : Control
     /// This affects presentation only and does not modify the
     /// underlying log buffer or logging pipeline.
     /// </summary>
-    public void Clear()
+    public void ClearLogs()
     {
         TextLog.Clear();
     }

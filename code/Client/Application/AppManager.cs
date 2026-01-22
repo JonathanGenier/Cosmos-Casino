@@ -24,6 +24,8 @@ public sealed partial class AppManager : NodeManager
     private GameManager? _gameManager;
     private SceneLoader? _sceneLoader;
 
+    private ConsoleInputFlow? _consoleInputFlow;
+
     #endregion
 
     #region Properties
@@ -69,6 +71,12 @@ public sealed partial class AppManager : NodeManager
         set => _sceneLoader = value;
     }
 
+    private ConsoleInputFlow ConsoleInputFlow
+    {
+        get => _consoleInputFlow ?? throw new InvalidOperationException($"{nameof(ConsoleInputFlow)} is not initialized.");
+        set => _consoleInputFlow = value;
+    }
+
     #endregion
 
     #region Godot Process
@@ -108,7 +116,8 @@ public sealed partial class AppManager : NodeManager
     /// tree to release resources. Overrides the base implementation to ensure proper resource management.</remarks>
     public override void _ExitTree()
     {
-        CoreServices.Dispose();
+        CoreServices?.Dispose();
+        ConsoleInputFlow?.Dispose();
         base._ExitTree();
     }
 
@@ -195,9 +204,9 @@ public sealed partial class AppManager : NodeManager
         InitializeCoreServices();
         InitializeAppServices();
 
-        AppUiManager = AddInitializableNode<AppUiManager>(
-            aum => aum.Initialize(AppServices.InputManager, CoreServices.ConsoleManager));
+        AppUiManager = AddInitializableNode<AppUiManager>(aum => aum.Initialize(CoreServices.ConsoleManager));
 
+        InitializeAppFlows();
         SceneLoader = new SceneLoader(GetTree());
         StartMainMenu();
     }
@@ -267,7 +276,7 @@ public sealed partial class AppManager : NodeManager
 
     #endregion
 
-    #region Services
+    #region Initialization
 
     /// <summary>
     /// Initializes the core services required by the application. This method must be called before accessing core
@@ -287,6 +296,14 @@ public sealed partial class AppManager : NodeManager
     private void InitializeAppServices()
     {
         AppServices = AddNode<AppServices>();
+    }
+
+    /// <summary>
+    /// Initializes the application input flows and assign their dependencies.
+    /// </summary>
+    private void InitializeAppFlows()
+    {
+        ConsoleInputFlow = new ConsoleInputFlow(AppUiManager.ConsoleUiManager, AppServices.InputManager);
     }
 
     #endregion

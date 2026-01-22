@@ -32,6 +32,18 @@ public sealed partial class InputManager : Node
     public delegate void ToggleConsoleUiEventHandler();
 
     /// <summary>
+    /// Represents the method that handles an event signaling that the console UI should release its input focus.
+    /// </summary>
+    [Signal]
+    public delegate void ForceConsoleUiToReleaseFocusEventHandler();
+
+    /// <summary>
+    /// Represents the method that handles an event signaling that the console user interface should be hidden.
+    /// </summary>
+    [Signal]
+    public delegate void ForceConsoleUiToHideEventHandler();
+
+    /// <summary>
     /// Represents the method that handles camera movement events by specifying a direction vector.
     /// </summary>
     /// <param name="direction">The direction and magnitude of the camera movement, represented as a two-dimensional vector. Each component
@@ -104,6 +116,11 @@ public sealed partial class InputManager : Node
     public bool IsInputBlockedByUi => _isInputBlockedByUi;
 
     /// <summary>
+    /// Gets a value indicating whether the user is currently typing in a text input field.
+    /// </summary>
+    public bool IsUserTyping => GetViewport().GuiGetFocusOwner() is LineEdit;
+
+    /// <summary>
     /// Gets a value indicating whether the primary input button is currently pressed.
     /// </summary>
     public bool IsPrimaryPressed => IsPressed(_inputState[InputButton.Primary], _previousInputState[InputButton.Primary]);
@@ -142,6 +159,11 @@ public sealed partial class InputManager : Node
     /// Gets a value indicating whether the toggle console input button was pressed during the current input state.
     /// </summary>
     public bool IsToggleConsolePressed => IsPressed(_inputState[InputButton.ToggleConsole], _previousInputState[InputButton.ToggleConsole]);
+
+    /// <summary>
+    /// Gets a value indicating whether the Escape key is currently pressed.
+    /// </summary>
+    public bool IsEscapeKeyPressed => IsPressed(_inputState[InputButton.Escape], _previousInputState[InputButton.Escape]);
 
     #endregion
 
@@ -212,6 +234,13 @@ public sealed partial class InputManager : Node
 
                 case Key.Alt:
                     _inputState[InputButton.Alt] = pressed;
+                    break;
+
+                // ─────────────────────────────
+                // Abort 
+                // ─────────────────────────────
+                case Key.Escape:
+                    _inputState[InputButton.Escape] = pressed;
                     break;
 
                 // ─────────────────────────────

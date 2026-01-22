@@ -19,10 +19,13 @@ public sealed partial class AppUiManager : InitializableNodeManager
 
     #region Properties
 
-    private ConsoleUiManager ConsoleUiManager
+    /// <summary>
+    /// Gets the current instance of the Console UI manager.
+    /// </summary>
+    public ConsoleUiManager ConsoleUiManager
     {
         get => _consoleUiManager ?? throw new InvalidOperationException($"{nameof(ConsoleUiManager)} is not initialized.");
-        set => _consoleUiManager = value;
+        private set => _consoleUiManager = value;
     }
 
     #endregion
@@ -32,12 +35,10 @@ public sealed partial class AppUiManager : InitializableNodeManager
     /// <summary>
     /// Initializes the component with the specified input and console managers.
     /// </summary>
-    /// <param name="inputManager">The input manager to be used for handling user input during initialization. Cannot be null.</param>
     /// <param name="consoleManager">The console manager to be used for managing console operations during initialization. Cannot be null.</param>
-    public void Initialize(InputManager inputManager, ConsoleManager consoleManager)
+    public void Initialize(ConsoleManager consoleManager)
     {
-        ConsoleUiManager = CreateInitializableNode<ConsoleUiManager>(
-            cum => cum.Initialize(inputManager, consoleManager));
+        ConsoleUiManager = CreateInitializableNode<ConsoleUiManager>(cum => cum.Initialize(consoleManager));
         MarkInitialized();
     }
 
