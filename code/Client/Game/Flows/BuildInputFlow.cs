@@ -100,6 +100,7 @@ public sealed class BuildInputFlow : IDisposable
         _inputManager.BuildRemoveReleased += OnBuildRemoveReleased;
         _inputManager.BuildCanceled += OnBuildCanceled;
         _cursorManager.CursorCellChanged += OnCursorCellChanged;
+        _inputManager.ModifierChanged += OnModifierChanged;
         _isSubscribed = true;
     }
 
@@ -124,6 +125,7 @@ public sealed class BuildInputFlow : IDisposable
         _inputManager.BuildRemoveReleased -= OnBuildRemoveReleased;
         _inputManager.BuildCanceled -= OnBuildCanceled;
         _cursorManager.CursorCellChanged -= OnCursorCellChanged;
+        _inputManager.ModifierChanged -= OnModifierChanged;
         _isSubscribed = false;
     }
 
@@ -164,7 +166,6 @@ public sealed class BuildInputFlow : IDisposable
 
         _isPrimaryHeld = false;
         _buildContext.EndBuild(endContext);
-
     }
 
     private void OnBuildRemovePressed()
@@ -205,12 +206,12 @@ public sealed class BuildInputFlow : IDisposable
     /// <param name="currentContext">The current cursor context representing the new cell position.</param>
     private void OnCursorCellChanged(CursorContext currentContext)
     {
-        if (_isPrimaryHeld == _isSecondaryHeld)
-        {
-            return;
-        }
+        UpdateActiveBuild(currentContext);
+    }
 
-        _buildContext.UpdateBuild(currentContext);
+    private void OnModifierChanged()
+    {
+        UpdateActiveBuild();
     }
 
     /// <summary>
@@ -220,6 +221,57 @@ public sealed class BuildInputFlow : IDisposable
     {
         _buildContext.CancelBuild();
         ResetState();
+    }
+
+    #endregion
+
+    #region Internal Methods
+
+    private void UpdateActiveBuild(CursorContext? context = null)
+    {
+        if (_isPrimaryHeld == _isSecondaryHeld)
+        {
+            return;
+        }
+
+        CursorContext resolvedContext;
+
+        if (context.HasValue)
+        {
+            resolvedContext = context.Value;
+        }
+        else if (!_cursorManager.TryGetCursorContext(out resolvedContext))
+        {
+            return;
+        }
+
+        var interactionMode = GetBuildInteractionMode();
+        _buildContext.UpdateBuild(resolvedContext, interactionMode);
+    }
+
+    private BuildInteractionMode GetBuildInteractionMode()
+    {
+        if (_inputManager.IsShiftHeld && _inputManager.IsCtrlHeld)
+        {
+            return BuildInteractionMode.ShiftCtrlAlternative;
+        }
+
+        if (_inputManager.IsShiftHeld)
+        {
+            return BuildInteractionMode.ShiftAlternative;
+        }
+
+        if (_inputManager.IsCtrlHeld)
+        {
+            return BuildInteractionMode.CtrlAlternative;
+        }
+
+        if (_inputManager.IsAltHeld)
+        {
+            return BuildInteractionMode.AltAlternative;
+        }
+
+        return BuildInteractionMode.Default;
     }
 
     #endregion

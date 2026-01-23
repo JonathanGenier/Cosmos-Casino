@@ -57,7 +57,7 @@ public sealed class ConsoleInputModule : IInputModule
     /// <param name="delta">The elapsed time, in seconds, since the previous frame. This value can be used for frame-dependent calculations.</param>
     public void Process(double delta)
     {
-        if (_inputManager.IsToggleConsolePressed)
+        if (_inputManager.IsF1KeyPressed)
         {
             _inputManager.EmitSignal(InputManager.SignalName.ToggleConsoleUi);
         }

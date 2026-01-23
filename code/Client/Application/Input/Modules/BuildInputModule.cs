@@ -63,45 +63,7 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
             return;
         }
 
-        // -------------------------------------
-        // 1. Cancel
-        // -------------------------------------
-        if ((_inputManager.IsPrimaryHeld && _inputManager.IsSecondaryPressed)
-            || (_inputManager.IsPrimaryPressed && _inputManager.IsSecondaryHeld))
-        {
-            _inputManager.EmitSignal(InputManager.SignalName.BuildCanceled);
-            return;
-        }
-
-        // -------------------------------------
-        // 2. Build
-        // -------------------------------------
-        if (_inputManager.IsPrimaryPressed)
-        {
-            _inputManager.EmitSignal(InputManager.SignalName.BuildPlacePressed);
-            return;
-        }
-
-        if (_inputManager.IsPrimaryReleased)
-        {
-            _inputManager.EmitSignal(InputManager.SignalName.BuildPlaceReleased);
-            return;
-        }
-
-        // -------------------------------------
-        // 3. Build
-        // -------------------------------------
-        if (_inputManager.IsSecondaryPressed)
-        {
-            _inputManager.EmitSignal(InputManager.SignalName.BuildRemovePressed);
-            return;
-        }
-
-        if (_inputManager.IsSecondaryReleased)
-        {
-            _inputManager.EmitSignal(InputManager.SignalName.BuildRemoveReleased);
-            return;
-        }
+        ProcessMouseInputs();
     }
 
     #endregion
@@ -117,5 +79,51 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
         _isEnabled = state != GameState.Loading;
     }
 
+    #endregion
+
+    #region Internal Methods
+
+    private void ProcessMouseInputs()
+    {
+        // -------------------------------------
+        // 1. Mouse Cancel
+        // -------------------------------------
+        if ((_inputManager.IsPrimaryHeld && _inputManager.IsSecondaryPressed)
+            || (_inputManager.IsPrimaryPressed && _inputManager.IsSecondaryHeld))
+        {
+            _inputManager.EmitSignal(InputManager.SignalName.BuildCanceled);
+            return;
+        }
+
+        // -------------------------------------
+        // 2. Mouse Build
+        // -------------------------------------
+        if (_inputManager.IsPrimaryPressed)
+        {
+            _inputManager.EmitSignal(InputManager.SignalName.BuildPlacePressed);
+            return;
+        }
+
+        if (_inputManager.IsPrimaryReleased)
+        {
+            _inputManager.EmitSignal(InputManager.SignalName.BuildPlaceReleased);
+            return;
+        }
+
+        // -------------------------------------
+        // 3. Mouse Remove
+        // -------------------------------------
+        if (_inputManager.IsSecondaryPressed)
+        {
+            _inputManager.EmitSignal(InputManager.SignalName.BuildRemovePressed);
+            return;
+        }
+
+        if (_inputManager.IsSecondaryReleased)
+        {
+            _inputManager.EmitSignal(InputManager.SignalName.BuildRemoveReleased);
+            return;
+        }
+    }
     #endregion
 }
