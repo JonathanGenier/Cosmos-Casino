@@ -102,6 +102,13 @@ public sealed partial class InputManager : Node
     public delegate void BuildCanceledEventHandler();
 
     /// <summary>
+    /// Represents the method that handles a request to resize the build grid preview in a specified direction.
+    /// </summary>
+    /// <param name="direction">Direciton of the scroll wheel. Scroll up to increase size. Scroll down to decrease size.</param>
+    [Signal]
+    public delegate void BuildGridPreviewResizeRequestedEventHandler(int direction);
+
+    /// <summary>
     /// Emitted whena modifier key (Shift, Ctrl, Alt) state changes (Pressed, Held, Released).
     /// </summary>
     [Signal]
@@ -344,11 +351,11 @@ public sealed partial class InputManager : Node
                 // Mouse Wheel (frame-based)
                 // ─────────────────────────────
                 case MouseButton.WheelUp:
-                    _inputState.ScrollDelta += 1f;
+                    _inputState.ScrollDelta = 1f;
                     break;
 
                 case MouseButton.WheelDown:
-                    _inputState.ScrollDelta -= 1f;
+                    _inputState.ScrollDelta = -1f;
                     break;
             }
         }

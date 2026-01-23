@@ -12,16 +12,30 @@ using System;
 /// material is not present or if invalid parameters are provided.</remarks>
 public sealed partial class BuildGridPreview : Node3D
 {
-    #region Exported
-
-    [Export]
-    private float _radius = 4.5f;
-    [Export]
-    private float _cellSize = 1.0f;
-
-    #endregion
-
     #region Fields
+
+    /// <summary>
+    /// Represents the default diameter, in tiles, used for grid preview.
+    /// </summary>
+    public const int DefaultTileDiameter = 15;
+
+    /// <summary>
+    /// Represents the minimum allowed radius, in tile, for grid preview.
+    /// </summary>
+    public const int MinTileDiameter = 9;
+
+    /// <summary>
+    /// Represents the maximum allowed radius, in tile, for grid preview.
+    /// </summary>
+    public const int MaxTileDiameter = 39;
+
+    /// <summary>
+    /// Specifies the step size, in tiles, used when resizing the radius of the grid preview.
+    /// </summary>
+    public const int DiameterResizeTileStep = 2;
+
+    [Export]
+    private float _radius = 0.0f;
 
     private MeshInstance3D? _meshInstance;
     private ShaderMaterial? _material;
@@ -52,6 +66,7 @@ public sealed partial class BuildGridPreview : Node3D
         _material = shader;
 
         ApplyStaticShaderParams();
+        SetTileDiameter(DefaultTileDiameter);
     }
 
     #endregion
@@ -70,31 +85,6 @@ public sealed partial class BuildGridPreview : Node3D
     }
 
     /// <summary>
-    /// Sets the radius value used for rendering and updates the object's scale accordingly.
-    /// </summary>
-    /// <remarks>If the specified radius is less than 0.1, the radius will be set to 0.1 to ensure a minimum
-    /// size for rendering.</remarks>
-    /// <param name="radius">The new radius to apply. Must be greater than or equal to 0.1.</param>
-    public void SetRadius(float radius)
-    {
-        _radius = Mathf.Max(0.1f, radius);
-        _material?.SetShaderParameter("radius", _radius);
-        UpdateScale();
-    }
-
-    /// <summary>
-    /// Sets the size of each cell used in the shader effect.
-    /// </summary>
-    /// <remarks>If the specified value is less than 0.1, the cell size will be set to 0.1 to ensure a minimum
-    /// visual effect. This method updates the corresponding shader parameter if a material is assigned.</remarks>
-    /// <param name="cellSize">The desired cell size. Must be greater than or equal to 0.1.</param>
-    public void SetCellSize(float cellSize)
-    {
-        _cellSize = Mathf.Max(0.1f, cellSize);
-        _material?.SetShaderParameter("cell_size", _cellSize);
-    }
-
-    /// <summary>
     /// Sets the tile diameter by specifying the number of tiles across the diameter. The diameter must be an odd
     /// integer greater than or equal to 1.
     /// </summary>
@@ -104,8 +94,7 @@ public sealed partial class BuildGridPreview : Node3D
     {
         if (tileCount < 1 || tileCount % 2 == 0)
         {
-            throw new ArgumentException(
-                "Tile diameter must be an odd number >= 1.");
+            throw new ArgumentException("Tile diameter must be an odd number >= 1.");
         }
 
         float radius = tileCount * 0.5f;
@@ -143,7 +132,19 @@ public sealed partial class BuildGridPreview : Node3D
     private void ApplyStaticShaderParams()
     {
         _material!.SetShaderParameter("radius", _radius);
-        _material.SetShaderParameter("cell_size", _cellSize);
+        UpdateScale();
+    }
+
+    /// <summary>
+    /// Sets the radius value used for rendering and updates the object's scale accordingly.
+    /// </summary>
+    /// <remarks>If the specified radius is less than 0.1, the radius will be set to 0.1 to ensure a minimum
+    /// size for rendering.</remarks>
+    /// <param name="radius">The new radius to apply. Must be greater than or equal to 0.1.</param>
+    private void SetRadius(float radius)
+    {
+        _radius = Mathf.Max(0.1f, radius);
+        _material?.SetShaderParameter("radius", _radius);
         UpdateScale();
     }
 

@@ -160,10 +160,41 @@ public sealed class CameraInputModule : IInputModule, IGameInputModule
             return;
         }
 
+        if (IsResizingBuildPreview())
+        {
+            return;
+        }
+
         if (inputState.ScrollDelta != 0f)
         {
             _inputManager.EmitSignal(InputManager.SignalName.ZoomCamera, inputState.ScrollDelta);
         }
+    }
+
+    #endregion
+
+    #region Restrictions
+
+    /// <summary>
+    /// Determines whether the build preview is currently being resized based on the current input state.
+    /// </summary>
+    /// <remarks>This method evaluates the current input conditions to decide if resizing should be active.
+    /// Typically, resizing is enabled only when the Shift key is held and neither the primary nor secondary input is
+    /// active.</remarks>
+    /// <returns>true if the build preview is in resizing mode; otherwise, false.</returns>
+    private bool IsResizingBuildPreview()
+    {
+        if (_inputManager.IsPrimaryHeld || _inputManager.IsSecondaryHeld)
+        {
+            return false;
+        }
+
+        if (!_inputManager.IsShiftHeld)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     #endregion
