@@ -99,8 +99,9 @@ public sealed class BuildInputFlow : IDisposable
         _inputManager.BuildRemovePressed += OnBuildRemovePressed;
         _inputManager.BuildRemoveReleased += OnBuildRemoveReleased;
         _inputManager.BuildCanceled += OnBuildCanceled;
-        _cursorManager.CursorCellChanged += OnCursorCellChanged;
         _inputManager.ModifierChanged += OnModifierChanged;
+        _inputManager.BuildGridPreviewResizeRequested += OnGridPreviewResizeRequested;
+        _cursorManager.CursorCellChanged += OnCursorCellChanged;
         _isSubscribed = true;
     }
 
@@ -124,8 +125,9 @@ public sealed class BuildInputFlow : IDisposable
         _inputManager.BuildRemovePressed -= OnBuildRemovePressed;
         _inputManager.BuildRemoveReleased -= OnBuildRemoveReleased;
         _inputManager.BuildCanceled -= OnBuildCanceled;
-        _cursorManager.CursorCellChanged -= OnCursorCellChanged;
         _inputManager.ModifierChanged -= OnModifierChanged;
+        _inputManager.BuildGridPreviewResizeRequested -= OnGridPreviewResizeRequested;
+        _cursorManager.CursorCellChanged -= OnCursorCellChanged;
         _isSubscribed = false;
     }
 
@@ -227,6 +229,13 @@ public sealed class BuildInputFlow : IDisposable
 
     #region Internal Methods
 
+    /// <summary>
+    /// Updates the active build state based on the specified cursor context and the current interaction mode.
+    /// </summary>
+    /// <remarks>This method does not perform an update if both primary and secondary input states are equal.
+    /// If no context is provided and the current cursor context cannot be determined, the update is skipped.</remarks>
+    /// <param name="context">An optional cursor context to use for the update. If not specified, the current cursor context is retrieved
+    /// automatically.</param>
     private void UpdateActiveBuild(CursorContext? context = null)
     {
         if (_isPrimaryHeld == _isSecondaryHeld)
@@ -249,6 +258,13 @@ public sealed class BuildInputFlow : IDisposable
         _buildContext.UpdateBuild(resolvedContext, interactionMode);
     }
 
+    /// <summary>
+    /// Determines the current build interaction mode based on the state of modifier keys held by the user.
+    /// </summary>
+    /// <remarks>The returned interaction mode is determined by checking the state of the Shift, Ctrl, and Alt
+    /// keys. If multiple modifier keys are held, Shift and Ctrl take precedence over other combinations.</remarks>
+    /// <returns>A value of type <see cref="BuildInteractionMode"/> that represents the active interaction mode. Returns <see
+    /// cref="BuildInteractionMode.Default"/> if no modifier keys are held.</returns>
     private BuildInteractionMode GetBuildInteractionMode()
     {
         if (_inputManager.IsShiftHeld && _inputManager.IsCtrlHeld)
@@ -272,6 +288,16 @@ public sealed class BuildInputFlow : IDisposable
         }
 
         return BuildInteractionMode.Default;
+    }
+
+    /// <summary>
+    /// Handles a request to resize the grid preview by the specified delta value.
+    /// </summary>
+    /// <param name="delta">The amount by which to adjust the grid size. Positive values increase the grid size; negative values decrease
+    /// it.</param>
+    private void OnGridPreviewResizeRequested(int delta)
+    {
+        _buildContext.ResizeGridPreview(delta);
     }
 
     #endregion

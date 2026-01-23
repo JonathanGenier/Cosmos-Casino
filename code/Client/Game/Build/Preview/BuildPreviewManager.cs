@@ -191,6 +191,15 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     }
 
     /// <summary>
+    /// Resizes the grid preview by setting the diameter of each tile to the specified value.
+    /// </summary>
+    /// <param name="size">The diameter, in tiles, to set the grid preview. Must be a positive integer.</param>
+    public void ResizeGridPreview(int size)
+    {
+        GridPreviewInstance.SetTileDiameter(size);
+    }
+
+    /// <summary>
     /// Removes any active cursor preview from the user interface.
     /// </summary>
     /// <remarks>Call this method to clear both floor and wall cursor previews, typically when the user
@@ -518,7 +527,6 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
         GridPreviewInstance = node as BuildGridPreview ?? throw new InvalidOperationException($"{nameof(PackedScene)} root node must have {nameof(BuildGridPreview)} script attached.");
         AddChild(GridPreviewInstance);
         GridPreviewInstance.Hide();
-        GridPreviewInstance.SetTileDiameter(15);
     }
 
     /// <summary>

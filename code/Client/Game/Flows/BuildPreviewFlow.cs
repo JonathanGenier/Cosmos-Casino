@@ -40,6 +40,7 @@ public class BuildPreviewFlow : IGameFlow, IDisposable
         _buildContext.BuildStarted += OnBuildStarted;
         _buildContext.BuildChanged += OnBuildChanged;
         _buildContext.BuildCleared += OnBuildCleared;
+        _buildContext.GridPreviewRadiusChanged += OnGridPreviewRadiusChanged;
     }
 
     #endregion
@@ -62,6 +63,7 @@ public class BuildPreviewFlow : IGameFlow, IDisposable
         _buildContext.BuildStarted -= OnBuildStarted;
         _buildContext.BuildChanged -= OnBuildChanged;
         _buildContext.BuildCleared -= OnBuildCleared;
+        _buildContext.GridPreviewRadiusChanged -= OnGridPreviewRadiusChanged;
         _isDisposed = true;
     }
 
@@ -100,6 +102,11 @@ public class BuildPreviewFlow : IGameFlow, IDisposable
     private void OnBuildCleared()
     {
         _buildPreviewManager.ExitDragMode();
+    }
+
+    private void OnGridPreviewRadiusChanged(int size)
+    {
+        _buildPreviewManager.ResizeGridPreview(size);
     }
 
     #endregion

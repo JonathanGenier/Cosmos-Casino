@@ -64,6 +64,7 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
         }
 
         ProcessMouseInputs();
+        ProcessResizeGrid();
     }
 
     #endregion
@@ -125,5 +126,31 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
             return;
         }
     }
+
+    private void ProcessResizeGrid()
+    {
+        if (_inputManager.IsInputBlockedByUi)
+        {
+            return;
+        }
+
+        if (!_inputManager.IsShiftHeld)
+        {
+            return;
+        }
+
+        if (_inputManager.IsPrimaryHeld || _inputManager.IsSecondaryHeld)
+        {
+            return;
+        }
+
+        var inputState = _inputManager.State;
+
+        if (_inputManager.State.ScrollDelta != 0f)
+        {
+            _inputManager.EmitSignal(InputManager.SignalName.BuildGridPreviewResizeRequested, inputState.ScrollDelta);
+        }
+    }
+
     #endregion
 }

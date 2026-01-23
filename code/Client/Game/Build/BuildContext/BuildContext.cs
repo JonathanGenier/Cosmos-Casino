@@ -13,6 +13,8 @@ public sealed class BuildContext
 {
     #region Fields
 
+
+
     private BuildContextBase? _activeContext;
     private MapCellCoord? _startCell;
     private MapCellCoord? _currentCell;
@@ -62,6 +64,11 @@ public sealed class BuildContext
     /// the build has been cleared and before a new build is started, if applicable.</remarks>
     public event Action? BuildCleared;
 
+    /// <summary>
+    /// Occurs when the preview radius of the grid changes.
+    /// </summary>
+    public event Action<int>? GridPreviewRadiusChanged;
+
     #endregion
 
     #region Properties
@@ -76,9 +83,14 @@ public sealed class BuildContext
     /// </summary>
     public bool IsBuildActive => _activeContext != null && _startCell.HasValue && _currentCell.HasValue;
 
+    /// <summary>
+    /// Gets the radius, in tiles, used for the grid preview display.
+    /// </summary>
+    public int GridPreviewRadius { get; private set; } = BuildGridPreview.DefaultTileDiameter;
+
     #endregion
 
-    #region Context Management
+    #region Context API
 
     /// <summary>
     /// Sets the active build context to the specified context instance.
@@ -95,9 +107,20 @@ public sealed class BuildContext
         ContextActivated?.Invoke();
     }
 
+    /// <summary>
+    /// Clears the current preview selection and raises the preview changed event if a preview was active.
+    /// </summary>
+    /// <remarks>Use this method to reset any ongoing preview operation. If no preview is currently active,
+    /// the method has no effect. Calling this method triggers the <c>PreviewChanged</c> event only if a preview was
+    /// previously set.</remarks>
+    public void CancelContext()
+    {
+        Clear();
+    }
+
     #endregion
 
-    #region Build Management
+    #region Build API
 
     /// <summary>
     /// Begins a new build operation at the specified starting context using the provided build operation.
@@ -180,17 +203,6 @@ public sealed class BuildContext
     }
 
     /// <summary>
-    /// Clears the current preview selection and raises the preview changed event if a preview was active.
-    /// </summary>
-    /// <remarks>Use this method to reset any ongoing preview operation. If no preview is currently active,
-    /// the method has no effect. Calling this method triggers the <c>PreviewChanged</c> event only if a preview was
-    /// previously set.</remarks>
-    public void CancelContext()
-    {
-        Clear();
-    }
-
-    /// <summary>
     /// Cancels the current build operation and resets the build state.
     /// </summary>
     /// <remarks>Call this method to abort an in-progress build and clear any associated resources or state.
@@ -202,7 +214,36 @@ public sealed class BuildContext
 
     #endregion
 
-    #region Active Context 
+    #region Build Preview API
+
+    /// <summary>
+    /// Requests a resize of the grid preview in the specified direction.
+    /// </summary>
+    /// <param name="direction">A value indicating the direction and magnitude of the resize operation. Positive values increase the grid size;
+    /// negative values decrease it.</param>
+    public void ResizeGridPreview(int direction)
+    {
+        if (direction == 0)
+        {
+            return;
+        }
+
+        // Scroll up shrinks preview, scroll down expands (inverted for UX)
+        int delta = -direction * BuildGridPreview.DiameterResizeTileStep;
+        int newSize = GridPreviewRadius + delta;
+
+        if (newSize < BuildGridPreview.MinTileDiameter || newSize > BuildGridPreview.MaxTileDiameter)
+        {
+            return;
+        }
+
+        GridPreviewRadius = newSize;
+        GridPreviewRadiusChanged?.Invoke(GridPreviewRadius);
+    }
+
+    #endregion
+
+    #region Build Intent API
 
     /// <summary>
     /// Attempts to create a new build intent based on the current context and cell selection.
@@ -258,8 +299,15 @@ public sealed class BuildContext
 
     #endregion
 
-    #region State Management
+    #region Build Context Management
 
+    /// <summary>
+    /// Sets the current build interaction mode if it differs from the existing mode.
+    /// </summary>
+    /// <remarks>Use this method to update the build interaction mode only when a change is required. Repeated
+    /// calls with the same value will have no effect.</remarks>
+    /// <param name="buildInteractionMode">The build interaction mode to apply. If this value is the same as the current mode, no change is made.</param>
+    /// <returns>true if the build interaction mode was changed; otherwise, false.</returns>
     private bool SetBuildInteractionMode(BuildInteractionMode buildInteractionMode)
     {
         if (_currentBuildInteractionMode == buildInteractionMode)
