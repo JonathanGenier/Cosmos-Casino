@@ -17,6 +17,7 @@ public sealed class BuildContext
     private MapCellCoord? _startCell;
     private MapCellCoord? _currentCell;
     private BuildOperation _currentBuildOperation;
+    private BuildInteractionMode _currentBuildInteractionMode;
 
     #endregion
 
@@ -120,26 +121,36 @@ public sealed class BuildContext
     }
 
     /// <summary>
-    /// Updates the current build state based on the specified cursor context.
+    /// Updates the active build preview based on the current cursor position and interaction mode.
     /// </summary>
-    /// <remarks>If the cursor has not moved to a new cell or if the build context is not active, this method
-    /// performs no action. Triggers the build changed event only when the cursor enters a different cell.</remarks>
-    /// <param name="current">The current cursor context containing the world position to evaluate for build updates.</param>
-    public void UpdateBuild(CursorContext current)
+    /// <remarks>
+    /// This method refreshes the build state when either the cursor enters a different map cell
+    /// or the build interaction mode changes (for example, due to modifier input).
+    /// If neither the cell position nor the interaction mode has changed, no update is performed.
+    /// </remarks>
+    /// <param name="current">
+    /// The current cursor context containing the world position used to determine the active map cell.
+    /// </param>
+    /// <param name="buildInteractionMode">
+    /// The current interaction mode that influences how the build preview is interpreted and generated.
+    /// </param>
+    public void UpdateBuild(CursorContext current, BuildInteractionMode buildInteractionMode)
     {
         if (_activeContext == null || _startCell == null)
         {
             return;
         }
 
-        var currentCell = MapToWorld.WorldToCell(current.WorldPosition);
+        var newCell = MapToWorld.WorldToCell(current.WorldPosition);
+        bool cellChanged = newCell != _currentCell;
+        bool interactionChanged = SetBuildInteractionMode(buildInteractionMode);
 
-        if (currentCell == _currentCell)
+        if (!cellChanged && !interactionChanged)
         {
             return;
         }
 
-        _currentCell = currentCell;
+        _currentCell = newCell;
         BuildChanged?.Invoke();
     }
 
@@ -201,12 +212,21 @@ public sealed class BuildContext
     /// <returns>A <see cref="BuildIntent"/> instance if a build intent can be created; otherwise, <see langword="null"/>.</returns>
     public BuildIntent? TryCreateBuildIntent()
     {
-        if (_activeContext == null || _startCell == null || _currentCell == null || _currentBuildOperation == BuildOperation.None)
+        if (_activeContext == null
+            || _startCell == null
+            || _currentCell == null
+            || _currentBuildOperation == BuildOperation.None)
         {
             return null;
         }
 
-        _activeContext.TryCreateBuildIntent(_startCell.Value, _currentCell.Value, _currentBuildOperation, out var intent);
+        _activeContext.TryCreateBuildIntent(
+            _startCell.Value,
+            _currentCell.Value,
+            _currentBuildOperation,
+            _currentBuildInteractionMode,
+            out var intent);
+
         return intent;
     }
 
@@ -226,13 +246,30 @@ public sealed class BuildContext
 
         var cell = cursorContext.CellPosition;
 
-        _activeContext.TryCreateBuildIntent(cell, cell, BuildOperation.Place, out var intent);
+        _activeContext.TryCreateBuildIntent(
+            cell,
+            cell,
+            BuildOperation.Place,
+            BuildInteractionMode.Default,
+            out var intent);
+
         return intent;
     }
 
     #endregion
 
     #region State Management
+
+    private bool SetBuildInteractionMode(BuildInteractionMode buildInteractionMode)
+    {
+        if (_currentBuildInteractionMode == buildInteractionMode)
+        {
+            return false;
+        }
+
+        _currentBuildInteractionMode = buildInteractionMode;
+        return true;
+    }
 
     /// <summary>
     /// Resets the current state by clearing the active context and any associated build data.
@@ -265,6 +302,7 @@ public sealed class BuildContext
         _startCell = null;
         _currentCell = null;
         _currentBuildOperation = BuildOperation.None;
+        _currentBuildInteractionMode = BuildInteractionMode.Default;
         BuildCleared?.Invoke();
     }
 

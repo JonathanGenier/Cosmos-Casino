@@ -101,14 +101,27 @@ public sealed partial class InputManager : Node
     [Signal]
     public delegate void BuildCanceledEventHandler();
 
+    /// <summary>
+    /// Emitted whena modifier key (Shift, Ctrl, Alt) state changes (Pressed, Held, Released).
+    /// </summary>
+    [Signal]
+    public delegate void ModifierChangedEventHandler();
     #endregion
 
     #region Properties
+
+    // -------------------------------------------------------------------------------------------------------------------------
+    // Manager Properties
+    // -------------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
     /// Gets the current input state for the component.
     /// </summary>
     public InputState State => _inputState;
+
+    // -------------------------------------------------------------------------------------------------------------------------
+    // Blocker Properties
+    // -------------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
     /// Gets a value indicating whether user input is currently blocked by the user interface.
@@ -119,6 +132,10 @@ public sealed partial class InputManager : Node
     /// Gets a value indicating whether the user is currently typing in a text input field.
     /// </summary>
     public bool IsUserTyping => GetViewport().GuiGetFocusOwner() is LineEdit;
+
+    // -------------------------------------------------------------------------------------------------------------------------
+    // Mouse Properties
+    // -------------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
     /// Gets a value indicating whether the primary input button is currently pressed.
@@ -150,15 +167,33 @@ public sealed partial class InputManager : Node
     /// </summary>
     public bool IsSecondaryHeld => IsHeld(_inputState[InputButton.Secondary]);
 
+    // -------------------------------------------------------------------------------------------------------------------------
+    // Modifiers Properties
+    // -------------------------------------------------------------------------------------------------------------------------
+
     /// <summary>
     /// Gets a value indicating whether the Shift key is currently held down.
     /// </summary>
     public bool IsShiftHeld => IsHeld(_inputState[InputButton.Shift]);
 
     /// <summary>
+    /// Gets a value indicating whether the Ctrl key is currently held down.
+    /// </summary>
+    public bool IsCtrlHeld => IsHeld(_inputState[InputButton.Ctrl]);
+
+    /// <summary>
+    /// Gets a value indicating whether the Alt key is currently held down.
+    /// </summary>
+    public bool IsAltHeld => IsHeld(_inputState[InputButton.Alt]);
+
+    // -------------------------------------------------------------------------------------------------------------------------
+    // Function Keys Properties
+    // -------------------------------------------------------------------------------------------------------------------------
+
+    /// <summary>
     /// Gets a value indicating whether the toggle console input button was pressed during the current input state.
     /// </summary>
-    public bool IsToggleConsolePressed => IsPressed(_inputState[InputButton.ToggleConsole], _previousInputState[InputButton.ToggleConsole]);
+    public bool IsF1KeyPressed => IsPressed(_inputState[InputButton.ToggleConsole], _previousInputState[InputButton.ToggleConsole]);
 
     /// <summary>
     /// Gets a value indicating whether the Escape key is currently pressed.
@@ -226,14 +261,17 @@ public sealed partial class InputManager : Node
                 // ─────────────────────────────
                 case Key.Shift:
                     _inputState[InputButton.Shift] = pressed;
+                    EmitSignal(SignalName.ModifierChanged);
                     break;
 
                 case Key.Ctrl:
                     _inputState[InputButton.Ctrl] = pressed;
+                    EmitSignal(SignalName.ModifierChanged);
                     break;
 
                 case Key.Alt:
                     _inputState[InputButton.Alt] = pressed;
+                    EmitSignal(SignalName.ModifierChanged);
                     break;
 
                 // ─────────────────────────────
