@@ -42,9 +42,10 @@ namespace CosmosCasino.Core.Game.Map.Terrain
         /// Handles deterministic terrain creation, chunk lookup, and
         /// slope-neighbor resolution logic.
         /// </summary>
-        internal TerrainManager()
+        /// <param name="chunkCountPerAxis">Number of chunk per axis (X,Y) to define map size.</param>
+        internal TerrainManager(int chunkCountPerAxis = TerrainConfigs.ChunkCountPerAxis)
         {
-            _terrainBounds = TerrainBounds.CreateNew();
+            _terrainBounds = TerrainBounds.CreateNew(chunkCountPerAxis);
             _chunks = new Dictionary<TerrainChunkGridCoord, TerrainChunk>(_terrainBounds.Width * _terrainBounds.Height);
         }
 
@@ -182,9 +183,9 @@ namespace CosmosCasino.Core.Game.Map.Terrain
 
             _chunks.Clear();
 
-            for (int y = _terrainBounds.MinY; y <= _terrainBounds.MaxY; y++)
+            for (int y = Bounds.MinY; y <= Bounds.MaxY; y++)
             {
-                for (int x = _terrainBounds.MinX; x <= _terrainBounds.MaxX; x++)
+                for (int x = Bounds.MinX; x <= Bounds.MaxX; x++)
                 {
                     var gridCoord = new TerrainChunkGridCoord(x, y);
                     var chunk = GenerateChunk(gridCoord, terrainHeightGenerator);

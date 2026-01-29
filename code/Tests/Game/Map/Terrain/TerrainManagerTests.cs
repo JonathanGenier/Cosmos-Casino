@@ -16,7 +16,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void GenerateInitialTerrain_CalledTwice_Throws()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
 
             // Act
             manager.GenerateInitialTerrain(seed: 123);
@@ -30,7 +30,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void GenerateInitialTerrain_GeneratesAllChunksInBounds()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
 
             // Act
             manager.GenerateInitialTerrain(seed: 0);
@@ -51,8 +51,8 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void GenerateInitialTerrain_SameSeed_IsDeterministic()
         {
             // Arrange
-            var m1 = new TerrainManager();
-            var m2 = new TerrainManager();
+            var m1 = new TerrainManager(1);
+            var m2 = new TerrainManager(1);
 
             // Act
             m1.GenerateInitialTerrain(seed: 42);
@@ -68,8 +68,8 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void GenerateInitialTerrain_DifferentSeed_ProducesDifferentTerrain()
         {
             // Arrange
-            var m1 = new TerrainManager();
-            var m2 = new TerrainManager();
+            var m1 = new TerrainManager(1);
+            var m2 = new TerrainManager(1);
 
             // Act
             m1.GenerateInitialTerrain(seed: 1);
@@ -86,7 +86,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void GenerateInitialTerrain_AllTilesBelongToCorrectChunk()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
             manager.GenerateInitialTerrain(seed: 0);
 
             // Act & Assert
@@ -121,7 +121,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void TryGetChunk_BeforeGeneration_ReturnsFalse()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
 
             // Act
             var result = manager.TryGetChunk(new TerrainChunkGridCoord(0, 0), out _);
@@ -134,7 +134,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void TryGetChunk_OutsideBounds_ReturnsFalse()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
             manager.GenerateInitialTerrain(seed: 0);
             var outsideCoord = new TerrainChunkGridCoord(manager.Bounds.MaxX + 1, manager.Bounds.MaxY + 1);
 
@@ -149,7 +149,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void TryGetChunkAtWorld_BeforeGeneration_ReturnsFalse()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
 
             // Act
             var result = manager.TryGetChunkFromWorldCoord(new TerrainTileWorldCoord(0, 0), out _);
@@ -162,7 +162,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void TryGetChunkAtWorld_ValidWorldCoord_ReturnsCorrectChunk()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
             manager.GenerateInitialTerrain(seed: 0);
 
             var worldCoord = new TerrainTileWorldCoord(0, 0);
@@ -179,7 +179,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void TryGetChunkAtWorld_NegativeWorldCoord_MapsCorrectly()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(3);
             manager.GenerateInitialTerrain(seed: 0);
 
             var worldCoord = new TerrainTileWorldCoord(-1, -1);
@@ -188,7 +188,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
             var result = manager.TryGetChunkFromWorldCoord(worldCoord, out var chunk);
 
             // Assert
-            Assert.That(TerrainConfigs.ChunkCountPerAxis, Is.GreaterThanOrEqualTo(3));
+            Assert.That(manager.Bounds.Width, Is.GreaterThanOrEqualTo(3));
             Assert.That(result, Is.True);
             Assert.That(chunk.GridCoord.X, Is.LessThanOrEqualTo(0));
             Assert.That(chunk.GridCoord.Y, Is.LessThanOrEqualTo(0));
@@ -202,7 +202,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void TryGetTileAtWorld_BeforeGeneration_ReturnsFalse()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
 
             // Act
             var result = manager.TryGetTileFromWorldCoord(
@@ -216,7 +216,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void TryGetTileAtWorld_ValidWorldCoord_ReturnsTrue()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
             manager.GenerateInitialTerrain(seed: 0);
 
             var worldCoord = new TerrainTileWorldCoord(0, 0);
@@ -233,7 +233,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void TryGetTileAtWorld_ChunkBoundary_Works()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
             manager.GenerateInitialTerrain(seed: 0);
 
             int edge = TerrainConfigs.ChunkSize - 1;
@@ -250,7 +250,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void TryGetTileAtWorld_OutsideTerrain_ReturnsFalse()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
             manager.GenerateInitialTerrain(seed: 0);
 
             var outsideWorldCoord = new TerrainTileWorldCoord(
@@ -268,7 +268,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void TryGetTileAtWorld_CrossChunkBoundary_ReturnsCorrectTile()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(3);
             manager.GenerateInitialTerrain(seed: 0);
 
             int worldX = TerrainConfigs.ChunkSize;
@@ -278,7 +278,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
             var result = manager.TryGetTileFromWorldCoord(worldCoord, out var tile);
 
             // Assert
-            Assert.That(TerrainConfigs.ChunkCountPerAxis, Is.GreaterThanOrEqualTo(3));
+            Assert.That(manager.Bounds.Width, Is.GreaterThanOrEqualTo(3));
             Assert.That(result, Is.True);
             Assert.That(tile.LocalCoord.X, Is.EqualTo(0));
             Assert.That(tile.LocalCoord.Y, Is.EqualTo(0));
@@ -288,7 +288,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void TryGetTileAtWorld_NegativeWorldCoord_ResolvesCorrectTile()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(3);
             manager.GenerateInitialTerrain(seed: 0);
 
             var worldCoord = new TerrainTileWorldCoord(-1, 0);
@@ -297,7 +297,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
             var result = manager.TryGetTileFromWorldCoord(worldCoord, out var tile);
 
             // Assert
-            Assert.That(TerrainConfigs.ChunkCountPerAxis, Is.GreaterThanOrEqualTo(3));
+            Assert.That(manager.Bounds.Width, Is.GreaterThanOrEqualTo(3));
             Assert.That(result, Is.True);
             Assert.That(tile.LocalCoord.X, Is.EqualTo(TerrainConfigs.ChunkSize - 1));
         }
@@ -310,7 +310,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void ResolveSlopeNeighbors_EdgeTiles_DoNotThrow()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
 
             // Act + Assert
             Assert.DoesNotThrow(() => manager.GenerateInitialTerrain(seed: 0));
@@ -320,7 +320,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void ResolveSlopeNeighbors_SlopeTilesHaveNoNeighbors()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
             manager.GenerateInitialTerrain(seed: 0);
 
             // Act & Assert
@@ -345,7 +345,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void ResolveSlopeNeighbors_FlatTileAdjacentToSlope_SetsNeighborMask()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
             manager.GenerateInitialTerrain(seed: 0);
 
             TerrainTile flatTile = null!;
@@ -379,7 +379,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void ResolveSlopeNeighbors_MultipleSlopeNeighbors_CombineMasks()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
             manager.GenerateInitialTerrain(seed: 0);
 
             // Act & Assert
@@ -419,7 +419,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
         public void ResolveSlopeNeighbors_DirectionMaskMatchesHeightTransition()
         {
             // Arrange
-            var manager = new TerrainManager();
+            var manager = new TerrainManager(1);
             manager.GenerateInitialTerrain(seed: 0);
 
             // Act & Assert
