@@ -1,5 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Map;
+using CosmosCasino.Core.Game.Map.Terrain;
 
 namespace CosmosCasino.Core.Game
 {
@@ -22,11 +23,19 @@ namespace CosmosCasino.Core.Game
         {
             MapManager = new MapManager();
             BuildManager = new BuildManager(MapManager);
+            TerrainManager = new TerrainManager();
+            TerrainManager.GenerateInitialTerrain(seed: 11);
         }
 
         #endregion
 
         #region Properties
+
+        /// <summary>
+        /// Gets the terrain manager responsible for providing access to
+        /// terrain chunks, tiles, and terrain-related queries.
+        /// </summary>
+        public TerrainManager TerrainManager { get; init; }
 
         /// <summary>
         /// Provides access to the core build manager responsible for

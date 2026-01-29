@@ -3,7 +3,7 @@ using CosmosCasino.Core.Game.Map.Grid;
 using NUnit.Framework;
 using System.Numerics;
 
-namespace CosmosCasino.Tests.Game.Map
+namespace CosmosCasino.Tests.Game.Map.Grid
 {
     [TestFixture]
     internal class MapGridTests

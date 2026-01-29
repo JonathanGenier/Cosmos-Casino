@@ -1,0 +1,23 @@
+[gd_scene load_steps=6 format=3 uid="uid://cffg8taudn1fa"]
+
+[ext_resource type="Script" uid="uid://cbs5e0mjnqmyc" path="res://code/Client/Game/Map/Terrain/Rendering/TerrainChunkView.cs" id="1_50dhg"]
+[ext_resource type="Shader" uid="uid://bbbmu3ch8lk7w" path="res://assets/shaders/terrain.gdshader" id="1_aunaq"]
+[ext_resource type="Texture2D" uid="uid://dxbvye8v7fdty" path="res://assets/textures/rock_1.jpg" id="2_a8n6q"]
+[ext_resource type="Texture2D" uid="uid://b6onktkecmc75" path="res://assets/textures/Rock_2.png" id="4_a5d7k"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3xahe"]
+render_priority = 0
+shader = ExtResource("1_aunaq")
+shader_parameter/flat_texture = ExtResource("4_a5d7k")
+shader_parameter/slope_texture = ExtResource("2_a8n6q")
+shader_parameter/roughness = 1.0
+shader_parameter/metallic = 0.0
+shader_parameter/line_thickness = 0.01
+shader_parameter/line_visibility = 0.8
+shader_parameter/blend_radius = 0.25
+
+[node name="TerrainChunkView" type="Node3D"]
+script = ExtResource("1_50dhg")
+
+[node name="GroundMesh" type="MeshInstance3D" parent="."]
+material_override = SubResource("ShaderMaterial_3xahe")

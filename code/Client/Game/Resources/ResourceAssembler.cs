@@ -11,6 +11,7 @@ public sealed partial class ResourceAssembler : Node
 {
     private SpawnResources? _spawnResources;
     private PreviewResources? _previewResources;
+    private TerrainResources? _terrainResources;
 
     #region Properties
 
@@ -36,6 +37,17 @@ public sealed partial class ResourceAssembler : Node
         private set => _previewResources = value;
     }
 
+    /// <summary>
+    /// Gets the terrain rendering resources required by the client layer.
+    /// This property is only valid after initialization and provides access
+    /// to shared terrain assets such as chunk view scenes and materials.
+    /// </summary>
+    public TerrainResources TerrainResources
+    {
+        get => _terrainResources ?? throw new InvalidOperationException($"{nameof(TerrainResources)} is not initialized.");
+        private set => _terrainResources = value;
+    }
+
     #endregion
 
     #region Godot Processes
@@ -52,8 +64,9 @@ public sealed partial class ResourceAssembler : Node
     {
         var spawnPreloader = GetNode<ResourcePreloader>("SpawnResources");
         var previewPreloader = GetNode<ResourcePreloader>("PreviewResources");
+        var terrainPreloader = GetNode<ResourcePreloader>("TerrainResources");
 
-        Assemble(spawnPreloader, previewPreloader);
+        Assemble(spawnPreloader, previewPreloader, terrainPreloader);
     }
 
     #endregion
@@ -65,12 +78,15 @@ public sealed partial class ResourceAssembler : Node
     /// </summary>
     /// <param name="spawnPreloader">The resource preloader used to assemble the spawn resource collection. Cannot be null.</param>
     /// <param name="previewPreloader">The resource preloader used to assemble the preview resource collection. Cannot be null.</param>
+    /// <param name="terrainPreloader">The resource preloader used to assemble the terrain resource collection. Cannot be null.</param>
     private void Assemble(
         ResourcePreloader spawnPreloader,
-        ResourcePreloader previewPreloader)
+        ResourcePreloader previewPreloader,
+        ResourcePreloader terrainPreloader)
     {
         SpawnResources = SpawnResources.Assemble(spawnPreloader);
         PreviewResources = PreviewResources.Assemble(previewPreloader);
+        TerrainResources = TerrainResources.Assemble(terrainPreloader);
     }
 
     #endregion
