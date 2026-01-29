@@ -20,7 +20,7 @@ namespace CosmosCasino.Core.Configs
         /// The total playable terrain size is derived from this value in
         /// combination with <see cref="ChunkSize"/>.
         /// </summary>
-        public const int ChunkCountPerAxis = 3; // 15;
+        public const int ChunkCountPerAxis = 15;
 
         /// <summary>
         /// Number of noise octaves used when generating terrain height values.

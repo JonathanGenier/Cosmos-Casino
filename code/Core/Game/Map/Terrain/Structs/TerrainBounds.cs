@@ -49,19 +49,18 @@ namespace CosmosCasino.Core.Game.Map.Terrain
         /// A new <see cref="TerrainBounds"/> instance representing the
         /// playable chunk area.
         /// </returns>
+        /// <param name="chunkCountPerAxis">Number of chunk per axis (X,Y) to define map size.</param>
         /// <exception cref="InvalidOperationException">
         /// Thrown if <see cref="TerrainConfigs.ChunkCountPerAxis"/> is not an odd value.
         /// </exception>
-        internal static TerrainBounds CreateNew()
+        internal static TerrainBounds CreateNew(int chunkCountPerAxis)
         {
-            var chunkCount = TerrainConfigs.ChunkCountPerAxis;
-
-            if ((chunkCount & 1) == 0)
+            if ((chunkCountPerAxis & 1) == 0)
             {
                 throw new InvalidOperationException($"{nameof(TerrainConfigs.ChunkCountPerAxis)} must be odd.");
             }
 
-            int half = chunkCount / 2;
+            int half = chunkCountPerAxis / 2;
 
             var minX = -half;
             var maxX = half;
