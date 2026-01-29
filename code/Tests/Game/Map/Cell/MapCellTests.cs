@@ -2,7 +2,7 @@ using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map.Cell;
 using NUnit.Framework;
 
-namespace CosmosCasino.Tests.Game.Map
+namespace CosmosCasino.Tests.Game.Map.Cell
 {
     [TestFixture]
     internal class MapCellTests

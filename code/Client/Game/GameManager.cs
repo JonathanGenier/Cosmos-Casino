@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Game;
+using CosmosCasino.Core.Game.Map.Terrain;
 using Godot;
 using System;
 
@@ -10,19 +11,34 @@ public sealed partial class GameManager : NodeManager
 {
     #region Fields
 
+    // ----------------------------------------------------
+    // STATE
+
     private readonly BuildContext _buildContext = new();
 
     private bool _sceneReady = false;
     private bool _sessionInitialized = false;
     private bool _simulationHasStarted = false;
 
+    // ----------------------------------------------------
+    // EXTERNAL
+
     private AppServices? _appServices;
     private GameSession? _gameSession;
+
+    // ----------------------------------------------------
+    // MANAGERS
+
     private CameraManager? _cameraManager;
     private BuildProcessManager? _buildProcessManager;
     private GameUiManager? _gameUiManager;
     private SpawnManager? _spawnManager;
     private CursorManager? _cursorManager;
+    private TerrainRenderManager? _terrainRenderManager;
+
+    // ----------------------------------------------------
+    // FLOWS
+
     private CameraInputFlow? _cameraInputFlow;
     private BuildContextFlow? _buildContextFlow;
     private BuildRequestFlow? _buildRequestFlow;
@@ -30,7 +46,15 @@ public sealed partial class GameManager : NodeManager
     private BuildPreviewFlow? _buildPreviewFlow;
     private BuildInputFlow? _buildInputFlow;
     private CursorPreviewFlow? _cursorPreviewFlow;
+
+    // ----------------------------------------------------
+    // UTILITIES
+
     private ResourceAssembler? _resourceAssembler;
+
+    // ----------------------------------------------------
+    // DEBUG ONLY
+
 #if DEBUG
     private CursorDebugVisualizer? _cursorDebugVisualizer;
 #endif
@@ -39,10 +63,16 @@ public sealed partial class GameManager : NodeManager
 
     #region Properties
 
+    // ----------------------------------------------------------------------------------------------------------------------------
+    // STATE
+
     /// <summary>
     /// Gets the current high-level game state.
     /// </summary>
     public GameState State { get; private set; } = GameState.Loading;
+
+    // ----------------------------------------------------------------------------------------------------------------------------
+    // EXTERNAL
 
     private AppServices AppServices
     {
@@ -55,6 +85,9 @@ public sealed partial class GameManager : NodeManager
         get => _gameSession ?? throw new InvalidOperationException($"{nameof(GameSession)} is not initialized.");
         set => _gameSession = value;
     }
+
+    // ----------------------------------------------------------------------------------------------------------------------------
+    // MANAGERS
 
     private CameraManager CameraManager
     {
@@ -85,6 +118,15 @@ public sealed partial class GameManager : NodeManager
         get => _cursorManager ?? throw new InvalidOperationException($"{nameof(CursorManager)} is not initialized.");
         set => _cursorManager = value;
     }
+
+    private TerrainRenderManager TerrainRenderManager
+    {
+        get => _terrainRenderManager ?? throw new InvalidOperationException($"{nameof(TerrainRenderManager)} is not initialized.");
+        set => _terrainRenderManager = value;
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------------------
+    // FLOWS
 
     private CameraInputFlow CameraInputFlow
     {
@@ -122,17 +164,23 @@ public sealed partial class GameManager : NodeManager
         set => _buildInputFlow = value;
     }
 
+    private CursorPreviewFlow CursorPreviewFlow
+    {
+        get => _cursorPreviewFlow ?? throw new InvalidOperationException($"{nameof(CursorPreviewFlow)} is not initialized.");
+        set => _cursorPreviewFlow = value;
+    }
+
+    // ----------------------------------------------------------------------------------------------------------------------------
+    // UTILITIES
+
     private ResourceAssembler ResourceAssembler
     {
         get => _resourceAssembler ?? throw new InvalidOperationException($"{nameof(ResourceAssembler)} is not initialized.");
         set => _resourceAssembler = value;
     }
 
-    private CursorPreviewFlow CursorPreviewFlow
-    {
-        get => _cursorPreviewFlow ?? throw new InvalidOperationException($"{nameof(CursorPreviewFlow)} is not initialized.");
-        set => _cursorPreviewFlow = value;
-    }
+    // ----------------------------------------------------------------------------------------------------------------------------
+    // DEBUG ONLY
 
 #if DEBUG
     private CursorDebugVisualizer CursorDebugVisualizer
@@ -140,7 +188,6 @@ public sealed partial class GameManager : NodeManager
         get => _cursorDebugVisualizer ?? throw new InvalidOperationException($"{nameof(CursorDebugVisualizer)} is not initialized.");
         set => _cursorDebugVisualizer = value;
     }
-
 
 #endif
 
@@ -278,6 +325,9 @@ public sealed partial class GameManager : NodeManager
         CameraManager = CreateNode<CameraManager>();
         GameUiManager = CreateInitializableNode<GameUiManager>(
             gum => gum.Initialize());
+
+        TerrainRenderManager = AddInitializableNode<TerrainRenderManager>(
+            trm => trm.Initialize(GameSession.TerrainManager, ResourceAssembler.TerrainResources));
 
 #if DEBUG
         CursorDebugVisualizer.Initialize(CursorManager);

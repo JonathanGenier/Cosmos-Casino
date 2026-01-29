@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://cpwd808y472vu"]
+[gd_scene load_steps=12 format=3 uid="uid://cpwd808y472vu"]
 
 [ext_resource type="Script" uid="uid://deve3yyfhp41u" path="res://code/Client/Game/GameManager.cs" id="1_ydf3n"]
 [ext_resource type="Script" uid="uid://c74nuu6h7j00p" path="res://code/Client/Game/Resources/ResourceAssembler.cs" id="2_6thfb"]
@@ -8,18 +8,15 @@
 [ext_resource type="PackedScene" uid="uid://tt5euv8t06il" path="res://scenes/game/build/spawn/wall.tscn" id="5_p0de3"]
 [ext_resource type="PackedScene" uid="uid://rwqh6hpnfi1f" path="res://scenes/game/build/preview/floor_preview.tscn" id="6_06uhe"]
 [ext_resource type="PackedScene" uid="uid://cs0upbu07vjfw" path="res://scenes/game/build/preview/wall_preview.tscn" id="7_gu01l"]
+[ext_resource type="PackedScene" uid="uid://cffg8taudn1fa" path="res://scenes/game/terrain/terrain_chunk_view.tscn" id="8_axn74"]
 
-[sub_resource type="Environment" id="Environment_6hqhf"]
-background_mode = 2
-ambient_light_source = 2
-ambient_light_color = Color(0.53303695, 0.53303665, 0.5330367, 1)
-ambient_light_energy = 3.87
-reflected_light_source = 1
-fog_enabled = true
+[sub_resource type="Environment" id="Environment_axn74"]
+background_mode = 1
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_p0de3"]
-radius = 0.25
-height = 1.0
+[sub_resource type="CylinderMesh" id="CylinderMesh_axn74"]
+top_radius = 0.25
+bottom_radius = 0.25
+height = 30.0
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1_ydf3n")
@@ -33,14 +30,16 @@ resources = [PackedStringArray("floor", "wall"), [ExtResource("2_p0de3"), ExtRes
 [node name="PreviewResources" type="ResourcePreloader" parent="ResourceAssembler"]
 resources = [PackedStringArray("build_grid_preview", "floor_preview", "wall_preview"), [ExtResource("5_6thfb"), ExtResource("6_06uhe"), ExtResource("7_gu01l")]]
 
+[node name="TerrainResources" type="ResourcePreloader" parent="ResourceAssembler"]
+resources = [PackedStringArray("terrain_chunk_view"), [ExtResource("8_axn74")]]
+
 [node name="Camera_Rig" parent="." instance=ExtResource("2_omorx")]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_6hqhf")
+environment = SubResource("Environment_axn74")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 0.98333764, 0.1817894, 0, -0.1817894, 0.98333764, 0, 0, 0)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-mesh = SubResource("CapsuleMesh_p0de3")
+mesh = SubResource("CylinderMesh_axn74")

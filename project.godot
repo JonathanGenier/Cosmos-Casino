@@ -34,6 +34,14 @@ external_editor="custom"
 external_editor_path="C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/devenv.exe"
 external_editor_args="C:/Users/j_gen/OneDrive/Documents/Game_Projects/Cosmos_Casino/cosmos-casino/CosmosCasino.sln"
 
+[file_customization]
+
+folder_colors={
+"res://assets/": "green",
+"res://code/": "red",
+"res://scenes/": "yellow"
+}
+
 [layer_names]
 
 3d_physics/layer_1="Buildable"
