@@ -1,99 +1,92 @@
-using CosmosCasino.Core.Game.Map.Terrain.Generation;
-
 namespace CosmosCasino.Core.Game.Map.Terrain.Tile
 {
     /// <summary>
-    /// Internal implementation details for terrain tile generation.
-    /// This partial definition contains lifecycle state, initialization,
-    /// and generation logic used to populate the tile's height and slope data.
-    /// All generation operations are one-time and enforced by internal guards.
+    /// Represents a single terrain tile defined by corner height samples,
+    /// providing slope classification and neighbor slope metadata used by
+    /// higher-level terrain processing and rendering systems.
     /// </summary>
-    public sealed partial class TerrainTile
+    public sealed class TerrainTile
     {
-        #region Fields
-
-        /// <summary>
-        /// Indicates whether height generation has already been performed.
-        /// This flag enforces the invariant that a terrain tile's height data
-        /// may only be generated once during its lifetime.
-        /// </summary>
-        private bool _heightGenerated;
-
-        #endregion
-
         #region Initialization
 
-
         /// <summary>
-        /// Initializes a new terrain tile with the specified local and world coordinates.
-        /// The tile is created in an ungenerated state; height and slope data
-        /// are populated later during the terrain generation phase.
+        /// Initializes a terrain tile using height samples from its four corner points.
         /// </summary>
-        /// <param name="localCoord">
-        /// The tile's coordinate relative to its containing chunk.
-        /// </param>
-        /// <param name="worldCoord">
-        /// The tile's coordinate in world space, used for height sampling.
-        /// </param>
-        internal TerrainTile(TerrainTileLocalCoord localCoord, TerrainTileWorldCoord worldCoord)
+        /// <param name="topLeftHeight">Height at the tile’s top-left corner.</param>
+        /// <param name="topRightHeight">Height at the tile’s top-right corner.</param>
+        /// <param name="bottomLeftHeight">Height at the tile’s bottom-left corner.</param>
+        /// <param name="bottomRightHeight">Height at the tile’s bottom-right corner.</param>
+        internal TerrainTile(float topLeftHeight, float topRightHeight, float bottomLeftHeight, float bottomRightHeight)
         {
-            LocalCoord = localCoord;
-            WorldCoord = worldCoord;
+            TopLeftHeight = topLeftHeight;
+            TopRightHeight = topRightHeight;
+            BottomLeftHeight = bottomLeftHeight;
+            BottomRightHeight = bottomRightHeight;
+            IsSlope = TopLeftHeight != TopRightHeight || TopLeftHeight != BottomLeftHeight || TopLeftHeight != BottomRightHeight;
         }
 
         #endregion
 
-        #region Generation
+        #region Properties
 
         /// <summary>
-        /// Generates and assigns the tile's corner height values using the provided
-        /// terrain height provider.
-        /// Height sampling is performed using the tile's world coordinates, and
-        /// slope detection is derived from the resulting corner heights.
-        /// This method may only be called once per tile instance.
+        /// The height value sampled at the tile's top-left corner.
         /// </summary>
-        /// <param name="heightGenerator">
-        /// The height provider used to sample terrain heights at world coordinates.
-        /// </param>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if height generation has already been performed for this tile.
-        /// </exception>
-        internal void GenerateHeights(ITerrainHeightProvider heightGenerator)
-        {
-            if (_heightGenerated)
-            {
-                throw new InvalidOperationException("TerrainTile heights already generated.");
-            }
-
-            TopLeftHeight = heightGenerator.GetHeight(WorldCoord.X, WorldCoord.Y);
-            TopRightHeight = heightGenerator.GetHeight(WorldCoord.X + 1, WorldCoord.Y);
-            BottomLeftHeight = heightGenerator.GetHeight(WorldCoord.X, WorldCoord.Y + 1);
-            BottomRightHeight = heightGenerator.GetHeight(WorldCoord.X + 1, WorldCoord.Y + 1);
-            IsSlope = TopLeftHeight != TopRightHeight || TopLeftHeight != BottomLeftHeight || TopLeftHeight != BottomRightHeight;
-
-            _heightGenerated = true;
-        }
+        public float TopLeftHeight { get; private set; }
 
         /// <summary>
-        /// Records the presence of a neighboring sloped tile in the specified direction.
-        /// This information is used by higher-level systems (e.g., rendering or
-        /// smoothing logic) to determine how flat tiles should visually or
-        /// logically transition into adjacent slopes.
+        /// The height value sampled at the tile's top-right corner.
         /// </summary>
-        /// <param name="direction">
-        /// The direction of the neighboring sloped tile to record.
-        /// </param>
+        public float TopRightHeight { get; private set; }
+
+        /// <summary>
+        /// The height value sampled at the tile's bottom-left corner.
+        /// </summary>
+        public float BottomLeftHeight { get; private set; }
+
+        /// <summary>
+        /// The height value sampled at the tile's bottom-right corner.
+        /// </summary>
+        public float BottomRightHeight { get; private set; }
+
+        /// <summary>
+        /// Indicates whether the tile represents a slope.
+        /// A tile is considered sloped if any of its corner height values
+        /// differ from one another.
+        /// </summary>
+        public bool IsSlope { get; private set; }
+
+        /// <summary>
+        /// Bitmask describing which neighboring tiles are sloped.
+        /// This property is only meaningful for flat tiles and is used to
+        /// inform terrain smoothing, blending, or visual transition logic.
+        /// </summary>
+        public SlopeNeighborMask SlopeNeighborMask { get; private set; }
+
+        #endregion
+
+        #region Slope Neighbor Management
+
+        /// <summary>
+        /// Records a neighboring sloped tile in the specified direction for flat tiles.
+        /// </summary>
+        /// <param name="direction">The direction of the neighboring slope.</param>
         internal void AddSlopeNeighbor(SlopeNeighborMask direction)
         {
-            SlopeNeighbors |= direction;
+            if (IsSlope)
+            {
+                return;
+            }
+
+            SlopeNeighborMask |= direction;
         }
 
         /// <summary>
-        /// Clears all slope neighbor flags, resetting the SlopeNeighbors property to indicate no neighbors are present.
+        /// Clears all recorded slope neighbor information for this tile.
         /// </summary>
-        internal void ClearSlopeNeighbors()
+        internal void ClearSlopeNeighborMask()
         {
-            SlopeNeighbors = SlopeNeighborMask.None;
+            SlopeNeighborMask = SlopeNeighborMask.None;
         }
 
         #endregion

@@ -3,15 +3,11 @@ using CosmosCasino.Core.Configs;
 namespace CosmosCasino.Core.Game.Map.Terrain.Generation
 {
     /// <summary>
-    /// Default terrain height generator based on deterministic value noise.
-    /// This type provides a concrete implementation of <see cref="ITerrainHeightProvider"/>
-    /// using seeded value noise to produce reproducible height values for world
-    /// coordinates. The generated heights are quantized to discrete steps to ensure
-    /// stability for downstream systems such as slope detection, pathing, and rendering.
-    /// Noise characteristics are sourced from <see cref="TerrainConfigs"/> to allow
-    /// centralized tuning without modifying generation logic.
+    /// Generates deterministic terrain height values using seeded multi-octave
+    /// value noise and quantizes results to fixed elevation steps for stability
+    /// and consistency across the terrain system.
     /// </summary>
-    internal sealed class TerrainHeightGenerator : ITerrainHeightProvider
+    internal sealed class TerrainHeightGenerator
     {
         #region Fields
 
@@ -55,7 +51,7 @@ namespace CosmosCasino.Core.Game.Map.Terrain.Generation
         /// A quantized height value representing the terrain elevation at the
         /// specified world coordinate.
         /// </returns>
-        float ITerrainHeightProvider.GetHeight(int x, int y)
+        internal float GetHeight(float x, float y)
         {
             float h = _noise.SampleOctaves(
                 x,

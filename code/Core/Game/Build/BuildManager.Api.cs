@@ -24,10 +24,10 @@ namespace CosmosCasino.Core.Game.Build
 
             foreach (var coord in intent.Cells)
             {
-                var result = intent.Kind switch
+                var result = intent.Operation switch
                 {
-                    BuildKind.Floor => EvaluateOperationOnFloor(intent.Operation, coord),
-                    BuildKind.Wall => EvaluateOperationOnWall(intent.Operation, coord),
+                    BuildOperation.Place => _mapManager.CanPlace(intent.Kind, coord),
+                    BuildOperation.Remove => _mapManager.CanRemove(intent.Kind, coord),
                     _ => throw new NotImplementedException($"{nameof(BuildKind)} not implemented.")
                 };
 

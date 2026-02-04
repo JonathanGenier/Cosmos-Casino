@@ -1,6 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 using System;
 
 /// <summary>
@@ -16,8 +16,8 @@ public sealed class BuildContext
 
 
     private BuildContextBase? _activeContext;
-    private MapCellCoord? _startCell;
-    private MapCellCoord? _currentCell;
+    private MapCoord? _startCell;
+    private MapCoord? _currentCell;
     private BuildOperation _currentBuildOperation;
     private BuildInteractionMode _currentBuildInteractionMode;
 
@@ -137,7 +137,7 @@ public sealed class BuildContext
             return;
         }
 
-        _startCell = MapToWorld.WorldToCell(start.WorldPosition);
+        _startCell = MapMath.WorldToMap(start.WorldPosition);
         _currentCell = _startCell;
         _currentBuildOperation = buildOperation;
         BuildStarted?.Invoke();
@@ -164,7 +164,7 @@ public sealed class BuildContext
             return;
         }
 
-        var newCell = MapToWorld.WorldToCell(current.WorldPosition);
+        var newCell = MapMath.WorldToMap(current.WorldPosition);
         bool cellChanged = newCell != _currentCell;
         bool interactionChanged = SetBuildInteractionMode(buildInteractionMode);
 
@@ -190,7 +190,7 @@ public sealed class BuildContext
             return;
         }
 
-        var currentCell = MapToWorld.WorldToCell(current.WorldPosition);
+        var currentCell = MapMath.WorldToMap(current.WorldPosition);
 
         if (currentCell != _currentCell)
         {

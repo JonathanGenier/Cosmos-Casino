@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 
 namespace CosmosCasino.Core.Game.Build
 {
@@ -23,7 +23,7 @@ namespace CosmosCasino.Core.Game.Build
         /// <exception cref="ArgumentException">
         /// Thrown when the cell collection is empty.
         /// </exception>
-        private static void ValidateCells(IReadOnlyList<MapCellCoord> cells)
+        private static void ValidateCells(IReadOnlyList<MapCoord> cells)
         {
             ArgumentNullException.ThrowIfNull(cells);
 

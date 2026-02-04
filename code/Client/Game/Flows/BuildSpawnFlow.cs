@@ -1,6 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 using Godot;
 using System;
 
@@ -130,7 +130,7 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
     private void SpawnBuild(BuildOperationResult result, BuildIntent buildIntent)
     {
         CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildIntent.Kind);
-        Vector3 position = MapToWorld.CellToWorld(spawnKey.Coord);
+        Vector3 position = MapMath.MapToWorld(spawnKey.Coord);
         BuildSpawnDescriptor descriptor = BuildSpawnDescriptorResolver.Resolve(buildIntent);
 
         _spawnManager.Spawn(
@@ -152,11 +152,11 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
 
     private CellSlotSpawnKey GetSpawnKey(BuildOperationResult result, BuildKind buildKind)
     {
-        MapCellCoord coord = result.Cell;
-        MapCellSlot slot = buildKind switch
+        MapCoord coord = result.MapCoord;
+        CellSlot slot = buildKind switch
         {
-            BuildKind.Floor => MapCellSlot.Floor,
-            BuildKind.Wall => MapCellSlot.Wall,
+            BuildKind.Floor => CellSlot.Floor,
+            BuildKind.Wall => CellSlot.Wall,
             _ => throw new InvalidOperationException($"{nameof(BuildKind)} {buildKind} not implemented"),
         };
 

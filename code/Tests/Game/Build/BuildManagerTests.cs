@@ -1,7 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
-using CosmosCasino.Core.Game.Map.Cell;
 using NUnit.Framework;
 
 namespace CosmosCasino.Tests.Game.Build
@@ -22,6 +21,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void Setup()
         {
             _mapManager = new MapManager();
+            _mapManager.GenerateMap(0, 10);
             _buildManager = new BuildManager(_mapManager);
         }
 
@@ -33,7 +33,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void Evaluate_PlaceFloor_SingleCell_DoesNotMutateMap()
         {
             // Arrange
-            var cells = CreateCells();
+            var cells = CreateCellsList();
             var intent = BuildIntent.PlaceFloor(cells);
 
             // Act
@@ -42,14 +42,14 @@ namespace CosmosCasino.Tests.Game.Build
             // Assert
             Assert.That(result.Results, Has.Count.EqualTo(1));
             Assert.That(result.Results[0].Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(cells.All(c => _mapManager.HasFloor(c)), Is.False);
+            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c)), Is.False);
         }
 
         [Test]
         public void Evaluate_PlaceFloor_MultipleCells_DoesNotMutateMap()
         {
             // Arrange
-            var cells = CreateCells(3);
+            var cells = CreateCellsList(3);
             var intent = BuildIntent.PlaceFloor(cells);
 
             // Act
@@ -58,14 +58,14 @@ namespace CosmosCasino.Tests.Game.Build
             // Assert
             Assert.That(result.Results, Has.Count.EqualTo(cells.Count));
             Assert.That(result.Results.All(r => r.Outcome == BuildOperationOutcome.Valid), Is.True);
-            Assert.That(cells.All(c => _mapManager.HasFloor(c)), Is.False);
+            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c)), Is.False);
         }
 
         [Test]
         public void Evaluate_PlaceFloor_AlreadyOccupied_ReturnsNoOp()
         {
             // Arrange
-            var cells = CreateCells();
+            var cells = CreateCellsList();
             PlaceFloor(cells);
             var intent = BuildIntent.PlaceFloor(cells);
 
@@ -74,7 +74,7 @@ namespace CosmosCasino.Tests.Game.Build
 
             // Assert
             Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
-            Assert.That(cells.All(c => _mapManager.HasFloor(c)), Is.True);
+            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c)), Is.True);
         }
 
         #endregion
@@ -85,7 +85,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void Evaluate_PlaceWall_SingleCell_WithFloor_DoesNotMutateMap()
         {
             // Arrange
-            var cells = CreateCells();
+            var cells = CreateCellsList();
             PlaceFloor(cells);
             var intent = BuildIntent.PlaceWall(cells);
 
@@ -94,14 +94,14 @@ namespace CosmosCasino.Tests.Game.Build
 
             // Assert
             Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_mapManager.HasWall(cells[0]), Is.False);
+            Assert.That(_mapManager.Has(BuildKind.Wall, cells[0]), Is.False);
         }
 
         [Test]
         public void Evaluate_PlaceWall_WithoutFloor_ReturnsInvalid()
         {
             // Arrange
-            var cells = CreateCells(2);
+            var cells = CreateCellsList(2);
             var intent = BuildIntent.PlaceWall(cells);
 
             // Act
@@ -110,7 +110,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Assert
             Assert.That(result.Results, Has.Count.EqualTo(cells.Count));
             Assert.That(result.Results.All(r => r.Outcome == BuildOperationOutcome.Invalid), Is.True);
-            Assert.That(cells.All(c => _mapManager.HasWall(c)), Is.False);
+            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Wall, c)), Is.False);
         }
 
         #endregion
@@ -121,7 +121,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void Execute_PlaceFloor_SingleCell_CreatesFloor()
         {
             // Arrange
-            var cells = CreateCells();
+            var cells = CreateCellsList();
             var intent = BuildIntent.PlaceFloor(cells);
 
             // Act
@@ -129,14 +129,14 @@ namespace CosmosCasino.Tests.Game.Build
 
             // Assert
             Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_mapManager.HasFloor(cells[0]), Is.True);
+            Assert.That(_mapManager.Has(BuildKind.Floor, cells[0]), Is.True);
         }
 
         [Test]
         public void Execute_PlaceFloor_MultipleCells_CreatesAllFloors()
         {
             // Arrange
-            var cells = CreateCells(3);
+            var cells = CreateCellsList(3);
             var intent = BuildIntent.PlaceFloor(cells);
 
             // Act
@@ -145,14 +145,14 @@ namespace CosmosCasino.Tests.Game.Build
             // Assert
             Assert.That(result.Results, Has.Count.EqualTo(cells.Count));
             Assert.That(result.Results.All(r => r.Outcome == BuildOperationOutcome.Valid), Is.True);
-            Assert.That(cells.All(c => _mapManager.HasFloor(c)), Is.True);
+            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c)), Is.True);
         }
 
         [Test]
         public void Execute_PlaceFloor_DuplicateCells_AllowsPartialFailure()
         {
             // Arrange
-            var cell = new MapCellCoord(0, 0, 0);
+            var cell = new MapCoord(0, 0);
             var intent = BuildIntent.PlaceFloor([cell, cell]);
 
             // Act
@@ -162,7 +162,7 @@ namespace CosmosCasino.Tests.Game.Build
             Assert.That(result.Results, Has.Count.EqualTo(2));
             Assert.That(result.Results[0].Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
             Assert.That(result.Results[1].Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
-            Assert.That(_mapManager.HasFloor(cell), Is.True);
+            Assert.That(_mapManager.Has(BuildKind.Floor, cell), Is.True);
         }
 
         #endregion
@@ -173,7 +173,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void Execute_PlaceWall_WithExistingFloor_CreatesWall()
         {
             // Arrange
-            var cells = CreateCells();
+            var cells = CreateCellsList();
             PlaceFloor(cells);
             var intent = BuildIntent.PlaceWall(cells);
 
@@ -182,14 +182,14 @@ namespace CosmosCasino.Tests.Game.Build
 
             // Assert
             Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_mapManager.HasWall(cells[0]), Is.True);
+            Assert.That(_mapManager.Has(BuildKind.Wall, cells[0]), Is.True);
         }
 
         [Test]
         public void Execute_PlaceWall_WithoutFloor_ReturnsInvalid_AndDoesNotCreateWall()
         {
             // Arrange
-            var cells = CreateCells(2);
+            var cells = CreateCellsList(2);
             var intent = BuildIntent.PlaceWall(cells);
 
             // Act
@@ -197,7 +197,7 @@ namespace CosmosCasino.Tests.Game.Build
 
             // Assert
             Assert.That(result.Results.All(r => r.Outcome == BuildOperationOutcome.Invalid), Is.True);
-            Assert.That(cells.All(c => !_mapManager.HasWall(c)), Is.True);
+            Assert.That(cells.All(c => !_mapManager.Has(BuildKind.Wall, c)), Is.True);
         }
 
         #endregion
@@ -213,11 +213,11 @@ namespace CosmosCasino.Tests.Game.Build
         /// This method is used to arrange test scenarios by directly mutating the map state.
         /// Use this when you need to set up preconditions for testing BuildManager behavior.
         /// </remarks>
-        internal void PlaceFloor(IReadOnlyList<MapCellCoord> cells)
+        internal void PlaceFloor(IReadOnlyList<MapCoord> cells)
         {
             foreach (var cell in cells)
             {
-                _mapManager.TryPlaceFloor(cell);
+                _mapManager.TryPlace(BuildKind.Floor, cell);
             }
         }
 
@@ -226,19 +226,19 @@ namespace CosmosCasino.Tests.Game.Build
         /// Creates cells in a horizontal line starting at (0, 0, 0) and incrementing along the X-axis.
         /// </summary>
         /// <param name="cellCount">The number of map cell coordinates to create. Defaults to 1. Values less than or equal to 0 will be treated as 1.</param>
-        /// <returns>A read-only list of <see cref="MapCellCoord"/> instances positioned sequentially along the X-axis at Y=0, Z=0.</returns>
-        internal IReadOnlyList<MapCellCoord> CreateCells(int cellCount = 1)
+        /// <returns>A read-only list of <see cref="MapCoord"/> instances positioned sequentially along the X-axis at Y=0, Z=0.</returns>
+        internal IReadOnlyList<MapCoord> CreateCellsList(int cellCount = 1)
         {
             if (cellCount <= 0)
             {
                 cellCount = 1;
             }
 
-            var cells = new List<MapCellCoord>(cellCount);
+            var cells = new List<MapCoord>(cellCount);
 
             for (int i = 0; i < cellCount; i++)
             {
-                cells.Add(new MapCellCoord(i, 0, 0));
+                cells.Add(new MapCoord(i, 0));
             }
 
             return cells;

@@ -1,6 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 using System;
 using System.Collections.Generic;
 
@@ -34,8 +34,8 @@ public sealed class FloorBuildContext : BuildContextBase
     /// This parameter is passed uninitialized.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
     public override bool TryCreateBuildIntent(
-        MapCellCoord startCell,
-        MapCellCoord endCell,
+        MapCoord startCell,
+        MapCoord endCell,
         BuildOperation buildOperation,
         BuildInteractionMode buildInteractionMode,
         out BuildIntent intent)
@@ -82,9 +82,9 @@ public sealed class FloorBuildContext : BuildContextBase
     /// <returns>A read-only list of map cell coordinates within the specified area if the build operation is Place or Remove;
     /// otherwise, an empty list.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the specified build operation is not supported.</exception>
-    public override IReadOnlyList<MapCellCoord> GetCells(
-        MapCellCoord startCell,
-        MapCellCoord endCell,
+    public override IReadOnlyList<MapCoord> GetCells(
+        MapCoord startCell,
+        MapCoord endCell,
         BuildOperation buildOperation,
         BuildInteractionMode buildInteractionMode)
     {
@@ -95,7 +95,7 @@ public sealed class FloorBuildContext : BuildContextBase
             case BuildOperation.Remove:
                 return GetCellsRectangleArea(startCell, endCell);
             case BuildOperation.None:
-                return Array.Empty<MapCellCoord>();
+                return Array.Empty<MapCoord>();
             default:
                 throw new InvalidOperationException($"Unsupported build operation: {buildOperation}");
         }
@@ -115,9 +115,9 @@ public sealed class FloorBuildContext : BuildContextBase
     /// <returns>An immutable list of map cell coordinates that make up the selected area or path. The contents and shape of the
     /// list depend on the specified build interaction mode.</returns>
     /// <exception cref="InvalidOperationException">Thrown when an unsupported build interaction mode is specified.</exception>
-    private IReadOnlyList<MapCellCoord> GetPlaceCells(
-        MapCellCoord startCell,
-        MapCellCoord endCell,
+    private IReadOnlyList<MapCoord> GetPlaceCells(
+        MapCoord startCell,
+        MapCoord endCell,
         BuildInteractionMode buildInteractionMode)
     {
         switch (buildInteractionMode)

@@ -1,10 +1,10 @@
-namespace CosmosCasino.Core.Game.Map.Cell
+namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
     /// Immutable value type representing a 3D grid coordinate used to
     /// identify a single cell within the map.
     /// </summary>
-    public readonly struct MapCellCoord : IEquatable<MapCellCoord>
+    public readonly struct MapCoord : IEquatable<MapCoord>
     {
         #region FIELDS
 
@@ -18,27 +18,20 @@ namespace CosmosCasino.Core.Game.Map.Cell
         /// </summary>
         public readonly int Y;
 
-        /// <summary>
-        /// Z-axis (layer or elevation) coordinate of the cell.
-        /// </summary>
-        public readonly int Z;
-
         #endregion
 
         #region CONSTRUCTOR
 
         /// <summary>
-        /// Initializes a new <see cref="MapCellCoord"/> with the specified
+        /// Initializes a new <see cref="MapCoord"/> with the specified
         /// grid coordinates.
         /// </summary>
         /// <param name="x">X-axis coordinate.</param>
         /// <param name="y">Y-axis coordinate.</param>
-        /// <param name="z">Z-axis (layer) coordinate.</param>
-        public MapCellCoord(int x, int y, int z)
+        public MapCoord(int x, int y)
         {
             X = x;
             Y = y;
-            Z = z;
         }
 
         #endregion
@@ -46,7 +39,7 @@ namespace CosmosCasino.Core.Game.Map.Cell
         #region METHODS
 
         /// <summary>
-        /// Determines whether two <see cref="MapCellCoord"/> values represent
+        /// Determines whether two <see cref="MapCoord"/> values represent
         /// the same grid coordinate.
         /// </summary>
         /// <param name="left">The left-hand coordinate.</param>
@@ -54,13 +47,13 @@ namespace CosmosCasino.Core.Game.Map.Cell
         /// <returns>
         /// <c>true</c> if both coordinates are equal; otherwise, <c>false</c>.
         /// </returns>
-        public static bool operator ==(MapCellCoord left, MapCellCoord right)
+        public static bool operator ==(MapCoord left, MapCoord right)
         {
             return left.Equals(right);
         }
 
         /// <summary>
-        /// Determines whether two <see cref="MapCellCoord"/> values represent
+        /// Determines whether two <see cref="MapCoord"/> values represent
         /// different grid coordinates.
         /// </summary>
         /// <param name="left">The left-hand coordinate.</param>
@@ -68,22 +61,22 @@ namespace CosmosCasino.Core.Game.Map.Cell
         /// <returns>
         /// <c>true</c> if the coordinates are not equal; otherwise, <c>false</c>.
         /// </returns>
-        public static bool operator !=(MapCellCoord left, MapCellCoord right)
+        public static bool operator !=(MapCoord left, MapCoord right)
         {
             return !left.Equals(right);
         }
 
         /// <summary>
         /// Determines whether this coordinate is equal to another
-        /// <see cref="MapCellCoord"/> instance.
+        /// <see cref="MapCoord"/> instance.
         /// </summary>
         /// <param name="other">The coordinate to compare against.</param>
         /// <returns>
         /// <c>true</c> if all coordinate components match; otherwise, <c>false</c>.
         /// </returns>
-        public bool Equals(MapCellCoord other)
+        public bool Equals(MapCoord other)
         {
-            return X == other.X && Y == other.Y && Z == other.Z;
+            return X == other.X && Y == other.Y;
         }
 
         /// <summary>
@@ -91,12 +84,12 @@ namespace CosmosCasino.Core.Game.Map.Cell
         /// </summary>
         /// <param name="obj">The object to compare.</param>
         /// <returns>
-        /// <c>true</c> if the object is a <see cref="MapCellCoord"/> with matching
+        /// <c>true</c> if the object is a <see cref="MapCoord"/> with matching
         /// values; otherwise, <c>false</c>.
         /// </returns>
         public override bool Equals(object? obj)
         {
-            return obj is MapCellCoord other && Equals(other);
+            return obj is MapCoord other && Equals(other);
         }
 
         /// <summary>
@@ -108,7 +101,7 @@ namespace CosmosCasino.Core.Game.Map.Cell
         /// </returns>
         public override int GetHashCode()
         {
-            return HashCode.Combine(X, Y, Z);
+            return HashCode.Combine(X, Y);
         }
 
         /// <summary>
@@ -119,7 +112,7 @@ namespace CosmosCasino.Core.Game.Map.Cell
         /// </returns>
         public override string ToString()
         {
-            return $"({X}, {Y}, {Z})";
+            return $"({X}, {Y})";
         }
 
         #endregion

@@ -1,5 +1,5 @@
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 
 namespace CosmosCasino.Core.Game.Build
 {
@@ -25,7 +25,7 @@ namespace CosmosCasino.Core.Game.Build
         /// <param name="operation">
         /// Operation to perform (place, replace, remove).
         /// </param>
-        private BuildIntent(IReadOnlyList<MapCellCoord> cells, BuildKind kind, BuildOperation operation)
+        private BuildIntent(IReadOnlyList<MapCoord> cells, BuildKind kind, BuildOperation operation)
         {
             Cells = cells;
             Kind = kind;
@@ -50,7 +50,7 @@ namespace CosmosCasino.Core.Game.Build
         /// Gets the collection of target cells where the build operation
         /// should be applied.
         /// </summary>
-        public IReadOnlyList<MapCellCoord> Cells { get; }
+        public IReadOnlyList<MapCoord> Cells { get; }
 
         #endregion
 
@@ -61,7 +61,7 @@ namespace CosmosCasino.Core.Game.Build
         /// </summary>
         /// <param name="cells">A read-only list of map cell coordinates where the floor will be placed. Cannot be null or empty.</param>
         /// <returns>A BuildIntent representing the operation to place a floor on the specified cells.</returns>
-        public static BuildIntent PlaceFloor(IReadOnlyList<MapCellCoord> cells)
+        public static BuildIntent PlaceFloor(IReadOnlyList<MapCoord> cells)
         {
             ValidateCells(cells);
 
@@ -77,7 +77,7 @@ namespace CosmosCasino.Core.Game.Build
         /// <param name="cells">A read-only list of map cell coordinates identifying the cells from which the floor should be removed.
         /// Cannot be null or empty.</param>
         /// <returns>A BuildIntent representing the removal of the floor from the specified cells.</returns>
-        public static BuildIntent RemoveFloor(IReadOnlyList<MapCellCoord> cells)
+        public static BuildIntent RemoveFloor(IReadOnlyList<MapCoord> cells)
         {
             ValidateCells(cells);
 
@@ -92,7 +92,7 @@ namespace CosmosCasino.Core.Game.Build
         /// </summary>
         /// <param name="cells">A read-only list of map cell coordinates where the wall will be placed. Cannot be null or empty.</param>
         /// <returns>A BuildIntent representing the action to place a wall on the specified cells.</returns>
-        public static BuildIntent PlaceWall(IReadOnlyList<MapCellCoord> cells)
+        public static BuildIntent PlaceWall(IReadOnlyList<MapCoord> cells)
         {
             ValidateCells(cells);
 
@@ -108,7 +108,7 @@ namespace CosmosCasino.Core.Game.Build
         /// <param name="cells">A read-only list of map cell coordinates that identify the locations from which walls should be removed.
         /// Cannot be null or empty.</param>
         /// <returns>A BuildIntent representing the removal of walls from the specified cells.</returns>
-        public static BuildIntent RemoveWall(IReadOnlyList<MapCellCoord> cells)
+        public static BuildIntent RemoveWall(IReadOnlyList<MapCoord> cells)
         {
             ValidateCells(cells);
 

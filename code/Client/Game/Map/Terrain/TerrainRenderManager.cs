@@ -1,21 +1,19 @@
-using CosmosCasino.Core.Game.Map.Terrain;
-using CosmosCasino.Core.Game.Map.Terrain.Chunk;
+using CosmosCasino.Core.Configs;
+using CosmosCasino.Core.Game.Map;
+using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using Godot;
 using System;
 using System.Collections.Generic;
 
 /// <summary>
-/// Manages the client-side rendering lifecycle of terrain chunks.
-/// Responsible for instantiating, initializing, and owning <see cref="TerrainChunkView"/> nodes
-/// that visually represent authoritative terrain data managed by <see cref="TerrainManager"/>.
-/// This class acts strictly as a view-layer coordinator and does not generate or mutate terrain data.
+/// Manages the client-side rendering of terrain by instantiating and maintaining
+/// visual terrain chunk views derived from the authoritative map terrain data.
 /// </summary>
 public sealed partial class TerrainRenderManager : InitializableNodeManager
 {
     #region Fields
 
-    private readonly Dictionary<TerrainChunkGridCoord, TerrainChunkView> _chunkViews = new();
-    private TerrainManager? _terrainManager;
+    private MapManager? _mapManager;
     private PackedScene? _chunkScene;
 
     private bool _isGenerated;
@@ -24,10 +22,10 @@ public sealed partial class TerrainRenderManager : InitializableNodeManager
 
     #region Properties
 
-    private TerrainManager TerrainManager
+    private MapManager MapManager
     {
-        get => _terrainManager ?? throw new InvalidOperationException($"{nameof(TerrainManager)} has not been initialized.");
-        set => _terrainManager = value;
+        get => _mapManager ?? throw new InvalidOperationException($"{nameof(MapManager)} has not been initialized.");
+        set => _mapManager = value;
     }
 
     private PackedScene TerrainChunkViewScene
@@ -41,25 +39,24 @@ public sealed partial class TerrainRenderManager : InitializableNodeManager
     #region Initialization
 
     /// <summary>
-    /// Initializes the terrain render manager with the required terrain manager and rendering resources.
-    /// Loads the terrain chunk view scene and generates the initial set of chunk views
-    /// corresponding to the terrain bounds.
+    /// Initializes the terrain rendering system by binding the map manager,
+    /// loading terrain resources, and generating initial terrain chunk views.
     /// </summary>
-    /// <param name="terrainManager">
-    /// The authoritative terrain manager providing access to terrain chunks and bounds.
+    /// <param name="mapManager">
+    /// The map manager providing access to terrain and map state.
     /// </param>
     /// <param name="terrainResources">
-    /// Client-side resources required for rendering terrain, including the chunk view scene.
+    /// The terrain rendering resources used to spawn chunk views.
     /// </param>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="terrainManager"/> or <paramref name="terrainResources"/> is null.
+    /// Thrown if <paramref name="mapManager"/> or <paramref name="terrainResources"/> is <c>null</c>.
     /// </exception>
-    public void Initialize(TerrainManager terrainManager, TerrainResources terrainResources)
+    public void Initialize(MapManager mapManager, TerrainResources terrainResources)
     {
-        ArgumentNullException.ThrowIfNull(terrainManager);
+        ArgumentNullException.ThrowIfNull(mapManager);
         ArgumentNullException.ThrowIfNull(terrainResources);
 
-        TerrainManager = terrainManager;
+        MapManager = mapManager;
         TerrainChunkViewScene = terrainResources.TerrainChunkViewScene;
 
         GenerateInitialTerrainChunkViews();
@@ -71,12 +68,11 @@ public sealed partial class TerrainRenderManager : InitializableNodeManager
     #region Generation
 
     /// <summary>
-    /// Generates and attaches the initial set of terrain chunk views based on the current terrain bounds.
-    /// Each chunk view is instantiated, initialized with its corresponding terrain chunk,
-    /// and added as a child node for rendering.
+    /// Generates and attaches the initial set of terrain chunk views for all
+    /// chunks within the configured terrain bounds.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// Thrown if chunk views have already been generated or if an expected terrain chunk is missing.
+    /// Thrown if chunk views have already been generated or required terrain data is missing.
     /// </exception>
     private void GenerateInitialTerrainChunkViews()
     {
@@ -85,27 +81,52 @@ public sealed partial class TerrainRenderManager : InitializableNodeManager
             throw new InvalidOperationException("Terrain chunks have already been generated.");
         }
 
-        var bounds = TerrainManager.Bounds;
-
-        for (int y = bounds.MinY; y <= bounds.MaxY; y++)
+        for (int y = 0; y < TerrainConfigs.ChunkCountPerAxis; y++)
         {
-            for (int x = bounds.MinX; x <= bounds.MaxX; x++)
+            for (int x = 0; x < TerrainConfigs.ChunkCountPerAxis; x++)
             {
-                var coord = new TerrainChunkGridCoord(x, y);
+                var chunkX = x * TerrainConfigs.ChunkSize;
+                var chunkY = y * TerrainConfigs.ChunkSize;
+                var chunkCoord = new MapCoord(chunkX, chunkY);
 
-                if (!TerrainManager.TryGetChunk(coord, out var terrainChunk))
-                {
-                    throw new InvalidOperationException($"Terrain chunk at {coord} does not exist.");
-                }
-
-                var chunkView = TerrainChunkViewScene.Instantiate<TerrainChunkView>();
-                chunkView.Initialize(terrainChunk);
-                _chunkViews.Add(coord, chunkView);
-                AddChild(chunkView);
+                GenerateChunkView(chunkCoord);
             }
         }
 
         _isGenerated = true;
+    }
+
+    /// <summary>
+    /// Creates and initializes a visual terrain chunk view for the specified
+    /// chunk coordinate using the corresponding terrain tile data.
+    /// </summary>
+    /// <param name="chunkCoord">The map coordinate of the chunk to generate.</param>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if any terrain tile required for the chunk is missing.
+    /// </exception>
+    private void GenerateChunkView(MapCoord chunkCoord)
+    {
+        int chunkSize = TerrainConfigs.ChunkSize;
+        var tiles = new TerrainTile[chunkSize, chunkSize];
+
+        for (int y = 0; y < chunkSize; y++)
+        {
+            for (int x = 0; x < chunkSize; x++)
+            {
+                var coord = new MapCoord(chunkCoord.X + x, chunkCoord.Y + y);
+
+                if (!MapManager.TryGetTerrain(coord, out var terrain))
+                {
+                    throw new InvalidOperationException($"Missing terrain at {coord}");
+                }
+
+                tiles[x, y] = terrain;
+            }
+        }
+
+        var chunkView = TerrainChunkViewScene.Instantiate<TerrainChunkView>();
+        chunkView.Initialize(tiles, chunkCoord);
+        AddChild(chunkView);
     }
 
     #endregion

@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 using Godot;
 
 /// <summary>
@@ -49,7 +49,7 @@ public readonly struct CursorContext
     /// <summary>
     /// Gets the cell coordinates corresponding to the current world position.
     /// </summary>
-    public MapCellCoord CellPosition => MapToWorld.WorldToCell(WorldPosition);
+    public MapCoord CellPosition => MapMath.WorldToMap(WorldPosition);
 
     #endregion
 }

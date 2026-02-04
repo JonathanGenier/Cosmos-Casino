@@ -1,4 +1,6 @@
-using CosmosCasino.Core.Game.Map.Terrain.Chunk;
+using CosmosCasino.Core.Configs;
+using CosmosCasino.Core.Game.Map;
+using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using Godot;
 using System;
 
@@ -15,7 +17,7 @@ public sealed partial class TerrainChunkView : Node3D
 {
     #region Fields
 
-    private TerrainChunk? _terrainChunk;
+    private TerrainTile[,]? _tiles;         // Array of tiles in this chunk
     private MeshInstance3D? _groundMesh;
 
     private bool _isInitialized;
@@ -25,10 +27,9 @@ public sealed partial class TerrainChunkView : Node3D
 
     #region Properties
 
-    private TerrainChunk TerrainChunk
+    private TerrainTile[,] Tiles
     {
-        get => _terrainChunk ?? throw new InvalidOperationException($"{nameof(TerrainChunk)} has not been initialized.");
-        set => _terrainChunk = value;
+        get => _tiles ?? throw new InvalidOperationException($"Chunk tiles has not been initialized.");
     }
 
     private MeshInstance3D GroundMesh
@@ -37,24 +38,23 @@ public sealed partial class TerrainChunkView : Node3D
         set => _groundMesh = value;
     }
 
+    private MapCoord Coord { get; set; }
+
     #endregion
 
     #region Initialization
 
     /// <summary>
-    /// Initializes the terrain chunk view with its backing terrain data.
-    /// Must be called before the node enters the scene tree.
+    /// Initializes the chunk view with terrain tile data and its map coordinate.
     /// </summary>
-    /// <param name="terrainChunk">
-    /// The terrain chunk providing the data to render.
-    /// </param>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="terrainChunk"/> is null.
-    /// </exception>
-    public void Initialize(TerrainChunk terrainChunk)
+    /// <param name="tiles">The terrain tiles contained in this chunk.</param>
+    /// <param name="coord">The map coordinate identifying the chunk.</param>
+    public void Initialize(TerrainTile[,] tiles, MapCoord coord)
     {
-        ArgumentNullException.ThrowIfNull(terrainChunk);
-        TerrainChunk = terrainChunk;
+        ArgumentNullException.ThrowIfNull(tiles);
+
+        _tiles = tiles;
+        Coord = coord;
         _isInitialized = true;
     }
 
@@ -76,8 +76,13 @@ public sealed partial class TerrainChunkView : Node3D
             throw new InvalidOperationException($"{nameof(TerrainChunkView)} has not been initialized.");
         }
 
-        Position = new Vector3(TerrainChunk.WorldOrigin.X, 0, TerrainChunk.WorldOrigin.Y);
         GroundMesh = GetNode<MeshInstance3D>("GroundMesh");
+
+        float half = TerrainConfigs.ChunkSize * TerrainConfigs.ChunkCountPerAxis / 2;
+        float originX = Coord.X - half - 0.5f;
+        float originZ = Coord.Y - half - 0.5f;
+
+        Position = new Vector3(originX, 0, originZ);
 
         BuildFullMesh();
     }
@@ -87,7 +92,7 @@ public sealed partial class TerrainChunkView : Node3D
     #region Mesh Generation
 
     /// <summary>
-    /// Builds and assigns the complete terrain mesh for this chunk.
+    /// Builds and assigns the renderable mesh for the terrain chunk.
     /// </summary>
     /// <exception cref="InvalidOperationException">
     /// Thrown if the mesh has already been built.
@@ -101,18 +106,31 @@ public sealed partial class TerrainChunkView : Node3D
 
         var surfaceTool = new SurfaceTool();
         var mesh = new ArrayMesh();
-        Vector3 chunkOrigin = Vector3.Zero;
 
         surfaceTool.Begin(Mesh.PrimitiveType.Triangles);
 
-        foreach (var tile in TerrainChunk.Tiles)
+        int sizeX = Tiles.GetLength(0);
+        int sizeY = Tiles.GetLength(1);
+
+        for (int y = 0; y < sizeY; y++)
         {
-            TerrainTileBuilder.BuildTile(surfaceTool, tile, chunkOrigin);
+            for (int x = 0; x < sizeX; x++)
+            {
+                var tile = Tiles[x, y];
+                var cellChunkPosition = new Vector2I(x, y);
+
+                TerrainTileBuilder.BuildTile(
+                    surfaceTool,
+                    tile,
+                    cellChunkPosition
+                );
+            }
         }
 
         surfaceTool.GenerateNormals();
         surfaceTool.Commit(mesh);
         GroundMesh.Mesh = mesh;
+
         _isMeshBuilt = true;
     }
 

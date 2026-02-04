@@ -1,6 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 using System;
 using System.Collections.Generic;
 
@@ -34,8 +34,8 @@ public sealed class WallBuildContext : BuildContextBase
     /// <param name="intent">When this method returns, contains the created build intent if successful; otherwise, null.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
     public override bool TryCreateBuildIntent(
-        MapCellCoord startCell,
-        MapCellCoord endCell,
+        MapCoord startCell,
+        MapCoord endCell,
         BuildOperation buildOperation,
         BuildInteractionMode buildInteractionMode,
         out BuildIntent intent)
@@ -86,9 +86,9 @@ public sealed class WallBuildContext : BuildContextBase
     /// <returns>A read-only list of map cell coordinates affected by the build operation. The list will be empty if no cells are
     /// affected.</returns>
     /// <exception cref="InvalidOperationException">Thrown if an unsupported build operation is specified.</exception>
-    public override IReadOnlyList<MapCellCoord> GetCells(
-        MapCellCoord startCell,
-        MapCellCoord endCell,
+    public override IReadOnlyList<MapCoord> GetCells(
+        MapCoord startCell,
+        MapCoord endCell,
         BuildOperation buildOperation,
         BuildInteractionMode buildInteractionMode)
     {
@@ -99,7 +99,7 @@ public sealed class WallBuildContext : BuildContextBase
             case BuildOperation.Remove:
                 return GetCellsRectangleArea(startCell, endCell);
             case BuildOperation.None:
-                return Array.Empty<MapCellCoord>();
+                return Array.Empty<MapCoord>();
             default:
                 throw new InvalidOperationException($"Unsupported build operation: {buildOperation}");
         }
@@ -113,12 +113,12 @@ public sealed class WallBuildContext : BuildContextBase
     /// <param name="endCell">The ending cell coordinate for the build operation. Determines the other endpoint of the affected cell range.</param>
     /// <param name="buildInteractionMode">The interaction mode that specifies how the cells between the start and end coordinates are selected. Different
     /// modes may result in different patterns or shapes of affected cells.</param>
-    /// <returns>A read-only list of <see cref="MapCellCoord"/> values representing the cells selected by the build operation.
+    /// <returns>A read-only list of <see cref="MapCoord"/> values representing the cells selected by the build operation.
     /// The list may be empty if no cells are selected.</returns>
     /// <exception cref="InvalidOperationException">Thrown if <paramref name="buildInteractionMode"/> is not a supported value.</exception>
-    private IReadOnlyList<MapCellCoord> GetPlaceCells(
-        MapCellCoord startCell,
-        MapCellCoord endCell,
+    private IReadOnlyList<MapCoord> GetPlaceCells(
+        MapCoord startCell,
+        MapCoord endCell,
         BuildInteractionMode buildInteractionMode)
     {
         switch (buildInteractionMode)

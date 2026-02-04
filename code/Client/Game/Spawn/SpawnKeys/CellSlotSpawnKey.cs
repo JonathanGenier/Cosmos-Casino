@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 using System;
 
 /// <summary>
@@ -18,7 +18,7 @@ public readonly struct CellSlotSpawnKey : IEquatable<CellSlotSpawnKey>, ISpawnKe
     /// </summary>
     /// <param name="coord">The coordinates of the map cell to associate with this key.</param>
     /// <param name="slot">The slot within the specified map cell to associate with this key.</param>
-    public CellSlotSpawnKey(MapCellCoord coord, MapCellSlot slot)
+    public CellSlotSpawnKey(MapCoord coord, CellSlot slot)
     {
         Coord = coord;
         Slot = slot;
@@ -31,12 +31,12 @@ public readonly struct CellSlotSpawnKey : IEquatable<CellSlotSpawnKey>, ISpawnKe
     /// <summary>
     /// Gets the coordinates of this map cell.
     /// </summary>
-    public MapCellCoord Coord { get; }
+    public MapCoord Coord { get; }
 
     /// <summary>
     /// Gets the slot information associated with this map cell.
     /// </summary>
-    public MapCellSlot Slot { get; }
+    public CellSlot Slot { get; }
 
     #endregion
 

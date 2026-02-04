@@ -1,15 +1,16 @@
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
+using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using NUnit.Framework;
 
-namespace CosmosCasino.Tests.Game.Map.Cell
+namespace CosmosCasino.Tests.Game.Map
 {
     [TestFixture]
-    internal class MapCellTests
+    internal class CellTests
     {
         #region FIELDS
 
-        private MapCell _mapCell = null!;
+        private Cell _cell = null!;
 
         #endregion
 
@@ -18,7 +19,9 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         [SetUp]
         public void Setup()
         {
-            _mapCell = new();
+            var terrainTile = new TerrainTile(0f, 0f, 0f, 0f);
+            var coord = new MapCoord(0, 0);
+            _cell = new Cell(coord, terrainTile);
         }
 
         #endregion
@@ -29,7 +32,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         public void MapCell_ShouldBeEmptyOnCreation()
         {
             // Assert
-            Assert.That(_mapCell.IsEmpty, Is.True);
+            Assert.That(_cell.IsEmpty, Is.True);
         }
 
         #endregion
@@ -40,18 +43,18 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         public void HasFloor_ShouldReturnTrue_WhenFloorExists()
         {
             // Arrange
-            var validationResult = _mapCell.ValidatePlaceFloor();
-            _mapCell.PlaceFloor(validationResult);
+            var validationResult = _cell.ValidatePlaceFloor();
+            _cell.PlaceFloor(validationResult);
 
             // Assert
-            Assert.That(_mapCell.HasFloor, Is.True);
+            Assert.That(_cell.HasFloor, Is.True);
         }
 
         [Test]
         public void HasFloor_ShouldReturnFalse_WhenFloorDoesNotExists()
         {
             // Assert
-            Assert.That(_mapCell.HasFloor, Is.False);
+            Assert.That(_cell.HasFloor, Is.False);
         }
 
         #endregion
@@ -65,14 +68,14 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceWallWithFloor();
 
             // Assert
-            Assert.That(_mapCell.HasWall, Is.True);
+            Assert.That(_cell.HasWall, Is.True);
         }
 
         [Test]
         public void HasWall_ShouldReturnFalse_WhenWallDoesNotExists()
         {
             // Assert
-            Assert.That(_mapCell.HasWall, Is.False);
+            Assert.That(_cell.HasWall, Is.False);
         }
 
         #endregion
@@ -86,7 +89,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceFloor();
 
             // Assert
-            Assert.That(_mapCell.IsEmpty, Is.False);
+            Assert.That(_cell.IsEmpty, Is.False);
         }
 
         [Test]
@@ -96,14 +99,14 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceWallWithFloor();
 
             // Assert
-            Assert.That(_mapCell.IsEmpty, Is.False);
+            Assert.That(_cell.IsEmpty, Is.False);
         }
 
         [Test]
         public void IsEmpty_ShouldReturnTrue_WhenFloorAndWallDoesNotExists()
         {
             // Assert
-            Assert.That(_mapCell.IsEmpty, Is.True);
+            Assert.That(_cell.IsEmpty, Is.True);
         }
 
         #endregion
@@ -114,7 +117,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         public void ValidatePlaceFloor_ShouldReturnValid_WhenFloorDoesNotExist()
         {
             // Act
-            var validResult = _mapCell.ValidatePlaceFloor();
+            var validResult = _cell.ValidatePlaceFloor();
 
             // Assert
             Assert.That(validResult.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
@@ -128,7 +131,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceFloor();
 
             // Act
-            var noOpResult = _mapCell.ValidatePlaceFloor();
+            var noOpResult = _cell.ValidatePlaceFloor();
 
             // Assert
             Assert.That(noOpResult.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
@@ -138,8 +141,8 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         [Test]
         public void ValidatePlaceFloor_Is_Idempotent_WhenStateDoesNotChange()
         {
-            var r1 = _mapCell.ValidatePlaceFloor();
-            var r2 = _mapCell.ValidatePlaceFloor();
+            var r1 = _cell.ValidatePlaceFloor();
+            var r2 = _cell.ValidatePlaceFloor();
 
             Assert.That(r1.Outcome, Is.EqualTo(r2.Outcome));
             Assert.That(r1.FailureReason, Is.EqualTo(r2.FailureReason));
@@ -154,12 +157,12 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         {
             // Arrange
             PlaceFloor();
-            var noOpResult = _mapCell.ValidatePlaceFloor();
+            var noOpResult = _cell.ValidatePlaceFloor();
 
             // Assert
             Assert.That(noOpResult.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
-            Assert.That(() => _mapCell.PlaceFloor(noOpResult), Throws.InvalidOperationException);
-            Assert.That(_mapCell.HasFloor, Is.True);
+            Assert.That(() => _cell.PlaceFloor(noOpResult), Throws.InvalidOperationException);
+            Assert.That(_cell.HasFloor, Is.True);
         }
 
         [Test]
@@ -169,26 +172,26 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceFloor();
 
             // Act
-            var noOpResult = _mapCell.ValidatePlaceFloor();
+            var noOpResult = _cell.ValidatePlaceFloor();
 
             // Assert
             Assert.That(noOpResult.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
-            Assert.That(() => _mapCell.PlaceFloor(noOpResult), Throws.InvalidOperationException);
-            Assert.That(_mapCell.HasFloor, Is.True);
+            Assert.That(() => _cell.PlaceFloor(noOpResult), Throws.InvalidOperationException);
+            Assert.That(_cell.HasFloor, Is.True);
         }
 
         [Test]
         public void PlaceFloor_ShouldMutate_WhenValid()
         {
             // Arrange
-            var validResult = _mapCell.ValidatePlaceFloor();
+            var validResult = _cell.ValidatePlaceFloor();
 
             // Act
-            _mapCell.PlaceFloor(validResult);
+            _cell.PlaceFloor(validResult);
 
             // Assert
             Assert.That(validResult.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_mapCell!.HasFloor, Is.True);
+            Assert.That(_cell!.HasFloor, Is.True);
         }
 
         #endregion
@@ -202,7 +205,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceFloor();
 
             // Act
-            var validResult = _mapCell.ValidateRemoveFloor();
+            var validResult = _cell.ValidateRemoveFloor();
 
             // Assert
             Assert.That(validResult.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
@@ -216,7 +219,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceWallWithFloor();
 
             // Act
-            var result = _mapCell.ValidateRemoveFloor();
+            var result = _cell.ValidateRemoveFloor();
 
             // Assert
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
@@ -227,7 +230,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         public void ValidateRemoveFloor_ShouldReturnNoOp_WhenNoFloorExists()
         {
             // Act
-            var result = _mapCell.ValidateRemoveFloor();
+            var result = _cell.ValidateRemoveFloor();
 
             // Assert
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
@@ -238,8 +241,8 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         public void ValidateRemoveFloor_Is_Idempotent_WhenStateDoesNotChange()
         {
             // Arrange
-            var r1 = _mapCell.ValidateRemoveFloor();
-            var r2 = _mapCell.ValidateRemoveFloor();
+            var r1 = _cell.ValidateRemoveFloor();
+            var r2 = _cell.ValidateRemoveFloor();
 
             // Assert
             Assert.That(r1.Outcome, Is.EqualTo(r2.Outcome));
@@ -257,12 +260,12 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceWallWithFloor();
 
             // Act
-            var invalidResult = _mapCell.ValidateRemoveFloor();
+            var invalidResult = _cell.ValidateRemoveFloor();
 
             // Assert
             Assert.That(invalidResult.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
-            Assert.That(() => _mapCell.RemoveFloor(invalidResult), Throws.InvalidOperationException);
-            Assert.That(_mapCell.HasFloor, Is.True);
+            Assert.That(() => _cell.RemoveFloor(invalidResult), Throws.InvalidOperationException);
+            Assert.That(_cell.HasFloor, Is.True);
         }
 
         [Test]
@@ -272,12 +275,12 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceFloor();
 
             // Act
-            var validResult = _mapCell.ValidateRemoveFloor();
-            _mapCell.RemoveFloor(validResult);
+            var validResult = _cell.ValidateRemoveFloor();
+            _cell.RemoveFloor(validResult);
 
             // Assert
             Assert.That(validResult.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_mapCell.HasFloor, Is.False);
+            Assert.That(_cell.HasFloor, Is.False);
         }
 
         [Test]
@@ -287,10 +290,10 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceWallWithFloor();
 
             // Assert
-            var before = _mapCell.ValidateRemoveFloor();
-            Assert.That(() => _mapCell.RemoveFloor(before), Throws.InvalidOperationException);
+            var before = _cell.ValidateRemoveFloor();
+            Assert.That(() => _cell.RemoveFloor(before), Throws.InvalidOperationException);
 
-            var after = _mapCell.ValidateRemoveFloor();
+            var after = _cell.ValidateRemoveFloor();
             Assert.That(after.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
             Assert.That(after.FailureReason, Is.EqualTo(BuildOperationFailureReason.Blocked));
         }
@@ -306,7 +309,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceFloor();
 
             // Act
-            var validResult = _mapCell.ValidatePlaceWall();
+            var validResult = _cell.ValidatePlaceWall();
 
             // Assert
             Assert.That(validResult.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
@@ -320,7 +323,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceWallWithFloor();
 
             // Act
-            var noOpResult = _mapCell.ValidatePlaceWall();
+            var noOpResult = _cell.ValidatePlaceWall();
 
             // Assert
             Assert.That(noOpResult.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
@@ -331,7 +334,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         public void ValidatePlaceWall_ShouldReturnInvalid_WhenNoFloorExists()
         {
             // Act
-            var invalidResult = _mapCell.ValidatePlaceWall();
+            var invalidResult = _cell.ValidatePlaceWall();
 
             // Assert
             Assert.That(invalidResult.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
@@ -343,8 +346,8 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         {
             // Arrange
             PlaceFloor();
-            var r1 = _mapCell.ValidatePlaceWall();
-            var r2 = _mapCell.ValidatePlaceWall();
+            var r1 = _cell.ValidatePlaceWall();
+            var r2 = _cell.ValidatePlaceWall();
 
             // Assert
             Assert.That(r1.Outcome, Is.EqualTo(r2.Outcome));
@@ -359,12 +362,12 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         public void PlaceWall_ShouldThrow_WhenIsNotValid()
         {
             // Arrange
-            var invalidResult = _mapCell.ValidatePlaceWall();
+            var invalidResult = _cell.ValidatePlaceWall();
 
             // Assert
             Assert.That(invalidResult.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
-            Assert.That(() => _mapCell.PlaceWall(invalidResult), Throws.InvalidOperationException);
-            Assert.That(_mapCell.HasWall, Is.False);
+            Assert.That(() => _cell.PlaceWall(invalidResult), Throws.InvalidOperationException);
+            Assert.That(_cell.HasWall, Is.False);
         }
 
         [Test]
@@ -372,12 +375,12 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         {
             // Arrange
             PlaceWallWithFloor();
-            var noOpResult = _mapCell.ValidatePlaceWall();
+            var noOpResult = _cell.ValidatePlaceWall();
 
             // Act / Assert
             Assert.That(noOpResult.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
-            Assert.That(() => _mapCell.PlaceWall(noOpResult), Throws.InvalidOperationException);
-            Assert.That(_mapCell.HasWall, Is.True);
+            Assert.That(() => _cell.PlaceWall(noOpResult), Throws.InvalidOperationException);
+            Assert.That(_cell.HasWall, Is.True);
         }
 
         [Test]
@@ -385,14 +388,14 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         {
             // Arrange
             PlaceFloor();
-            var validResult = _mapCell.ValidatePlaceWall();
+            var validResult = _cell.ValidatePlaceWall();
 
             // Act
-            _mapCell.PlaceWall(validResult);
+            _cell.PlaceWall(validResult);
 
             // Assert
             Assert.That(validResult.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_mapCell.HasWall, Is.True);
+            Assert.That(_cell.HasWall, Is.True);
         }
 
         #endregion
@@ -406,7 +409,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceWallWithFloor();
 
             // Act
-            var validResult = _mapCell.ValidateRemoveWall();
+            var validResult = _cell.ValidateRemoveWall();
 
             // Assert
             Assert.That(validResult.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
@@ -420,7 +423,7 @@ namespace CosmosCasino.Tests.Game.Map.Cell
             PlaceFloor();
 
             // Act
-            var noOpResult = _mapCell.ValidateRemoveWall();
+            var noOpResult = _cell.ValidateRemoveWall();
 
             // Assert
             Assert.That(noOpResult.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
@@ -431,8 +434,8 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         public void ValidateRemoveWall_Is_Idempotent_WhenStateDoesNotChange()
         {
             // Arrange
-            var r1 = _mapCell.ValidateRemoveWall();
-            var r2 = _mapCell.ValidateRemoveWall();
+            var r1 = _cell.ValidateRemoveWall();
+            var r2 = _cell.ValidateRemoveWall();
 
             // Assert
             Assert.That(r1.Outcome, Is.EqualTo(r2.Outcome));
@@ -448,12 +451,12 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         {
             // Arrange
             PlaceFloor();
-            var noOpResult = _mapCell.ValidateRemoveWall();
+            var noOpResult = _cell.ValidateRemoveWall();
 
             // Assert
             Assert.That(noOpResult.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
-            Assert.That(() => _mapCell.RemoveWall(noOpResult), Throws.InvalidOperationException);
-            Assert.That(_mapCell.HasWall, Is.False);
+            Assert.That(() => _cell.RemoveWall(noOpResult), Throws.InvalidOperationException);
+            Assert.That(_cell.HasWall, Is.False);
         }
 
         [Test]
@@ -461,14 +464,14 @@ namespace CosmosCasino.Tests.Game.Map.Cell
         {
             // Arrange
             PlaceWallWithFloor();
-            var validResult = _mapCell.ValidateRemoveWall();
+            var validResult = _cell.ValidateRemoveWall();
 
             // Act
-            _mapCell.RemoveWall(validResult);
+            _cell.RemoveWall(validResult);
 
             // Assert
             Assert.That(validResult.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_mapCell.HasWall, Is.False);
+            Assert.That(_cell.HasWall, Is.False);
         }
 
         #endregion
@@ -477,17 +480,17 @@ namespace CosmosCasino.Tests.Game.Map.Cell
 
         private void PlaceFloor()
         {
-            var floorValidationResult = _mapCell.ValidatePlaceFloor();
-            _mapCell.PlaceFloor(floorValidationResult);
+            var floorValidationResult = _cell.ValidatePlaceFloor();
+            _cell.PlaceFloor(floorValidationResult);
         }
 
         private void PlaceWallWithFloor()
         {
-            var floorValidationResult = _mapCell.ValidatePlaceFloor();
-            _mapCell.PlaceFloor(floorValidationResult);
+            var floorValidationResult = _cell.ValidatePlaceFloor();
+            _cell.PlaceFloor(floorValidationResult);
 
-            var wallValidationResult = _mapCell.ValidatePlaceWall();
-            _mapCell.PlaceWall(wallValidationResult);
+            var wallValidationResult = _cell.ValidatePlaceWall();
+            _cell.PlaceWall(wallValidationResult);
         }
 
         #endregion

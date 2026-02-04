@@ -2,16 +2,16 @@ using CosmosCasino.Core.Game.Map.Terrain.Generation;
 
 namespace CosmosCasino.Tests.Game.Map.Terrain.Generation
 {
-    internal class TestTerrainHeightGenerator : ITerrainHeightProvider
+    internal class TestTerrainHeightGenerator
     {
-        private readonly Func<int, int, float> _heightFunc;
+        private readonly Func<float, float, float> _heightFunc;
 
-        public TestTerrainHeightGenerator(Func<int, int, float> heightFunc)
+        public TestTerrainHeightGenerator(Func<float, float, float> heightFunc)
         {
             _heightFunc = heightFunc;
         }
 
-        float ITerrainHeightProvider.GetHeight(int x, int y)
+        internal float GetHeight(float x, float y)
         {
             return _heightFunc(x, y);
         }

@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Configs;
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Terrain;
@@ -23,19 +24,16 @@ namespace CosmosCasino.Core.Game
         {
             MapManager = new MapManager();
             BuildManager = new BuildManager(MapManager);
-            TerrainManager = new TerrainManager();
-            TerrainManager.GenerateInitialTerrain(seed: 11);
+
+            var seed = 0;
+            var mapSize = TerrainConfigs.ChunkSize * TerrainConfigs.ChunkCountPerAxis;
+
+            MapManager.GenerateMap(seed, mapSize);
         }
 
         #endregion
 
         #region Properties
-
-        /// <summary>
-        /// Gets the terrain manager responsible for providing access to
-        /// terrain chunks, tiles, and terrain-related queries.
-        /// </summary>
-        public TerrainManager TerrainManager { get; init; }
 
         /// <summary>
         /// Provides access to the core build manager responsible for
@@ -50,7 +48,7 @@ namespace CosmosCasino.Core.Game
         /// This reference is initialized during core service setup and remains
         /// immutable for the lifetime of the application.
         /// </summary>
-        internal MapManager MapManager { get; init; }
+        public MapManager MapManager { get; init; }
 
         #endregion
 

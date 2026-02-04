@@ -1,6 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 using NUnit.Framework;
 
 namespace CosmosCasino.Tests.Game.Build
@@ -22,7 +22,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void BuildFloor_EmptyCells_ThrowsArgumentException()
         {
             // Arrange
-            var cells = new List<MapCellCoord>();
+            var cells = new List<MapCoord>();
 
             // Act / Assert
             Assert.Throws<ArgumentException>(() =>
@@ -35,7 +35,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = new[]
             {
-                new MapCellCoord(1, 2, 3)
+                new MapCoord(1, 2)
             };
 
             // Act
@@ -52,9 +52,9 @@ namespace CosmosCasino.Tests.Game.Build
         public void BuildFloor_CopiesCells_Defensively()
         {
             // Arrange
-            var cells = new List<MapCellCoord>
+            var cells = new List<MapCoord>
             {
-                new MapCellCoord(0, 0, 0)
+                new MapCoord(0, 0)
             };
 
             // Act
@@ -81,7 +81,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void RemoveFloor_EmptyCells_ThrowsArgumentException()
         {
             // Arrange
-            var cells = new List<MapCellCoord>();
+            var cells = new List<MapCoord>();
 
             // Act / Assert
             Assert.Throws<ArgumentException>(() => BuildIntent.RemoveFloor(cells));
@@ -93,7 +93,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = new[]
             {
-                new MapCellCoord(1, 1, 1)
+                new MapCoord(1, 1)
             };
 
             // Act
@@ -110,9 +110,9 @@ namespace CosmosCasino.Tests.Game.Build
         public void RemoveFloor_CopiesCells_Defensively()
         {
             // Arrange
-            var cells = new List<MapCellCoord>
+            var cells = new List<MapCoord>
             {
-                new MapCellCoord(3, 3, 3)
+                new MapCoord(3, 3)
             };
 
             // Act
@@ -140,7 +140,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void BuildWall_EmptyCells_ThrowsArgumentException()
         {
             // Arrange
-            var cells = new List<MapCellCoord>();
+            var cells = new List<MapCoord>();
 
             // Act / Assert
             Assert.Throws<ArgumentException>(() =>
@@ -153,7 +153,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = new[]
             {
-                new MapCellCoord(5, 0, 1)
+                new MapCoord(5, 0)
             };
 
             // Act
@@ -170,9 +170,9 @@ namespace CosmosCasino.Tests.Game.Build
         public void BuildWall_CopiesCells_Defensively()
         {
             // Arrange
-            var cells = new List<MapCellCoord>
+            var cells = new List<MapCoord>
             {
-                new MapCellCoord(2, 0, 0)
+                new MapCoord(2, 0)
             };
 
             // Act
@@ -199,7 +199,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void RemoveWall_EmptyCells_ThrowsArgumentException()
         {
             // Arrange
-            var cells = new List<MapCellCoord>();
+            var cells = new List<MapCoord>();
 
             // Act / Assert
             Assert.Throws<ArgumentException>(() => BuildIntent.RemoveWall(cells));
@@ -211,7 +211,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = new[]
             {
-                new MapCellCoord(5, 0, 2)
+                new MapCoord(5, 0)
             };
 
             // Act
@@ -228,9 +228,9 @@ namespace CosmosCasino.Tests.Game.Build
         public void RemoveWall_CopiesCells_Defensively()
         {
             // Arrange
-            var cells = new List<MapCellCoord>
+            var cells = new List<MapCoord>
             {
-                new MapCellCoord(9, 0, 9)
+                new MapCoord(9, 9)
             };
 
             // Act
@@ -252,9 +252,9 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = new[]
             {
-                new MapCellCoord(0, 0, 0),
-                new MapCellCoord(1, 0, 0),
-                new MapCellCoord(2, 0, 0)
+                new MapCoord(0, 0),
+                new MapCoord(1, 0),
+                new MapCoord(2, 0)
             };
 
             // Act
@@ -271,8 +271,8 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = new[]
             {
-                new MapCellCoord(0, 0, 0),
-                new MapCellCoord(1, 0, 0)
+                new MapCoord(0, 0),
+                new MapCoord(1, 0)
             };
 
             var intent = BuildIntent.PlaceWall(cells);

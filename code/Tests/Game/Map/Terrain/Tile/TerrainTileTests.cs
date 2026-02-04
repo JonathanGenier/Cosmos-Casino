@@ -1,6 +1,4 @@
-using CosmosCasino.Core.Game.Map.Terrain.Chunk;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
-using CosmosCasino.Tests.Game.Map.Terrain.Generation;
 using NUnit.Framework;
 
 namespace CosmosCasino.Tests.Game.Map.Terrain.Tile
@@ -8,145 +6,50 @@ namespace CosmosCasino.Tests.Game.Map.Terrain.Tile
     [TestFixture]
     internal class TerrainTileTests
     {
-        #region New Tile
+        #region Constructor / Initialization
 
         [Test]
-        public void NewTile_HasNoSlopeNeighbors()
+        public void Constructor_AllHeightsEqual_IsSlopeFalse()
         {
             // Arrange
-            var tile = CreateTile();
-
-            // Assert
-            Assert.That(tile.SlopeNeighbors, Is.EqualTo(SlopeNeighborMask.None));
-            Assert.That(tile.HasAnySlopeNeighbor, Is.False);
-        }
-
-        #endregion
-
-        #region GenerateHeights
-
-        [Test]
-        public void GenerateHeights_FlatTile_SetsAllHeightsAndIsNotSlope()
-        {
-            // Arrange
-            var tile = CreateTile();
-            var heightGenerator = new TestTerrainHeightGenerator((x, y) => 1f);
+            const float height = 10f;
 
             // Act
-            tile.GenerateHeights(heightGenerator);
+            var tile = new TerrainTile(height, height, height, height);
 
             // Assert
-            Assert.That(tile.TopLeftHeight, Is.EqualTo(1f));
-            Assert.That(tile.TopRightHeight, Is.EqualTo(1f));
-            Assert.That(tile.BottomLeftHeight, Is.EqualTo(1f));
-            Assert.That(tile.BottomRightHeight, Is.EqualTo(1f));
+            Assert.That(tile.TopLeftHeight, Is.EqualTo(height));
+            Assert.That(tile.TopRightHeight, Is.EqualTo(height));
+            Assert.That(tile.BottomLeftHeight, Is.EqualTo(height));
+            Assert.That(tile.BottomRightHeight, Is.EqualTo(height));
             Assert.That(tile.IsSlope, Is.False);
+            Assert.That(tile.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.None));
         }
 
         [Test]
-        public void GenerateHeights_SlopedTile_DetectsSlope()
+        public void Constructor_OneCornerDifferent_IsSlopeTrue()
         {
             // Arrange
-            var tile = CreateTile();
-            var heightGenerator = new TestTerrainHeightGenerator(
-                (x, y) => (x == 0 && y == 1) ? 2f : 1f);
+            const float baseHeight = 10f;
+            const float slopeHeight = 11f;
 
             // Act
-            tile.GenerateHeights(heightGenerator);
+            var tile = new TerrainTile(
+                baseHeight,
+                baseHeight,
+                baseHeight,
+                slopeHeight);
 
             // Assert
             Assert.That(tile.IsSlope, Is.True);
         }
 
         [Test]
-        public void GenerateHeights_CalledTwice_Throws()
+        public void Constructor_AllCornersDifferent_IsSlopeTrue()
         {
             // Arrange
-            var tile = CreateTile();
-            var heightGenerator = new TestTerrainHeightGenerator(
-                (x, y) => 1f);
-
             // Act
-            tile.GenerateHeights(heightGenerator);
-
-            // Assert
-            Assert.Throws<InvalidOperationException>(() => tile.GenerateHeights(heightGenerator));
-        }
-
-        [Test]
-        public void GenerateHeights_UsesWorldCoordinates()
-        {
-            // Arrange
-            var tile = CreateTile();
-            var heightGenerator = new TestTerrainHeightGenerator(
-                (x, y) => (x * 1000f) + y);
-
-            // Act
-            tile.GenerateHeights(heightGenerator);
-
-            // Assert
-            Assert.That(tile.TopLeftHeight, Is.EqualTo(0));
-            Assert.That(tile.TopRightHeight, Is.EqualTo(1000f));
-            Assert.That(tile.BottomLeftHeight, Is.EqualTo(1f));
-            Assert.That(tile.BottomRightHeight, Is.EqualTo(1001f));
-        }
-
-        [Test]
-        public void GenerateHeights_DiagonalDifference_IsSlope()
-        {
-            // Arrange
-            var tile = CreateTile();
-            var heightGenerator = new TestTerrainHeightGenerator((x, y) => (x == 1 && y == 1) ? 2f : 1f);
-
-            // Act
-            tile.GenerateHeights(heightGenerator);
-
-            // Assert
-            Assert.That(tile.IsSlope, Is.True);
-        }
-
-        [Test]
-        public void GenerateHeights_AllCornersDifferent_IsSlope()
-        {
-            // Arrange
-            var tile = CreateTile();
-            var heightGenerator = new TestTerrainHeightGenerator((x, y) =>
-            {
-                if (x == 0 && y == 0)
-                {
-                    return 1f;
-                }
-
-                if (x == 1 && y == 0)
-                {
-                    return 2f;
-                }
-
-                if (x == 0 && y == 1)
-                {
-                    return 3f;
-                }
-
-                return 4f;
-            });
-
-            // Act
-            tile.GenerateHeights(heightGenerator);
-
-            // Assert
-            Assert.That(tile.IsSlope, Is.True);
-        }
-
-        [Test]
-        public void GenerateHeights_SmallDifference_IsSlope()
-        {
-            // Arrange
-            var tile = CreateTile();
-            var heightGenerator = new TestTerrainHeightGenerator(
-                (x, y) => (x == 0 && y == 1) ? 1.001f : 1f);
-
-            // Act
-            tile.GenerateHeights(heightGenerator);
+            var tile = new TerrainTile(1f, 2f, 3f, 4f);
 
             // Assert
             Assert.That(tile.IsSlope, Is.True);
@@ -154,79 +57,187 @@ namespace CosmosCasino.Tests.Game.Map.Terrain.Tile
 
         #endregion
 
-        #region Neighbors Slopes
+        #region AddSlopeNeighbor (Flat Tile)
 
         [Test]
-        public void AddSlopeNeighbor_SetsMask()
+        public void AddSlopeNeighbor_FlatTile_SetsMask()
         {
             // Arrange
-            var tile = CreateTile();
+            var tile = new TerrainTile(5f, 5f, 5f, 5f);
 
             // Act
             tile.AddSlopeNeighbor(SlopeNeighborMask.North);
 
             // Assert
-            Assert.That(tile.SlopeNeighbors, Is.EqualTo(SlopeNeighborMask.North));
-            Assert.That(tile.HasAnySlopeNeighbor, Is.True);
+            Assert.That(tile.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.North));
         }
 
         [Test]
-        public void AddSlopeNeighbor_MultipleDirections_CombineFlags()
+        public void AddSlopeNeighbor_FlatTile_MultipleCalls_AccumulatesMask()
         {
             // Arrange
-            var tile = CreateTile();
+            var tile = new TerrainTile(5f, 5f, 5f, 5f);
 
             // Act
             tile.AddSlopeNeighbor(SlopeNeighborMask.North);
             tile.AddSlopeNeighbor(SlopeNeighborMask.East);
 
             // Assert
-            Assert.That(tile.SlopeNeighbors, Is.EqualTo(SlopeNeighborMask.North | SlopeNeighborMask.East));
+            Assert.That(tile.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.North | SlopeNeighborMask.East));
         }
 
         [Test]
-        public void AddSlopeNeighbor_OrderDoesNotMatter()
+        public void AddSlopeNeighbor_FlatTile_SameDirectionTwice_Idempotent()
         {
             // Arrange
-            var tile = CreateTile();
+            var tile = new TerrainTile(5f, 5f, 5f, 5f);
 
             // Act
+            tile.AddSlopeNeighbor(SlopeNeighborMask.North);
+            tile.AddSlopeNeighbor(SlopeNeighborMask.North);
+
+            // Assert
+            Assert.That(tile.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.North));
+        }
+
+        #endregion
+
+        #region AddSlopeNeighbor (Sloped Tile)
+
+        [Test]
+        public void AddSlopeNeighbor_SlopedTile_DoesNothing()
+        {
+            // Arrange
+            var tile = new TerrainTile(5f, 6f, 5f, 5f);
+
+            // Act
+            tile.AddSlopeNeighbor(SlopeNeighborMask.North);
+
+            // Assert
+            Assert.That(tile.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.None));
+        }
+
+        [Test]
+        public void AddSlopeNeighbor_SlopedTile_MultipleCalls_StillDoesNothing()
+        {
+            // Arrange
+            var tile = new TerrainTile(1f, 2f, 3f, 4f);
+
+            // Act
+            tile.AddSlopeNeighbor(SlopeNeighborMask.North);
+            tile.AddSlopeNeighbor(SlopeNeighborMask.East);
+            tile.AddSlopeNeighbor(SlopeNeighborMask.South);
+
+            // Assert
+            Assert.That(tile.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.None));
+        }
+
+        #endregion
+
+        #region ClearSlopeNeighborMask
+
+        [Test]
+        public void ClearSlopeNeighborMask_FlatTile_ResetsMask()
+        {
+            // Arrange
+            var tile = new TerrainTile(5f, 5f, 5f, 5f);
+            tile.AddSlopeNeighbor(SlopeNeighborMask.North);
             tile.AddSlopeNeighbor(SlopeNeighborMask.West);
-            tile.AddSlopeNeighbor(SlopeNeighborMask.North);
-
-            // Assert
-            Assert.That(tile.SlopeNeighbors, Is.EqualTo(SlopeNeighborMask.North | SlopeNeighborMask.West));
-        }
-
-        #endregion
-
-        #region Clear Slope Neighbors
-
-        [Test]
-        public void ClearSlopeNeighbors_ResetsMask()
-        {
-            // Arrange
-            var tile = CreateTile();
-            tile.AddSlopeNeighbor(SlopeNeighborMask.North);
 
             // Act
-            tile.ClearSlopeNeighbors();
+            tile.ClearSlopeNeighborMask();
 
             // Assert
-            Assert.That(tile.SlopeNeighbors, Is.EqualTo(SlopeNeighborMask.None));
+            Assert.That(tile.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.None));
+        }
+
+        [Test]
+        public void ClearSlopeNeighborMask_WhenAlreadyEmpty_RemainsNone()
+        {
+            // Arrange
+            var tile = new TerrainTile(5f, 5f, 5f, 5f);
+
+            // Act
+            tile.ClearSlopeNeighborMask();
+
+            // Assert
+            Assert.That(tile.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.None));
+        }
+
+        [Test]
+        public void ClearSlopeNeighborMask_SlopedTile_NoEffectButSafe()
+        {
+            // Arrange
+            var tile = new TerrainTile(1f, 2f, 1f, 1f);
+
+            // Act
+            tile.ClearSlopeNeighborMask();
+
+            // Assert
+            Assert.That(tile.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.None));
         }
 
         #endregion
 
-        #region Helper Methods
+        #region Floating Point Edge Cases
 
-        private static TerrainTile CreateTile()
+        [Test]
+        public void Constructor_NaNHeights_IsSlopeTrue()
         {
-            var localCoord = new TerrainTileLocalCoord(0, 0);
-            var gridCoord = new TerrainChunkGridCoord(0, 0);
-            var worldCoord = new TerrainTileWorldCoord(gridCoord, localCoord);
+            // Arrange
+            var nan = float.NaN;
 
-            return new TerrainTile(localCoord, worldCoord);
+            // Act
+            var tile = new TerrainTile(nan, nan, nan, nan);
+
+            // Assert
+            // NaN != NaN => slope by definition
+            Assert.That(tile.IsSlope, Is.True);
+        }
+
+        [Test]
+        public void Constructor_PositiveInfinityVsFinite_IsSlopeTrue()
+        {
+            // Arrange
+            var tile = new TerrainTile(
+                float.PositiveInfinity,
+                10f,
+                10f,
+                10f);
+
+            // Act / Assert
+            Assert.That(tile.IsSlope, Is.True);
+        }
+
+        [Test]
+        public void Constructor_AllPositiveInfinity_IsSlopeFalse()
+        {
+            // Arrange
+            var inf = float.PositiveInfinity;
+
+            // Act
+            var tile = new TerrainTile(inf, inf, inf, inf);
+
+            // Assert
+            Assert.That(tile.IsSlope, Is.False);
+        }
+
+        [Test]
+        public void Constructor_NegativeZeroVsZero_IsSlopeFalse()
+        {
+            // Arrange
+            float negativeZero = -0f;
+            float positiveZero = 0f;
+
+            // Act
+            var tile = new TerrainTile(
+                negativeZero,
+                positiveZero,
+                positiveZero,
+                positiveZero);
+
+            // Assert
+            Assert.That(tile.IsSlope, Is.False);
         }
 
         #endregion
