@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 using System;
 
 /// <summary>
@@ -57,8 +57,8 @@ public static class SpawnResolver
     {
         return key.Slot switch
         {
-            MapCellSlot.Floor => ResolveFloorType(variant),
-            MapCellSlot.Wall => ResolveWallType(variant),
+            CellSlot.Floor => ResolveFloorType(variant),
+            CellSlot.Wall => ResolveWallType(variant),
             _ => throw new InvalidOperationException(
                 $"Unsupported cell slot: {key.Slot}")
         };

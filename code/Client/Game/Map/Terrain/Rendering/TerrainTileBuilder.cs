@@ -1,9 +1,10 @@
+using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using Godot;
 
 /// <summary>
 /// Provides utility methods for constructing terrain tiles into a mesh using a <see cref="SurfaceTool"/>.
-/// Responsible for converting logical <see cref="TerrainTile"/> data into renderable geometry,
+/// Responsible for converting logical <see cref="Cell"/> data into renderable geometry,
 /// including vertex positions, UVs, color-encoded tile metadata, and slope-aware triangulation.
 /// </summary>
 public static class TerrainTileBuilder
@@ -29,11 +30,11 @@ public static class TerrainTileBuilder
     /// </summary>
     /// <param name="surfaceTool">The surface tool used to emit vertices and build the mesh.</param>
     /// <param name="terrainTile">The logical terrain tile containing height and slope data.</param>
-    /// <param name="chunkOrigin">The world-space origin of the chunk containing this tile.</param>
-    public static void BuildTile(SurfaceTool surfaceTool, TerrainTile terrainTile, Vector3 chunkOrigin)
+    /// <param name="chunkPosition">The position of the chunk within the world.</param>
+    public static void BuildTile(SurfaceTool surfaceTool, TerrainTile terrainTile, Vector2I chunkPosition)
     {
-        float x = chunkOrigin.X + terrainTile.LocalCoord.X;
-        float z = chunkOrigin.Z + terrainTile.LocalCoord.Y;
+        float x = chunkPosition.X;
+        float z = chunkPosition.Y;
 
         float topLeftHeight = terrainTile.TopLeftHeight;
         float topRightHeight = terrainTile.TopRightHeight;
@@ -224,17 +225,17 @@ public static class TerrainTileBuilder
 
         // Cardinal directions
         int cardinalMask =
-        ((tile.SlopeNeighbors & SlopeNeighborMask.North) != 0 ? 1 : 0) |
-        ((tile.SlopeNeighbors & SlopeNeighborMask.East) != 0 ? 2 : 0) |
-        ((tile.SlopeNeighbors & SlopeNeighborMask.South) != 0 ? 4 : 0) |
-        ((tile.SlopeNeighbors & SlopeNeighborMask.West) != 0 ? 8 : 0);
+        ((tile.SlopeNeighborMask & SlopeNeighborMask.North) != 0 ? 1 : 0) |
+        ((tile.SlopeNeighborMask & SlopeNeighborMask.East) != 0 ? 2 : 0) |
+        ((tile.SlopeNeighborMask & SlopeNeighborMask.South) != 0 ? 4 : 0) |
+        ((tile.SlopeNeighborMask & SlopeNeighborMask.West) != 0 ? 8 : 0);
 
         // Diagonals
         int diagonalMask =
-        ((tile.SlopeNeighbors & SlopeNeighborMask.NorthEast) != 0 ? 1 : 0) |
-        ((tile.SlopeNeighbors & SlopeNeighborMask.SouthEast) != 0 ? 2 : 0) |
-        ((tile.SlopeNeighbors & SlopeNeighborMask.SouthWest) != 0 ? 4 : 0) |
-        ((tile.SlopeNeighbors & SlopeNeighborMask.NorthWest) != 0 ? 8 : 0);
+        ((tile.SlopeNeighborMask & SlopeNeighborMask.NorthEast) != 0 ? 1 : 0) |
+        ((tile.SlopeNeighborMask & SlopeNeighborMask.SouthEast) != 0 ? 2 : 0) |
+        ((tile.SlopeNeighborMask & SlopeNeighborMask.SouthWest) != 0 ? 4 : 0) |
+        ((tile.SlopeNeighborMask & SlopeNeighborMask.NorthWest) != 0 ? 8 : 0);
 
         return new Color(
             0f,

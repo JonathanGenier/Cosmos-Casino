@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 using Godot;
 using System;
 
@@ -16,7 +16,7 @@ public sealed partial class CursorManager : InitializableNodeManager
     private Vector3 _lastWorldPosition;
     private bool _hasLastWorldPosition;
 
-    private MapCellCoord _lastCell;
+    private MapCoord _lastCell;
     private bool _hasLastCell;
 
     #endregion

@@ -1,6 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -271,7 +271,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     private void ShowDragPreview(BuildResult buildResult)
     {
         var cells = buildResult.Intent.Cells;
-        var results = buildResult.Results.ToDictionary(r => r.Cell);
+        var results = buildResult.Results.ToDictionary(r => r.MapCoord);
 
         switch (buildResult.Intent.Kind)
         {
@@ -295,7 +295,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// <param name="cells">A read-only list of map cell coordinates where floor previews should be shown.</param>
     /// <param name="results">A read-only dictionary mapping each map cell coordinate to its corresponding build operation result, used to
     /// determine the validity of each preview.</param>
-    private void ShowFloorDragPreview(IReadOnlyList<MapCellCoord> cells, IReadOnlyDictionary<MapCellCoord, BuildOperationResult> results)
+    private void ShowFloorDragPreview(IReadOnlyList<MapCoord> cells, IReadOnlyDictionary<MapCoord, BuildOperationResult> results)
     {
         int i = 0;
 
@@ -305,7 +305,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var cell = cells[i];
             var result = GetResultOrThrow(results, cell);
 
-            _floorPreviews[i].SetWorldPosition(MapToWorld.CellToWorld(cells[i]));
+            _floorPreviews[i].SetWorldPosition(MapMath.MapToWorld(cells[i]));
             _floorPreviews[i].SetValidity(result.Outcome);
             _floorPreviews[i].Show();
         }
@@ -317,7 +317,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var result = GetResultOrThrow(results, cell);
             var preview = FloorPool!.Fetch();
 
-            preview.SetWorldPosition(MapToWorld.CellToWorld(cells[i]));
+            preview.SetWorldPosition(MapMath.MapToWorld(cells[i]));
             preview.SetValidity(result.Outcome);
             preview.Show();
             _floorPreviews.Add(preview);
@@ -346,7 +346,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// <param name="cells">A read-only list of map cell coordinates where wall previews should be shown.</param>
     /// <param name="results">A read-only dictionary mapping each map cell coordinate to its corresponding build operation result, used to
     /// determine the validity of each preview.</param>
-    private void ShowWallDragPreview(IReadOnlyList<MapCellCoord> cells, IReadOnlyDictionary<MapCellCoord, BuildOperationResult> results)
+    private void ShowWallDragPreview(IReadOnlyList<MapCoord> cells, IReadOnlyDictionary<MapCoord, BuildOperationResult> results)
     {
         int i = 0;
 
@@ -356,7 +356,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var cell = cells[i];
             var result = GetResultOrThrow(results, cell);
 
-            _wallPreviews[i].SetWorldPosition(MapToWorld.CellToWorld(cells[i]));
+            _wallPreviews[i].SetWorldPosition(MapMath.MapToWorld(cells[i]));
             _wallPreviews[i].SetValidity(result.Outcome);
             _wallPreviews[i].Show();
         }
@@ -368,7 +368,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var result = GetResultOrThrow(results, cell);
             var preview = WallPool!.Fetch();
 
-            preview.SetWorldPosition(MapToWorld.CellToWorld(cells[i]));
+            preview.SetWorldPosition(MapMath.MapToWorld(cells[i]));
             preview.SetValidity(result.Outcome);
             preview.Show();
             _wallPreviews.Add(preview);
@@ -438,7 +438,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             throw new InvalidOperationException("Cursor preview expects exactly one cell.");
         }
 
-        var worldPosition = MapToWorld.CellToWorld(buildResult.Intent.Cells.First());
+        var worldPosition = MapMath.MapToWorld(buildResult.Intent.Cells.First());
         var kind = buildResult.Intent.Kind;
         var outcome = buildResult.Results.First().Outcome;
 
@@ -621,7 +621,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// <param name="cell">The coordinate of the map cell for which to retrieve the build operation result.</param>
     /// <returns>The build operation result associated with the specified cell.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the specified cell does not exist in the results dictionary.</exception>
-    private BuildOperationResult GetResultOrThrow(IReadOnlyDictionary<MapCellCoord, BuildOperationResult> results, MapCellCoord cell)
+    private BuildOperationResult GetResultOrThrow(IReadOnlyDictionary<MapCoord, BuildOperationResult> results, MapCoord cell)
     {
         if (!results.TryGetValue(cell, out var result))
         {

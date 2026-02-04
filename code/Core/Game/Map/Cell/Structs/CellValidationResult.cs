@@ -1,12 +1,12 @@
 using CosmosCasino.Core.Game.Build.Domain;
 
-namespace CosmosCasino.Core.Game.Map.Cell
+namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
     /// Represents the result of validating a map cell for a build operation, including the outcome and any associated
     /// failure reason.
     /// </summary>
-    internal readonly struct MapCellValidationResult
+    internal readonly struct CellValidationResult
     {
         #region Initialization
 
@@ -16,7 +16,7 @@ namespace CosmosCasino.Core.Game.Map.Cell
         /// </summary>
         /// <param name="outcome">The result of the build operation for the map cell.</param>
         /// <param name="failureReason">The reason for the build operation failure, if applicable.</param>
-        private MapCellValidationResult(BuildOperationOutcome outcome, BuildOperationFailureReason failureReason)
+        private CellValidationResult(BuildOperationOutcome outcome, BuildOperationFailureReason failureReason)
         {
             Outcome = outcome;
             FailureReason = failureReason;
@@ -44,7 +44,7 @@ namespace CosmosCasino.Core.Game.Map.Cell
         /// Creates a MapCellValidationResult that represents a valid operation with no failure reason.
         /// </summary>
         /// <returns>A MapCellValidationResult indicating a valid outcome and no failure reason.</returns>
-        internal static MapCellValidationResult Valid()
+        internal static CellValidationResult Valid()
         {
             return new(BuildOperationOutcome.Valid, BuildOperationFailureReason.None);
         }
@@ -52,8 +52,8 @@ namespace CosmosCasino.Core.Game.Map.Cell
         /// <summary>
         /// Returns a validation result indicating that no operation was performed.
         /// </summary>
-        /// <returns>A <see cref="MapCellValidationResult"/> representing a no-op outcome with no failure reason.</returns>
-        internal static MapCellValidationResult NoOp()
+        /// <returns>A <see cref="CellValidationResult"/> representing a no-op outcome with no failure reason.</returns>
+        internal static CellValidationResult NoOp()
         {
             return new(BuildOperationOutcome.NoOp, BuildOperationFailureReason.None);
         }
@@ -62,9 +62,9 @@ namespace CosmosCasino.Core.Game.Map.Cell
         /// Creates a validation result that indicates the build operation is invalid for the specified failure reason.
         /// </summary>
         /// <param name="failureReason">The reason why the build operation is considered invalid.</param>
-        /// <returns>A <see cref="MapCellValidationResult"/> representing an invalid build operation with the specified failure
+        /// <returns>A <see cref="CellValidationResult"/> representing an invalid build operation with the specified failure
         /// reason.</returns>
-        internal static MapCellValidationResult Invalid(BuildOperationFailureReason failureReason)
+        internal static CellValidationResult Invalid(BuildOperationFailureReason failureReason)
         {
             return new(BuildOperationOutcome.Invalid, failureReason);
         }

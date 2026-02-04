@@ -16,4 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="code/Core/Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="code\Client\Game\Map\Terrain\Structs\" />
+  </ItemGroup>
 </Project>

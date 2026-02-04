@@ -14,8 +14,8 @@ namespace CosmosCasino.Tests.Game.Map.Terrain.Generation
             // Arrange
             var genA = new TerrainHeightGenerator(seed: 123);
             var genB = new TerrainHeightGenerator(seed: 123);
-            float h1 = ((ITerrainHeightProvider)genA).GetHeight(10, 20);
-            float h2 = ((ITerrainHeightProvider)genB).GetHeight(10, 20);
+            float h1 = genA.GetHeight(10, 20);
+            float h2 = genB.GetHeight(10, 20);
 
             // Assert
             Assert.That(h1, Is.EqualTo(h2));
@@ -27,8 +27,8 @@ namespace CosmosCasino.Tests.Game.Map.Terrain.Generation
             // Arrange
             var genA = new TerrainHeightGenerator(seed: 1);
             var genB = new TerrainHeightGenerator(seed: 2);
-            float h1 = ((ITerrainHeightProvider)genA).GetHeight(10, 20);
-            float h2 = ((ITerrainHeightProvider)genB).GetHeight(10, 20);
+            float h1 = genA.GetHeight(10, 20);
+            float h2 = genB.GetHeight(10, 20);
 
             // Assert
             Assert.That(h1, Is.Not.EqualTo(h2));
@@ -41,7 +41,7 @@ namespace CosmosCasino.Tests.Game.Map.Terrain.Generation
             var gen = new TerrainHeightGenerator(seed: 42);
 
             // Act
-            float h = ((ITerrainHeightProvider)gen).GetHeight(10, 20);
+            float h = gen.GetHeight(10, 20);
 
             // Assert
             float doubled = h * 2f;

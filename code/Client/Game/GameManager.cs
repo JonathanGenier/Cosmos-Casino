@@ -327,7 +327,7 @@ public sealed partial class GameManager : NodeManager
             gum => gum.Initialize());
 
         TerrainRenderManager = AddInitializableNode<TerrainRenderManager>(
-            trm => trm.Initialize(GameSession.TerrainManager, ResourceAssembler.TerrainResources));
+            trm => trm.Initialize(GameSession.MapManager, ResourceAssembler.TerrainResources));
 
 #if DEBUG
         CursorDebugVisualizer.Initialize(CursorManager);

@@ -1,6 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Map.Cell;
+using CosmosCasino.Core.Game.Map;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,7 +48,7 @@ public abstract class BuildContextBase
     /// <param name="intent">When this method returns, contains the resulting build intent if the operation succeeds; otherwise, the default
     /// value.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
-    public abstract bool TryCreateBuildIntent(MapCellCoord startCell, MapCellCoord endCell, BuildOperation buildOperation, BuildInteractionMode buildInteractionMode, out BuildIntent intent);
+    public abstract bool TryCreateBuildIntent(MapCoord startCell, MapCoord endCell, BuildOperation buildOperation, BuildInteractionMode buildInteractionMode, out BuildIntent intent);
 
     /// <summary>
     /// Returns a read-only list of map cell coordinates representing the path or sequence of cells between the
@@ -58,9 +58,9 @@ public abstract class BuildContextBase
     /// <param name="endCell">The coordinate of the ending cell. Must be a valid map cell within the bounds of the map.</param>
     /// <param name="buildOperation">The type of build operation to consider when determining the path between the cells.</param>
     /// <param name="buildInteractionMode">The interaction mode affecting the build operation.</param>
-    /// <returns>A read-only list of <see cref="MapCellCoord"/> objects representing the cells between <paramref
+    /// <returns>A read-only list of <see cref="MapCoord"/> objects representing the cells between <paramref
     /// name="startCell"/> and <paramref name="endCell"/>. The list may be empty if no valid path exists.</returns>
-    public abstract IReadOnlyList<MapCellCoord> GetCells(MapCellCoord startCell, MapCellCoord endCell, BuildOperation buildOperation, BuildInteractionMode buildInteractionMode);
+    public abstract IReadOnlyList<MapCoord> GetCells(MapCoord startCell, MapCoord endCell, BuildOperation buildOperation, BuildInteractionMode buildInteractionMode);
 
     #endregion
 
@@ -79,7 +79,7 @@ public abstract class BuildContextBase
     /// the map grid.</param>
     /// <returns>A read-only list of MapCellCoord objects covering every cell within the rectangle defined by startCell and
     /// endCell, inclusive. All returned cells are on the same Z layer as startCell.</returns>
-    protected IReadOnlyList<MapCellCoord> GetCellsRectangleArea(MapCellCoord startCell, MapCellCoord endCell)
+    protected IReadOnlyList<MapCoord> GetCellsRectangleArea(MapCoord startCell, MapCoord endCell)
     {
         int minX = Math.Min(startCell.X, endCell.X);
         int maxX = Math.Max(startCell.X, endCell.X);
@@ -87,15 +87,13 @@ public abstract class BuildContextBase
         int minY = Math.Min(startCell.Y, endCell.Y);
         int maxY = Math.Max(startCell.Y, endCell.Y);
 
-        int z = startCell.Z;
-
-        var cells = new List<MapCellCoord>();
+        var cells = new List<MapCoord>();
 
         for (int x = minX; x <= maxX; x++)
         {
             for (int y = minY; y <= maxY; y++)
             {
-                cells.Add(new MapCellCoord(x, y, z));
+                cells.Add(new MapCoord(x, y));
             }
         }
 
@@ -119,12 +117,12 @@ public abstract class BuildContextBase
     /// A cell used to determine the square size and direction.
     /// </param>
     /// <returns>
-    /// A read-only list of <see cref="MapCellCoord"/> covering every cell
+    /// A read-only list of <see cref="MapCoord"/> covering every cell
     /// within the square area, inclusive.
     /// </returns>
-    protected IReadOnlyList<MapCellCoord> GetCellsSquareArea(
-        MapCellCoord startCell,
-        MapCellCoord endCell)
+    protected IReadOnlyList<MapCoord> GetCellsSquareArea(
+        MapCoord startCell,
+        MapCoord endCell)
     {
         int dx = endCell.X - startCell.X;
         int dy = endCell.Y - startCell.Y;
@@ -144,16 +142,14 @@ public abstract class BuildContextBase
         int minY = Math.Min(y0, y1);
         int maxY = Math.Max(y0, y1);
 
-        int z = startCell.Z;
-
-        var cells = new List<MapCellCoord>(
+        var cells = new List<MapCoord>(
         (maxX - minX + 1) * (maxY - minY + 1));
 
         for (int x = minX; x <= maxX; x++)
         {
             for (int y = minY; y <= maxY; y++)
             {
-                cells.Add(new MapCellCoord(x, y, z));
+                cells.Add(new MapCoord(x, y));
             }
         }
 
@@ -170,9 +166,9 @@ public abstract class BuildContextBase
     /// layer for all returned cells.</param>
     /// <param name="endCell">The ending map cell coordinate that defines the opposite edge of the circle. Used together with <paramref
     /// name="startCell"/> to determine the circle's outline.</param>
-    /// <returns>A read-only list of <see cref="MapCellCoord"/> objects representing all cells inside the filled circle area. If
+    /// <returns>A read-only list of <see cref="MapCoord"/> objects representing all cells inside the filled circle area. If
     /// the outline is empty, returns an empty list.</returns>
-    protected IReadOnlyList<MapCellCoord> GetCellsCircleArea(MapCellCoord startCell, MapCellCoord endCell)
+    protected IReadOnlyList<MapCoord> GetCellsCircleArea(MapCoord startCell, MapCoord endCell)
     {
         // 1. Get authoritative outline
         var outline = GetCellsCircleLine(startCell, endCell);
@@ -181,8 +177,6 @@ public abstract class BuildContextBase
         {
             return outline;
         }
-
-        int z = startCell.Z;
 
         // 2. Group outline cells by Y
         var rows = new Dictionary<int, (int MinX, int MaxX)>();
@@ -203,13 +197,13 @@ public abstract class BuildContextBase
         }
 
         // 3. Fill between left/right bounds per row
-        var filled = new List<MapCellCoord>();
+        var filled = new List<MapCoord>();
 
         foreach (var (y, span) in rows)
         {
             for (int x = span.MinX; x <= span.MaxX; x++)
             {
-                filled.Add(new MapCellCoord(x, y, z));
+                filled.Add(new MapCoord(x, y));
             }
         }
 
@@ -229,14 +223,11 @@ public abstract class BuildContextBase
     /// coordinate of all returned cells matches the Z coordinate of the input cells.</remarks>
     /// <param name="startCell">The starting cell coordinate of the line. Must be on the same Z level as <paramref name="endCell"/>.</param>
     /// <param name="endCell">The ending cell coordinate of the line. Must be on the same Z level as <paramref name="startCell"/>.</param>
-    /// <returns>A read-only list of <see cref="MapCellCoord"/> objects forming a straight line between <paramref
+    /// <returns>A read-only list of <see cref="MapCoord"/> objects forming a straight line between <paramref
     /// name="startCell"/> and <paramref name="endCell"/>. The list includes both endpoints and all intermediate cells
     /// along the line.</returns>
-    protected IReadOnlyList<MapCellCoord> GetCellsStraightLine(
-        MapCellCoord startCell,
-        MapCellCoord endCell)
+    protected IReadOnlyList<MapCoord> GetCellsStraightLine(MapCoord startCell, MapCoord endCell)
     {
-        int z = startCell.Z;
 
         int x0 = startCell.X;
         int y0 = startCell.Y;
@@ -254,7 +245,7 @@ public abstract class BuildContextBase
 
         SnapDirection direction = GetSnapDirection(angle);
 
-        var cells = new List<MapCellCoord>();
+        var cells = new List<MapCoord>();
 
         switch (direction)
         {
@@ -265,7 +256,7 @@ public abstract class BuildContextBase
 
                     for (int i = 0; i <= length; i++)
                     {
-                        cells.Add(new MapCellCoord(x0 + (i * step), y0, z));
+                        cells.Add(new MapCoord(x0 + (i * step), y0));
                     }
 
                     break;
@@ -278,7 +269,7 @@ public abstract class BuildContextBase
 
                     for (int i = 0; i <= length; i++)
                     {
-                        cells.Add(new MapCellCoord(x0, y0 + (i * step), z));
+                        cells.Add(new MapCoord(x0, y0 + (i * step)));
                     }
 
                     break;
@@ -292,7 +283,7 @@ public abstract class BuildContextBase
 
                     for (int i = 0; i <= length; i++)
                     {
-                        cells.Add(new MapCellCoord(x0 + (i * sx), y0 + (i * sy), z));
+                        cells.Add(new MapCoord(x0 + (i * sx), y0 + (i * sy)));
                     }
 
                     break;
@@ -309,15 +300,11 @@ public abstract class BuildContextBase
     /// <param name="startCell">The starting cell coordinate.</param>
     /// <param name="endCell">The ending cell coordinate.</param>
     /// <returns>
-    /// A read-only list of <see cref="MapCellCoord"/> forming a continuous line
+    /// A read-only list of <see cref="MapCoord"/> forming a continuous line
     /// between the two cells, including both endpoints.
     /// </returns>
-    protected IReadOnlyList<MapCellCoord> GetCellsDynamicLine(
-        MapCellCoord startCell,
-        MapCellCoord endCell)
+    protected IReadOnlyList<MapCoord> GetCellsDynamicLine(MapCoord startCell, MapCoord endCell)
     {
-        int z = startCell.Z;
-
         int x0 = startCell.X;
         int y0 = startCell.Y;
         int x1 = endCell.X;
@@ -333,11 +320,11 @@ public abstract class BuildContextBase
 
         int steps = Math.Max(dx, dy) + 1;
 
-        var cells = new List<MapCellCoord>(steps);
+        var cells = new List<MapCoord>(steps);
 
         for (int i = 0; i < steps; i++)
         {
-            cells.Add(new MapCellCoord(x0, y0, z));
+            cells.Add(new MapCoord(x0, y0));
 
             int e2 = err << 1; // err * 2
 
@@ -364,26 +351,22 @@ public abstract class BuildContextBase
     /// <param name="startCell">First corner of the rectangle.</param>
     /// <param name="endCell">Opposite corner of the rectangle.</param>
     /// <returns>
-    /// A read-only list of <see cref="MapCellCoord"/> representing the
+    /// A read-only list of <see cref="MapCoord"/> representing the
     /// rectangle outline, including corners.
     /// </returns>
-    protected IReadOnlyList<MapCellCoord> GetCellsRectangleLine(
-        MapCellCoord startCell,
-        MapCellCoord endCell)
+    protected IReadOnlyList<MapCoord> GetCellsRectangleLine(MapCoord startCell, MapCoord endCell)
     {
-        int z = startCell.Z;
-
         int minX = Math.Min(startCell.X, endCell.X);
         int maxX = Math.Max(startCell.X, endCell.X);
         int minY = Math.Min(startCell.Y, endCell.Y);
         int maxY = Math.Max(startCell.Y, endCell.Y);
 
-        var cells = new List<MapCellCoord>();
+        var cells = new List<MapCoord>();
 
         // Top edge (minY)
         for (int x = minX; x <= maxX; x++)
         {
-            cells.Add(new MapCellCoord(x, minY, z));
+            cells.Add(new MapCoord(x, minY));
         }
 
         // Bottom edge (maxY)
@@ -391,14 +374,14 @@ public abstract class BuildContextBase
         {
             for (int x = minX; x <= maxX; x++)
             {
-                cells.Add(new MapCellCoord(x, maxY, z));
+                cells.Add(new MapCoord(x, maxY));
             }
         }
 
         // Left edge (excluding corners)
         for (int y = minY + 1; y < maxY; y++)
         {
-            cells.Add(new MapCellCoord(minX, y, z));
+            cells.Add(new MapCoord(minX, y));
         }
 
         // Right edge (excluding corners)
@@ -406,7 +389,7 @@ public abstract class BuildContextBase
         {
             for (int y = minY + 1; y < maxY; y++)
             {
-                cells.Add(new MapCellCoord(maxX, y, z));
+                cells.Add(new MapCoord(maxX, y));
             }
         }
 
@@ -425,10 +408,8 @@ public abstract class BuildContextBase
     /// cell.</param>
     /// <returns>A read-only list of map cell coordinates representing the straight line from the start cell to the square edge
     /// in the direction of the end cell. The list contains at least one cell.</returns>
-    protected IReadOnlyList<MapCellCoord> GetCellsSquareLine(MapCellCoord startCell, MapCellCoord endCell)
+    protected IReadOnlyList<MapCoord> GetCellsSquareLine(MapCoord startCell, MapCoord endCell)
     {
-        int z = startCell.Z;
-
         int dx = endCell.X - startCell.X;
         int dy = endCell.Y - startCell.Y;
 
@@ -445,7 +426,7 @@ public abstract class BuildContextBase
         int endX = startCell.X + (side * sx);
         int endY = startCell.Y + (side * sy);
 
-        MapCellCoord squareEnd = new(endX, endY, z);
+        MapCoord squareEnd = new(endX, endY);
 
         return GetCellsRectangleLine(startCell, squareEnd);
     }
@@ -462,13 +443,11 @@ public abstract class BuildContextBase
     /// Z value as <paramref name="endCell"/>.</param>
     /// <param name="endCell">The ending cell coordinate, which determines the opposite corner of the square bounding the circle. Must have
     /// the same Z value as <paramref name="startCell"/>.</param>
-    /// <returns>A read-only list of <see cref="MapCellCoord"/> representing the coordinates of cells that lie on the
+    /// <returns>A read-only list of <see cref="MapCoord"/> representing the coordinates of cells that lie on the
     /// circumference of the calculated circle. The list will be empty if the input coordinates do not define a valid
     /// circle.</returns>
-    protected IReadOnlyList<MapCellCoord> GetCellsCircleLine(MapCellCoord startCell, MapCellCoord endCell)
+    protected IReadOnlyList<MapCoord> GetCellsCircleLine(MapCoord startCell, MapCoord endCell)
     {
-        int z = startCell.Z;
-
         // --- Build square from drag ---
         int dx = endCell.X - startCell.X;
         int dy = endCell.Y - startCell.Y;
@@ -492,7 +471,7 @@ public abstract class BuildContextBase
         int cy = (minY + maxY) / 2;
         int radius = (maxX - minX) / 2;
 
-        var cells = new HashSet<MapCellCoord>();
+        var cells = new HashSet<MapCoord>();
 
         // --- Midpoint circle ---
         int x = radius;
@@ -501,7 +480,7 @@ public abstract class BuildContextBase
 
         while (y <= x)
         {
-            AddCirclePoints(cells, cx, cy, x, y, z);
+            AddCirclePoints(cells, cx, cy, x, y);
 
             y++;
 
@@ -555,23 +534,17 @@ public abstract class BuildContextBase
         return SnapDirection.Diagonal;
     }
 
-    private static void AddCirclePoints(
-        HashSet<MapCellCoord> cells,
-        int cx,
-        int cy,
-        int x,
-        int y,
-        int z)
+    private static void AddCirclePoints(HashSet<MapCoord> cells, int cx, int cy, int x, int y)
     {
-        cells.Add(new MapCellCoord(cx + x, cy + y, z));
-        cells.Add(new MapCellCoord(cx - x, cy + y, z));
-        cells.Add(new MapCellCoord(cx + x, cy - y, z));
-        cells.Add(new MapCellCoord(cx - x, cy - y, z));
+        cells.Add(new MapCoord(cx + x, cy + y));
+        cells.Add(new MapCoord(cx - x, cy + y));
+        cells.Add(new MapCoord(cx + x, cy - y));
+        cells.Add(new MapCoord(cx - x, cy - y));
 
-        cells.Add(new MapCellCoord(cx + y, cy + x, z));
-        cells.Add(new MapCellCoord(cx - y, cy + x, z));
-        cells.Add(new MapCellCoord(cx + y, cy - x, z));
-        cells.Add(new MapCellCoord(cx - y, cy - x, z));
+        cells.Add(new MapCoord(cx + y, cy + x));
+        cells.Add(new MapCoord(cx - y, cy + x));
+        cells.Add(new MapCoord(cx + y, cy - x));
+        cells.Add(new MapCoord(cx - y, cy - x));
     }
 
     #endregion

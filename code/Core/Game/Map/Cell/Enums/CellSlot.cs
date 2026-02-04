@@ -1,4 +1,4 @@
-namespace CosmosCasino.Core.Game.Map.Cell
+namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
     /// Represents a persistent structural slot within a map cell.
@@ -12,7 +12,7 @@ namespace CosmosCasino.Core.Game.Map.Cell
     /// or visual details.
     /// </para>
     /// </summary>
-    public enum MapCellSlot
+    public enum CellSlot
     {
         /// <summary>
         /// Floor layer of the cell.

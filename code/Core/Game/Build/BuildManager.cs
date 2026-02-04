@@ -1,6 +1,5 @@
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
-using CosmosCasino.Core.Game.Map.Cell;
 
 namespace CosmosCasino.Core.Game.Build
 {
@@ -38,17 +37,7 @@ namespace CosmosCasino.Core.Game.Build
 
         #region Floor Methods
 
-        private BuildOperationResult EvaluateOperationOnFloor(BuildOperation buildOperation, MapCellCoord coord)
-        {
-            return buildOperation switch
-            {
-                BuildOperation.Place => _mapManager.CanPlaceFloor(coord),
-                BuildOperation.Remove => _mapManager.CanRemoveFloor(coord),
-                _ => throw new NotImplementedException($"{nameof(buildOperation)} not implemented")
-            };
-        }
-
-        private BuildOperationResult ExecuteOperationOnFloor(BuildOperation buildOperation, MapCellCoord coord)
+        private BuildOperationResult ExecuteOperationOnFloor(BuildOperation buildOperation, MapCoord coord)
         {
             return buildOperation switch
             {
@@ -58,13 +47,12 @@ namespace CosmosCasino.Core.Game.Build
             };
         }
 
-        private BuildOperationResult TryPlaceFloor(MapCellCoord coord)
+        private BuildOperationResult TryPlaceFloor(MapCoord coord)
         {
             // TODO: Calculate cost to place said floorType
             // TODO: Check if can afford cost
             // If Yes :
-            BuildOperationResult actionResult = _mapManager.TryPlaceFloor(coord);
-
+            BuildOperationResult actionResult = _mapManager.TryPlace(BuildKind.Floor, coord);
 
             if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
@@ -77,9 +65,9 @@ namespace CosmosCasino.Core.Game.Build
         }
 
 
-        private BuildOperationResult TryRemoveFloor(MapCellCoord coord)
+        private BuildOperationResult TryRemoveFloor(MapCoord coord)
         {
-            BuildOperationResult actionResult = _mapManager.TryRemoveFloor(coord);
+            BuildOperationResult actionResult = _mapManager.TryRemove(BuildKind.Floor, coord);
 
             if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
@@ -93,17 +81,7 @@ namespace CosmosCasino.Core.Game.Build
 
         #region Wall Methods
 
-        private BuildOperationResult EvaluateOperationOnWall(BuildOperation buildOperation, MapCellCoord coord)
-        {
-            return buildOperation switch
-            {
-                BuildOperation.Place => _mapManager.CanPlaceWall(coord),
-                BuildOperation.Remove => _mapManager.CanRemoveWall(coord),
-                _ => throw new NotImplementedException($"{nameof(buildOperation)} not implemented")
-            };
-        }
-
-        private BuildOperationResult ExecuteOperationOnWall(BuildOperation buildOperation, MapCellCoord coord)
+        private BuildOperationResult ExecuteOperationOnWall(BuildOperation buildOperation, MapCoord coord)
         {
             return buildOperation switch
             {
@@ -113,12 +91,12 @@ namespace CosmosCasino.Core.Game.Build
             };
         }
 
-        private BuildOperationResult TryPlaceWall(MapCellCoord coord)
+        private BuildOperationResult TryPlaceWall(MapCoord coord)
         {
             // TODO: Calculate cost to place said floorType
             // TODO: Check if can afford cost
             // If Yes :
-            BuildOperationResult actionResult = _mapManager.TryPlaceWall(coord);
+            BuildOperationResult actionResult = _mapManager.TryPlace(BuildKind.Wall, coord);
 
             if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
@@ -131,9 +109,9 @@ namespace CosmosCasino.Core.Game.Build
             return actionResult;
         }
 
-        private BuildOperationResult TryRemoveWall(MapCellCoord coord)
+        private BuildOperationResult TryRemoveWall(MapCoord coord)
         {
-            BuildOperationResult actionResult = _mapManager.TryRemoveWall(coord);
+            BuildOperationResult actionResult = _mapManager.TryRemove(BuildKind.Wall, coord);
 
             if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
