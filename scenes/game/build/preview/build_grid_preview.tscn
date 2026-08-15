@@ -10,7 +10,6 @@ size = Vector2(1, 1)
 render_priority = 0
 shader = ExtResource("2_xbpfe")
 shader_parameter/radius = 5.5
-shader_parameter/cell_size = 1.0
 shader_parameter/line_width = 0.05
 shader_parameter/edge_fade = 10.0
 shader_parameter/grid_color = Color(0.00064697355, 0.3733038, 0.7133373, 1)

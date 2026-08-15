@@ -98,7 +98,7 @@ public sealed partial class BuildGridPreview : Node3D
             throw new ArgumentException("Tile diameter must be an odd number >= 1.");
         }
 
-        float radius = tileCount * 0.5f;
+        float radius = tileCount * WorldGridMetrics.HalfGridUnitSize;
         SetRadius(radius);
     }
 
@@ -114,6 +114,7 @@ public sealed partial class BuildGridPreview : Node3D
     /// shader remains in sync with the object's state.</remarks>
     private void ApplyStaticShaderParams()
     {
+        _material!.SetShaderParameter("cell_size", WorldGridMetrics.GridUnitSize);
         _material!.SetShaderParameter("radius", _radius);
         UpdateScale();
     }

@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Map;
 using Godot;
 using System;
 
@@ -31,6 +32,8 @@ public sealed partial class FloorPreview : Node3D
     {
         var mesh = GetNodeOrNull<MeshInstance3D>("MeshInstance3D")
         ?? throw new InvalidOperationException("MeshInstance3D not found.");
+
+        Scale = new Vector3(WorldGridMetrics.GridUnitSize, Scale.Y, WorldGridMetrics.GridUnitSize);
 
         ShaderMaterial material;
 
