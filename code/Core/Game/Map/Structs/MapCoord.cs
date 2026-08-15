@@ -1,7 +1,7 @@
 namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
-    /// Immutable value type representing a 3D grid coordinate used to
+    /// Immutable value type representing a 2D grid coordinate used to
     /// identify a single cell within the map.
     /// </summary>
     public readonly struct MapCoord : IEquatable<MapCoord>
@@ -108,7 +108,7 @@ namespace CosmosCasino.Core.Game.Map
         /// Returns a human-readable string representation of the coordinate.
         /// </summary>
         /// <returns>
-        /// A string in the format <c>(X, Y, Z)</c>.
+        /// A string in the format <c>(X, Y)</c>.
         /// </returns>
         public override string ToString()
         {

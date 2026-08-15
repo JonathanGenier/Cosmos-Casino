@@ -130,13 +130,15 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
     private void SpawnBuild(BuildOperationResult result, BuildIntent buildIntent)
     {
         CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildIntent.Kind);
-        Vector3 position = MapMath.MapToWorld(spawnKey.Coord);
+        Vector3 position = MapMath.CellToWorldCenter(spawnKey.Coord).ToGodotVector3();
+        Vector3 scale = new(WorldGridMetrics.GridUnitSize, 1f, WorldGridMetrics.GridUnitSize);
+        Transform3D transform = new(Basis.Identity.Scaled(scale), position);
         BuildSpawnDescriptor descriptor = BuildSpawnDescriptorResolver.Resolve(buildIntent);
 
         _spawnManager.Spawn(
             spawnKey,
             descriptor.Variant,
-            position,
+            transform,
             descriptor.Layer);
     }
 

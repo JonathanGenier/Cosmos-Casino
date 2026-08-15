@@ -1,5 +1,6 @@
 using CosmosCasino.Core.Configs;
 using CosmosCasino.Core.Game.Map;
+using CosmosCasino.Core.Game.Map.Terrain;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using Godot;
 using System;
@@ -85,9 +86,10 @@ public sealed partial class TerrainRenderManager : InitializableNodeManager
         {
             for (int x = 0; x < TerrainConfigs.ChunkCountPerAxis; x++)
             {
-                var chunkX = x * TerrainConfigs.ChunkSize;
-                var chunkY = y * TerrainConfigs.ChunkSize;
-                var chunkCoord = new MapCoord(chunkX, chunkY);
+                var chunkCoord = TerrainMath.ChunkIndexToGridCoord(
+                    x,
+                    y,
+                    TerrainConfigs.ChunkCountPerAxis);
 
                 GenerateChunkView(chunkCoord);
             }
@@ -100,11 +102,11 @@ public sealed partial class TerrainRenderManager : InitializableNodeManager
     /// Creates and initializes a visual terrain chunk view for the specified
     /// chunk coordinate using the corresponding terrain tile data.
     /// </summary>
-    /// <param name="chunkCoord">The map coordinate of the chunk to generate.</param>
+    /// <param name="chunkCoord">The signed chunk-grid coordinate of the chunk to generate.</param>
     /// <exception cref="InvalidOperationException">
     /// Thrown if any terrain tile required for the chunk is missing.
     /// </exception>
-    private void GenerateChunkView(MapCoord chunkCoord)
+    private void GenerateChunkView(TerrainChunkGridCoord chunkCoord)
     {
         int chunkSize = TerrainConfigs.ChunkSize;
         var tiles = new TerrainTile[chunkSize, chunkSize];
@@ -113,7 +115,11 @@ public sealed partial class TerrainRenderManager : InitializableNodeManager
         {
             for (int x = 0; x < chunkSize; x++)
             {
-                var coord = new MapCoord(chunkCoord.X + x, chunkCoord.Y + y);
+                var localCoord = new TerrainChunkLocalCoord(x, y);
+                var coord = TerrainMath.ChunkLocalToWorldTileCoord(
+                    chunkCoord,
+                    localCoord,
+                    chunkSize);
 
                 if (!MapManager.TryGetTerrain(coord, out var terrain))
                 {

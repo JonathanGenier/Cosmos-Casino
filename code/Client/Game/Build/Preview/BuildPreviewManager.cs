@@ -305,7 +305,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var cell = cells[i];
             var result = GetResultOrThrow(results, cell);
 
-            _floorPreviews[i].SetWorldPosition(MapMath.MapToWorld(cells[i]));
+            _floorPreviews[i].SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3());
             _floorPreviews[i].SetValidity(result.Outcome);
             _floorPreviews[i].Show();
         }
@@ -317,7 +317,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var result = GetResultOrThrow(results, cell);
             var preview = FloorPool!.Fetch();
 
-            preview.SetWorldPosition(MapMath.MapToWorld(cells[i]));
+            preview.SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3());
             preview.SetValidity(result.Outcome);
             preview.Show();
             _floorPreviews.Add(preview);
@@ -356,7 +356,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var cell = cells[i];
             var result = GetResultOrThrow(results, cell);
 
-            _wallPreviews[i].SetWorldPosition(MapMath.MapToWorld(cells[i]));
+            _wallPreviews[i].SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3());
             _wallPreviews[i].SetValidity(result.Outcome);
             _wallPreviews[i].Show();
         }
@@ -368,7 +368,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var result = GetResultOrThrow(results, cell);
             var preview = WallPool!.Fetch();
 
-            preview.SetWorldPosition(MapMath.MapToWorld(cells[i]));
+            preview.SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3());
             preview.SetValidity(result.Outcome);
             preview.Show();
             _wallPreviews.Add(preview);
@@ -438,7 +438,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             throw new InvalidOperationException("Cursor preview expects exactly one cell.");
         }
 
-        var worldPosition = MapMath.MapToWorld(buildResult.Intent.Cells.First());
+        var worldPosition = MapMath.CellToWorldCenter(buildResult.Intent.Cells.First()).ToGodotVector3();
         var kind = buildResult.Intent.Kind;
         var outcome = buildResult.Results.First().Outcome;
 

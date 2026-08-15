@@ -1,5 +1,4 @@
-using CosmosCasino.Core.Configs;
-using CosmosCasino.Core.Game.Map;
+using CosmosCasino.Core.Game.Map.Terrain;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using Godot;
 using System;
@@ -38,18 +37,18 @@ public sealed partial class TerrainChunkView : Node3D
         set => _groundMesh = value;
     }
 
-    private MapCoord Coord { get; set; }
+    private TerrainChunkGridCoord Coord { get; set; }
 
     #endregion
 
     #region Initialization
 
     /// <summary>
-    /// Initializes the chunk view with terrain tile data and its map coordinate.
+    /// Initializes the chunk view with terrain tile data and its signed chunk-grid coordinate.
     /// </summary>
     /// <param name="tiles">The terrain tiles contained in this chunk.</param>
-    /// <param name="coord">The map coordinate identifying the chunk.</param>
-    public void Initialize(TerrainTile[,] tiles, MapCoord coord)
+    /// <param name="coord">The signed chunk-grid coordinate identifying the chunk.</param>
+    public void Initialize(TerrainTile[,] tiles, TerrainChunkGridCoord coord)
     {
         ArgumentNullException.ThrowIfNull(tiles);
 
@@ -78,11 +77,12 @@ public sealed partial class TerrainChunkView : Node3D
 
         GroundMesh = GetNode<MeshInstance3D>("GroundMesh");
 
-        float half = TerrainConfigs.ChunkSize * TerrainConfigs.ChunkCountPerAxis / 2;
-        float originX = Coord.X - half - 0.5f;
-        float originZ = Coord.Y - half - 0.5f;
+        var chunkOriginTile = TerrainMath.ChunkLocalToWorldTileCoord(
+            Coord,
+            new TerrainChunkLocalCoord(0, 0),
+            Tiles.GetLength(0));
 
-        Position = new Vector3(originX, 0, originZ);
+        Position = TerrainMath.TileToWorldOrigin(chunkOriginTile).ToGodotVector3();
 
         BuildFullMesh();
     }

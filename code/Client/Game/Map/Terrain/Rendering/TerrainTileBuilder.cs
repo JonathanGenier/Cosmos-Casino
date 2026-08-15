@@ -33,8 +33,8 @@ public static class TerrainTileBuilder
     /// <param name="chunkPosition">The position of the chunk within the world.</param>
     public static void BuildTile(SurfaceTool surfaceTool, TerrainTile terrainTile, Vector2I chunkPosition)
     {
-        float x = chunkPosition.X;
-        float z = chunkPosition.Y;
+        float x = chunkPosition.X * WorldGridMetrics.GridUnitSize;
+        float z = chunkPosition.Y * WorldGridMetrics.GridUnitSize;
 
         float topLeftHeight = terrainTile.TopLeftHeight;
         float topRightHeight = terrainTile.TopRightHeight;
@@ -43,10 +43,10 @@ public static class TerrainTileBuilder
         float centerHeight = CalculateCenterHeight(topLeftHeight, topRightHeight, bottomLeftHeight, bottomRightHeight);
 
         Vector3 topLeftVertex = new(x, topLeftHeight, z);
-        Vector3 topRightVertex = new(x + 1, topRightHeight, z);
-        Vector3 bottomLeftVertex = new(x, bottomLeftHeight, z + 1);
-        Vector3 bottomRightVertex = new(x + 1, bottomRightHeight, z + 1);
-        Vector3 centerVertex = new(x + 0.5f, centerHeight, z + 0.5f);
+        Vector3 topRightVertex = new(x + WorldGridMetrics.GridUnitSize, topRightHeight, z);
+        Vector3 bottomLeftVertex = new(x, bottomLeftHeight, z + WorldGridMetrics.GridUnitSize);
+        Vector3 bottomRightVertex = new(x + WorldGridMetrics.GridUnitSize, bottomRightHeight, z + WorldGridMetrics.GridUnitSize);
+        Vector3 centerVertex = new(x + WorldGridMetrics.HalfGridUnitSize, centerHeight, z + WorldGridMetrics.HalfGridUnitSize);
 
         Color colorMask = EncodeTileMask(terrainTile);
 

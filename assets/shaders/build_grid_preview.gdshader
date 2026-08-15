@@ -2,7 +2,7 @@ shader_type spatial;
 render_mode unshaded, cull_disabled, blend_mix, depth_test_disabled;
 
 uniform float radius = 5.5;
-uniform float cell_size = 1.0;
+uniform float cell_size;
 uniform float line_width = 0.05;
 uniform float edge_fade = 1.0;
 

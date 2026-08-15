@@ -1,5 +1,5 @@
-using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Systems;
+using CosmosCasino.Core.Game.Map.Terrain;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using NUnit.Framework;
 
@@ -36,14 +36,14 @@ namespace CosmosCasino.Tests.Game.Map.Systems
 
             // Assert
             Assert.That(sink.Received.Count, Is.EqualTo(1));
-            Assert.That(sink.Received.ContainsKey(new MapCoord(0, 0)), Is.True);
+            Assert.That(sink.Received.ContainsKey(new TerrainTileWorldCoord(0, 0)), Is.True);
         }
 
         [Test]
         public void GenerateTerrain_MapSizeN_ProducesExactGrid()
         {
             // Arrange
-            const int mapSize = 4;
+            const int mapSize = 5;
             var system = new TerrainSystem();
             var sink = new TestTerrainTileSink();
 
@@ -53,13 +53,25 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Assert
             Assert.That(sink.Received.Count, Is.EqualTo(mapSize * mapSize));
 
-            for (int x = 0; x < mapSize; x++)
+            for (int x = -2; x <= 2; x++)
             {
-                for (int y = 0; y < mapSize; y++)
+                for (int y = -2; y <= 2; y++)
                 {
-                    Assert.That(sink.Received.ContainsKey(new MapCoord(x, y)), Is.True, $"Missing tile at ({x},{y})");
+                    Assert.That(sink.Received.ContainsKey(new TerrainTileWorldCoord(x, y)), Is.True, $"Missing tile at ({x},{y})");
                 }
             }
+        }
+
+        [Test]
+        public void GenerateTerrain_EvenPositiveMapSize_ThrowsArgumentException()
+        {
+            // Arrange
+            var system = new TerrainSystem();
+            var sink = new TestTerrainTileSink();
+
+            // Act / Assert
+            Assert.Throws<ArgumentException>(() =>
+                system.GenerateTerrain(seed: 1, mapSize: 4, sink));
         }
 
         [Test]
@@ -115,7 +127,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
         {
             // Arrange
             var system = new TerrainSystem();
-            var coords = new[] { new MapCoord(0, 0) };
+            var coords = new[] { new TerrainTileWorldCoord(0, 0) };
 
             // Act / Assert
             Assert.DoesNotThrow(() =>
@@ -127,9 +139,9 @@ namespace CosmosCasino.Tests.Game.Map.Systems
         {
             // Arrange
             var tile = new TerrainTile(1, 2, 1, 1); // slope
-            var tiles = new Dictionary<MapCoord, TerrainTile>
+            var tiles = new Dictionary<TerrainTileWorldCoord, TerrainTile>
             {
-                [new MapCoord(0, 0)] = tile
+                [new TerrainTileWorldCoord(0, 0)] = tile
             };
 
             var lookup = new TerrainLookup(tiles);
@@ -148,9 +160,9 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Arrange
             var flat = new TerrainTile(1, 1, 1, 1);
 
-            var tiles = new Dictionary<MapCoord, TerrainTile>
+            var tiles = new Dictionary<TerrainTileWorldCoord, TerrainTile>
             {
-                [new MapCoord(0, 0)] = flat
+                [new TerrainTileWorldCoord(0, 0)] = flat
             };
 
             var lookup = new TerrainLookup(tiles);
@@ -170,10 +182,10 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var center = new TerrainTile(1, 1, 1, 1);
             var north = new TerrainTile(1, 2, 1, 1); // slope
 
-            var tiles = new Dictionary<MapCoord, TerrainTile>
+            var tiles = new Dictionary<TerrainTileWorldCoord, TerrainTile>
             {
-                [new MapCoord(0, 0)] = center,
-                [new MapCoord(0, -1)] = north
+                [new TerrainTileWorldCoord(0, 0)] = center,
+                [new TerrainTileWorldCoord(0, -1)] = north
             };
 
             var lookup = new TerrainLookup(tiles);
@@ -194,11 +206,11 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Arrange
             var center = new TerrainTile(1, 1, 1, 1);
 
-            var tiles = new Dictionary<MapCoord, TerrainTile>
+            var tiles = new Dictionary<TerrainTileWorldCoord, TerrainTile>
             {
-                [new MapCoord(0, 0)] = center,
-                [new MapCoord(1, 0)] = new TerrainTile(1, 2, 1, 1),  // East
-                [new MapCoord(0, 1)] = new TerrainTile(1, 1, 2, 1),  // South
+                [new TerrainTileWorldCoord(0, 0)] = center,
+                [new TerrainTileWorldCoord(1, 0)] = new TerrainTile(1, 2, 1, 1),  // East
+                [new TerrainTileWorldCoord(0, 1)] = new TerrainTile(1, 1, 2, 1),  // South
             };
 
             var lookup = new TerrainLookup(tiles);
@@ -220,9 +232,9 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var center = new TerrainTile(1, 1, 1, 1);
             center.AddSlopeNeighbor(SlopeNeighborMask.North);
 
-            var tiles = new Dictionary<MapCoord, TerrainTile>
+            var tiles = new Dictionary<TerrainTileWorldCoord, TerrainTile>
             {
-                [new MapCoord(0, 0)] = center
+                [new TerrainTileWorldCoord(0, 0)] = center
             };
 
             var lookup = new TerrainLookup(tiles);
@@ -242,10 +254,10 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var center = new TerrainTile(1, 1, 1, 1);
             var east = new TerrainTile(1, 2, 1, 1);
 
-            var tiles = new Dictionary<MapCoord, TerrainTile>
+            var tiles = new Dictionary<TerrainTileWorldCoord, TerrainTile>
             {
-                [new MapCoord(0, 0)] = center,
-                [new MapCoord(1, 0)] = east
+                [new TerrainTileWorldCoord(0, 0)] = center,
+                [new TerrainTileWorldCoord(1, 0)] = east
             };
 
             var lookup = new TerrainLookup(tiles);
@@ -268,14 +280,14 @@ namespace CosmosCasino.Tests.Game.Map.Systems
 
         private sealed class TerrainLookup
         {
-            private readonly Dictionary<MapCoord, TerrainTile> _tiles;
+            private readonly Dictionary<TerrainTileWorldCoord, TerrainTile> _tiles;
 
-            internal TerrainLookup(Dictionary<MapCoord, TerrainTile> tiles)
+            internal TerrainLookup(Dictionary<TerrainTileWorldCoord, TerrainTile> tiles)
             {
                 _tiles = tiles;
             }
 
-            internal TerrainTile? TryGet(MapCoord coord)
+            internal TerrainTile? TryGet(TerrainTileWorldCoord coord)
             {
                 return _tiles.TryGetValue(coord, out var tile) ? tile : null;
             }
@@ -283,11 +295,11 @@ namespace CosmosCasino.Tests.Game.Map.Systems
 
         private sealed class TestTerrainTileSink : ITerrainTileSink
         {
-            private readonly Dictionary<MapCoord, TerrainTile> received = new();
+            private readonly Dictionary<TerrainTileWorldCoord, TerrainTile> received = new();
 
-            internal Dictionary<MapCoord, TerrainTile> Received => received;
+            internal Dictionary<TerrainTileWorldCoord, TerrainTile> Received => received;
 
-            public void ReceiveTerrainTile(MapCoord coord, TerrainTile tile)
+            public void ReceiveTerrainTile(TerrainTileWorldCoord coord, TerrainTile tile)
             {
                 Received.Add(coord, tile);
             }

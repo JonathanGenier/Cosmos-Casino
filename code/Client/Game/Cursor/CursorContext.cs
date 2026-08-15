@@ -49,7 +49,7 @@ public readonly struct CursorContext
     /// <summary>
     /// Gets the cell coordinates corresponding to the current world position.
     /// </summary>
-    public MapCoord CellPosition => MapMath.WorldToMap(WorldPosition);
+    public MapCoord CellPosition => MapMath.WorldToCell(WorldPosition.ToWorldCoord());
 
     #endregion
 }

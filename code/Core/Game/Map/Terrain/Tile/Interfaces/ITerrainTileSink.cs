@@ -1,3 +1,5 @@
+using CosmosCasino.Core.Game.Map.Terrain;
+
 namespace CosmosCasino.Core.Game.Map.Terrain.Tile
 {
     /// <summary>
@@ -7,10 +9,10 @@ namespace CosmosCasino.Core.Game.Map.Terrain.Tile
     internal interface ITerrainTileSink
     {
         /// <summary>
-        /// Receives a generated terrain tile at the specified map coordinate.
+        /// Receives a generated terrain tile at the specified terrain world-tile coordinate.
         /// </summary>
-        /// <param name="coord">The map coordinate of the generated terrain tile.</param>
+        /// <param name="coord">The terrain world-tile coordinate of the generated terrain tile.</param>
         /// <param name="terrainTile">The generated terrain tile instance.</param>
-        void ReceiveTerrainTile(MapCoord coord, TerrainTile terrainTile);
+        void ReceiveTerrainTile(TerrainTileWorldCoord coord, TerrainTile terrainTile);
     }
 }

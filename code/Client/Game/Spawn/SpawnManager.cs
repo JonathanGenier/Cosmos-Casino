@@ -73,8 +73,20 @@ public sealed partial class SpawnManager : InitializableNodeManager
     /// <exception cref="InvalidOperationException">Thrown if the spawn manager is not configured or if the resolved spawn does not instantiate a Node3D.</exception>
     public void Spawn(ISpawnKey key, ISpawnVariant variant, Vector3 position, SpawnLayer layer)
     {
+        Spawn(key, variant, new Transform3D(Basis.Identity, position), layer);
+    }
+
+    /// <summary>
+    /// Spawns a new instance of the specified object with the given transform and adds it to the specified spawn layer.
+    /// </summary>
+    /// <param name="key">The key that uniquely identifies the type of object to spawn.</param>
+    /// <param name="variant">The variant information used to resolve the specific object to spawn.</param>
+    /// <param name="transform">The transform applied to the spawned object.</param>
+    /// <param name="layer">The spawn layer to which the new object will be added.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the spawn manager is not configured or if the resolved spawn does not instantiate a Node3D.</exception>
+    public void Spawn(ISpawnKey key, ISpawnVariant variant, Transform3D transform, SpawnLayer layer)
+    {
         var spawnId = SpawnResolver.Resolve(key, variant);
-        var transform = new Transform3D(Basis.Identity, position);
 
         ReplaceIfExists(key);
 

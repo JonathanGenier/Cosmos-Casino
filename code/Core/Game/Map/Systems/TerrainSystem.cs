@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Game.Map.Terrain;
 using CosmosCasino.Core.Game.Map.Terrain.Generation;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
 
@@ -36,18 +37,26 @@ namespace CosmosCasino.Core.Game.Map.Systems
         /// <param name="sink">The sink that receives generated terrain tiles.</param>
         internal void GenerateTerrain(int seed, int mapSize, ITerrainTileSink sink)
         {
+            if (mapSize == 0)
+            {
+                return;
+            }
+
+            TerrainMath.ValidatePositiveOddCount(mapSize, nameof(mapSize));
+
             var terrainHeightGenerator = new TerrainHeightGenerator(seed);
 
             for (int x = 0; x < mapSize; x++)
             {
                 for (int y = 0; y < mapSize; y++)
                 {
-                    var coord = new MapCoord(x, y);
+                    var coord = TerrainMath.TileIndexToWorldCoord(x, y, mapSize);
+                    var origin = TerrainMath.TileToWorldOrigin(coord);
 
-                    var topLeftHeight = terrainHeightGenerator.GetHeight(coord.X, coord.Y);
-                    var topRightHeight = terrainHeightGenerator.GetHeight(coord.X + 1, coord.Y);
-                    var bottomLeftHeight = terrainHeightGenerator.GetHeight(coord.X, coord.Y + 1);
-                    var bottomRightHeight = terrainHeightGenerator.GetHeight(coord.X + 1, coord.Y + 1);
+                    var topLeftHeight = terrainHeightGenerator.GetHeight(origin.X, origin.Y);
+                    var topRightHeight = terrainHeightGenerator.GetHeight(origin.X + WorldGridMetrics.GridUnitSize, origin.Y);
+                    var bottomLeftHeight = terrainHeightGenerator.GetHeight(origin.X, origin.Y + WorldGridMetrics.GridUnitSize);
+                    var bottomRightHeight = terrainHeightGenerator.GetHeight(origin.X + WorldGridMetrics.GridUnitSize, origin.Y + WorldGridMetrics.GridUnitSize);
                     var terrainTile = new TerrainTile(topLeftHeight, topRightHeight, bottomLeftHeight, bottomRightHeight);
 
                     sink.ReceiveTerrainTile(coord, terrainTile);
@@ -63,9 +72,9 @@ namespace CosmosCasino.Core.Game.Map.Systems
         /// Resolves slope adjacency information for terrain tiles by inspecting neighboring
         /// tiles and recording slope relationships on flat tiles.
         /// </summary>
-        /// <param name="coords">The set of map coordinates to process.</param>
+        /// <param name="coords">The set of terrain world-tile coordinates to process.</param>
         /// <param name="tryGetTerrain">Function used to retrieve terrain tiles by coordinate.</param>
-        internal void ResolveSlopeNeighbors(IEnumerable<MapCoord> coords, Func<MapCoord, TerrainTile?> tryGetTerrain)
+        internal void ResolveSlopeNeighbors(IEnumerable<TerrainTileWorldCoord> coords, Func<TerrainTileWorldCoord, TerrainTile?> tryGetTerrain)
         {
             foreach (var coord in coords)
             {
@@ -86,7 +95,7 @@ namespace CosmosCasino.Core.Game.Map.Systems
 
                 foreach (var (mask, dx, dy) in NeighborOffsets)
                 {
-                    var neighborCoord = new MapCoord(coord.X + dx, coord.Y + dy);
+                    var neighborCoord = new TerrainTileWorldCoord(coord.X + dx, coord.Y + dy);
                     var neighborTerrain = tryGetTerrain(neighborCoord);
 
                     if (neighborTerrain?.IsSlope == true)

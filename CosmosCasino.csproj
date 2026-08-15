@@ -19,4 +19,7 @@
   <ItemGroup>
     <Folder Include="code\Client\Game\Map\Terrain\Structs\" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="code\Client\AGENTS.md" />
+  </ItemGroup>
 </Project>
