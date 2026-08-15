@@ -137,7 +137,7 @@ public sealed class BuildContext
             return;
         }
 
-        _startCell = MapMath.WorldToMap(start.WorldPosition);
+        _startCell = MapMath.WorldToCell(start.WorldPosition.ToWorldCoord());
         _currentCell = _startCell;
         _currentBuildOperation = buildOperation;
         BuildStarted?.Invoke();
@@ -164,7 +164,7 @@ public sealed class BuildContext
             return;
         }
 
-        var newCell = MapMath.WorldToMap(current.WorldPosition);
+        var newCell = MapMath.WorldToCell(current.WorldPosition.ToWorldCoord());
         bool cellChanged = newCell != _currentCell;
         bool interactionChanged = SetBuildInteractionMode(buildInteractionMode);
 
@@ -190,7 +190,7 @@ public sealed class BuildContext
             return;
         }
 
-        var currentCell = MapMath.WorldToMap(current.WorldPosition);
+        var currentCell = MapMath.WorldToCell(current.WorldPosition.ToWorldCoord());
 
         if (currentCell != _currentCell)
         {

@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Map.Terrain;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using System.Diagnostics.CodeAnalysis;
 
@@ -42,11 +43,11 @@ namespace CosmosCasino.Core.Game.Map.Systems
         /// <summary>
         /// Receives a generated terrain tile and creates a corresponding cell.
         /// </summary>
-        /// <param name="coord">The map coordinate of the terrain tile.</param>
+        /// <param name="coord">The terrain world-tile coordinate of the terrain tile.</param>
         /// <param name="terrainTile">The terrain tile used to initialize the cell.</param>
-        void ITerrainTileSink.ReceiveTerrainTile(MapCoord coord, TerrainTile terrainTile)
+        void ITerrainTileSink.ReceiveTerrainTile(TerrainTileWorldCoord coord, TerrainTile terrainTile)
         {
-            _grid.CreateCell(coord, terrainTile);
+            _grid.CreateCell(new MapCoord(coord.X, coord.Y), terrainTile);
         }
 
         #endregion

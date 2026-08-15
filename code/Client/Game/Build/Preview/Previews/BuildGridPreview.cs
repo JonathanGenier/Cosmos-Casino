@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Game.Map;
 using Godot;
 using System;
 
@@ -74,14 +75,14 @@ public sealed partial class BuildGridPreview : Node3D
     #region Public API
 
     /// <summary>
-    /// Updates the object's global position to the specified world position, snapping it to the nearest grid point.
+    /// Updates the object's global position to the center of the map cell containing the specified world position.
     /// </summary>
-    /// <remarks>The position is automatically adjusted to align with the grid. This ensures consistent
-    /// placement and may affect precision if the input position does not fall exactly on a grid point.</remarks>
+    /// <remarks>The cell conversion is resolved by Core map math; this view only translates the result to Godot.</remarks>
     /// <param name="worldPosition">The target position in world coordinates to which the object's global position will be updated.</param>
     public void UpdatePosition(Vector3 worldPosition)
     {
-        GlobalPosition = SnapToGrid(worldPosition);
+        MapCoord cell = MapMath.WorldToCell(worldPosition.ToWorldCoord());
+        GlobalPosition = MapMath.CellToWorldCenter(cell).ToGodotVector3(worldPosition.Y);
     }
 
     /// <summary>
@@ -104,24 +105,6 @@ public sealed partial class BuildGridPreview : Node3D
     #endregion
 
     #region Internal
-
-    /// <summary>
-    /// Snaps the specified world position to the center of the nearest grid cell on the XZ plane.
-    /// </summary>
-    /// <remarks>This method is useful for aligning objects to a grid in scenarios such as tile-based games or
-    /// level editors. The grid cells are assumed to be 1 unit in size, and snapping occurs only on the X and Z
-    /// axes.</remarks>
-    /// <param name="worldPos">The world position to be snapped to the grid. The Y component is preserved; the X and Z components are adjusted
-    /// to align with the grid.</param>
-    /// <returns>A Vector3 representing the position at the center of the nearest grid cell, with the original Y component.</returns>
-    private static Vector3 SnapToGrid(Vector3 worldPos)
-    {
-        return new Vector3(
-            Mathf.Floor(worldPos.X) + 0.5f,
-            worldPos.Y,
-            Mathf.Floor(worldPos.Z) + 0.5f
-        );
-    }
 
     /// <summary>
     /// Applies static shader parameters to the associated material instance.

@@ -23,6 +23,12 @@ namespace CosmosCasino.Core.Configs
         public const int ChunkCountPerAxis = 15;
 
         /// <summary>
+        /// Total number of terrain tiles generated along one axis of the playable map.
+        /// This value must be odd so the map has one unique center tile.
+        /// </summary>
+        public const int TileCountPerAxis = ChunkSize * ChunkCountPerAxis;
+
+        /// <summary>
         /// Number of noise octaves used when generating terrain height values.
         /// 
         /// Higher values increase terrain detail at the cost of additional

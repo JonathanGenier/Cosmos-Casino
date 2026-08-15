@@ -21,7 +21,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void Setup()
         {
             _mapManager = new MapManager();
-            _mapManager.GenerateMap(0, 10);
+            _mapManager.GenerateMap(0, 11);
             _buildManager = new BuildManager(_mapManager);
         }
 

@@ -26,7 +26,7 @@ namespace CosmosCasino.Core.Game
             BuildManager = new BuildManager(MapManager);
 
             var seed = 0;
-            var mapSize = TerrainConfigs.ChunkSize * TerrainConfigs.ChunkCountPerAxis;
+            var mapSize = TerrainConfigs.TileCountPerAxis;
 
             MapManager.GenerateMap(seed, mapSize);
         }

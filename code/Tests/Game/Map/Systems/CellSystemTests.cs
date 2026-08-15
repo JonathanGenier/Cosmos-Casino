@@ -1,6 +1,7 @@
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Systems;
+using CosmosCasino.Core.Game.Map.Terrain;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using NUnit.Framework;
 
@@ -38,7 +39,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var coord = Coord();
 
             // Act
-            ((ITerrainTileSink)system).ReceiveTerrainTile(coord, FlatTile());
+            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
 
             // Assert
             Assert.That(system.CellCount, Is.EqualTo(1));
@@ -52,8 +53,8 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var coord = Coord();
 
             // Act
-            ((ITerrainTileSink)system).ReceiveTerrainTile(coord, FlatTile());
-            ((ITerrainTileSink)system).ReceiveTerrainTile(coord, FlatTile());
+            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
+            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
 
             // Assert
             Assert.That(system.CellCount, Is.EqualTo(1));
@@ -69,8 +70,8 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Arrange
             var system = new CellSystem();
 
-            ((ITerrainTileSink)system).ReceiveTerrainTile(Coord(0, 0), FlatTile());
-            ((ITerrainTileSink)system).ReceiveTerrainTile(Coord(1, 0), FlatTile());
+            ((ITerrainTileSink)system).ReceiveTerrainTile(new TerrainTileWorldCoord(0, 0), FlatTile());
+            ((ITerrainTileSink)system).ReceiveTerrainTile(new TerrainTileWorldCoord(1, 0), FlatTile());
 
             // Act
             var coords = system.EnumerateAllCoords();
@@ -90,7 +91,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var system = new CellSystem();
             var coord = Coord();
 
-            ((ITerrainTileSink)system).ReceiveTerrainTile(coord, FlatTile());
+            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
 
             // Act
             var result = system.TryGetCell(coord, out var cell);
@@ -140,7 +141,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var system = new CellSystem();
             var coord = Coord();
 
-            ((ITerrainTileSink)system).ReceiveTerrainTile(coord, FlatTile());
+            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
 
             // Act
             system.TryPlace(BuildKind.Floor, coord);
@@ -156,7 +157,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Arrange
             var system = new CellSystem();
             var coord = Coord();
-            ((ITerrainTileSink)system).ReceiveTerrainTile(coord, FlatTile());
+            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
             system.TryPlace(BuildKind.Floor, coord);
 
             // Act
@@ -254,7 +255,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Arrange
             var system = new CellSystem();
             var coord = Coord();
-            ((ITerrainTileSink)system).ReceiveTerrainTile(coord, FlatTile());
+            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
 
             // Act / Assert
             Assert.Throws<InvalidOperationException>(() => system.CanPlace((BuildKind)999, coord));
@@ -266,7 +267,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Arrange
             var system = new CellSystem();
             var coord = Coord();
-            ((ITerrainTileSink)system).ReceiveTerrainTile(coord, FlatTile());
+            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
 
             // Act / Assert
             Assert.Throws<InvalidOperationException>(() => system.TryPlace((BuildKind)999, coord));
@@ -285,6 +286,11 @@ namespace CosmosCasino.Tests.Game.Map.Systems
         private static MapCoord Coord(int x = 0, int y = 0)
         {
             return new MapCoord(x, y);
+        }
+
+        private static TerrainTileWorldCoord TerrainCoord(MapCoord coord)
+        {
+            return new TerrainTileWorldCoord(coord.X, coord.Y);
         }
 
         #endregion

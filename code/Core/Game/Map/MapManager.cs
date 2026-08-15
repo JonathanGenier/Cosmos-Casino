@@ -1,5 +1,6 @@
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map.Systems;
+using CosmosCasino.Core.Game.Map.Terrain;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using System.Diagnostics.CodeAnalysis;
 
@@ -61,6 +62,17 @@ namespace CosmosCasino.Core.Game.Map
             return false;
         }
 
+        /// <summary>
+        /// Attempts to retrieve the terrain tile at the specified terrain world-tile coordinate.
+        /// </summary>
+        /// <param name="coord">The terrain world-tile coordinate to query.</param>
+        /// <param name="terrainTile">The terrain tile at the coordinate if found.</param>
+        /// <returns><c>true</c> if terrain exists at the coordinate; otherwise <c>false</c>.</returns>
+        public bool TryGetTerrain(TerrainTileWorldCoord coord, [NotNullWhen(true)] out TerrainTile terrainTile)
+        {
+            return TryGetTerrain(new MapCoord(coord.X, coord.Y), out terrainTile);
+        }
+
         #endregion
 
         #region Generation
@@ -74,7 +86,10 @@ namespace CosmosCasino.Core.Game.Map
         {
             _terrainSystem.GenerateTerrain(seed, mapSize, _cellSystem);
 
-            var allCoords = _cellSystem.EnumerateAllCoords();
+            var allCoords = _cellSystem
+                .EnumerateAllCoords()
+                .Select(coord => new TerrainTileWorldCoord(coord.X, coord.Y));
+
             _terrainSystem.ResolveSlopeNeighbors(allCoords, coord => TryGetTerrain(coord, out var t) ? t : null);
         }
 

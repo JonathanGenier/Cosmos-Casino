@@ -130,7 +130,7 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
     private void SpawnBuild(BuildOperationResult result, BuildIntent buildIntent)
     {
         CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildIntent.Kind);
-        Vector3 position = MapMath.MapToWorld(spawnKey.Coord);
+        Vector3 position = MapMath.CellToWorldCenter(spawnKey.Coord).ToGodotVector3();
         BuildSpawnDescriptor descriptor = BuildSpawnDescriptorResolver.Resolve(buildIntent);
 
         _spawnManager.Spawn(
