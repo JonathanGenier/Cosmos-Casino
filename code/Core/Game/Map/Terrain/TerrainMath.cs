@@ -1,5 +1,3 @@
-using CosmosCasino.Core.Game;
-
 namespace CosmosCasino.Core.Game.Map.Terrain
 {
     /// <summary>
@@ -8,13 +6,6 @@ namespace CosmosCasino.Core.Game.Map.Terrain
     /// </summary>
     public static class TerrainMath
     {
-        #region Constants
-
-        private const float TileSize = 1f;
-        private const float HalfTileSize = TileSize * 0.5f;
-
-        #endregion
-
         #region Tile Coordinates
 
         /// <summary>
@@ -53,7 +44,10 @@ namespace CosmosCasino.Core.Game.Map.Terrain
         /// <returns>The world-space center of <paramref name="coord"/>.</returns>
         public static WorldCoord TileToWorldCenter(TerrainTileWorldCoord coord)
         {
-            return new WorldCoord(coord.X, coord.Y);
+            return new WorldCoord(
+                coord.X * WorldGridMetrics.GridUnitSize,
+                coord.Y * WorldGridMetrics.GridUnitSize
+            );
         }
 
         /// <summary>
@@ -64,8 +58,8 @@ namespace CosmosCasino.Core.Game.Map.Terrain
         public static WorldCoord TileToWorldOrigin(TerrainTileWorldCoord coord)
         {
             return new WorldCoord(
-                coord.X - HalfTileSize,
-                coord.Y - HalfTileSize
+                (coord.X * WorldGridMetrics.GridUnitSize) - WorldGridMetrics.HalfGridUnitSize,
+                (coord.Y * WorldGridMetrics.GridUnitSize) - WorldGridMetrics.HalfGridUnitSize
             );
         }
 

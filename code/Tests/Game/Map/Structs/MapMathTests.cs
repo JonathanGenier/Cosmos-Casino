@@ -109,9 +109,9 @@ namespace CosmosCasino.Tests.Game.Map
 
             Assert.That(cell, Is.EqualTo(expectedCell));
             Assert.That(worldX, Is.GreaterThanOrEqualTo(origin.X));
-            Assert.That(worldX, Is.LessThan(origin.X + MapMath.CellSize));
+            Assert.That(worldX, Is.LessThan(origin.X + WorldGridMetrics.GridUnitSize));
             Assert.That(worldY, Is.GreaterThanOrEqualTo(origin.Y));
-            Assert.That(worldY, Is.LessThan(origin.Y + MapMath.CellSize));
+            Assert.That(worldY, Is.LessThan(origin.Y + WorldGridMetrics.GridUnitSize));
             Assert.That(MapMath.WorldToCell(center), Is.EqualTo(expectedCell));
         }
 

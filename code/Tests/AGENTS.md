@@ -210,9 +210,9 @@ Do not bypass APIs using generic tuples or vectors merely to make tests shorter 
 
 Examples may include:
 
-* `MapCellCoord`
+* `MapCoord`
 * `TerrainTileWorldCoord`
-* `TerrainTileLocalCoord`
+* `TerrainChunkLocalCoord`
 * `TerrainChunkGridCoord`
 
 Tests should help catch accidental mixing of coordinate spaces.

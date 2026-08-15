@@ -120,9 +120,9 @@ Prefer explicit domain types when they prevent invalid or ambiguous usage.
 
 Examples include coordinate types such as:
 
-* `MapCellCoord`
+* `MapCoord`
 * `TerrainTileWorldCoord`
-* `TerrainTileLocalCoord`
+* `TerrainChunkLocalCoord`
 * `TerrainChunkGridCoord`
 
 Do not replace strong domain types with generic vectors solely for convenience.
@@ -163,7 +163,7 @@ Map and Terrain are separate domains even when they align spatially.
 
 Do not couple them unnecessarily.
 
-If a `MapCellCoord` and `TerrainTileWorldCoord` refer to the same physical grid location, preserve the separate domain types and convert explicitly at the correct integration boundary.
+If a `MapCoord` and `TerrainTileWorldCoord` refer to the same physical grid location, preserve the separate domain types and convert explicitly at the correct integration boundary.
 
 Do not merge domains merely because their coordinates share the same numeric values.
 

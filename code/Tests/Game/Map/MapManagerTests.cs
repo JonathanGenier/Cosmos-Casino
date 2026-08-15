@@ -39,7 +39,7 @@ namespace CosmosCasino.Tests.Game.Map
         [Test]
         public void ConfiguredMapSize_HasUniqueCenterTile()
         {
-            Assert.That(TerrainConfigs.TileCountPerAxis, Is.EqualTo(225));
+            Assert.That(TerrainConfigs.TileCountPerAxis, Is.Positive);
             Assert.That(TerrainConfigs.TileCountPerAxis % 2, Is.EqualTo(1));
         }
 

@@ -314,7 +314,7 @@ When a test fails, determine whether the cause is:
 
 before changing the expectation.
 
-More detailed testing conventions belong in `CosmosCasino.Tests/AGENTS.md`.
+More detailed testing conventions belong in `code/Tests/AGENTS.md`.
 
 ---
 

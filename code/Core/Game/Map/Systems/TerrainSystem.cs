@@ -54,9 +54,9 @@ namespace CosmosCasino.Core.Game.Map.Systems
                     var origin = TerrainMath.TileToWorldOrigin(coord);
 
                     var topLeftHeight = terrainHeightGenerator.GetHeight(origin.X, origin.Y);
-                    var topRightHeight = terrainHeightGenerator.GetHeight(origin.X + MapMath.CellSize, origin.Y);
-                    var bottomLeftHeight = terrainHeightGenerator.GetHeight(origin.X, origin.Y + MapMath.CellSize);
-                    var bottomRightHeight = terrainHeightGenerator.GetHeight(origin.X + MapMath.CellSize, origin.Y + MapMath.CellSize);
+                    var topRightHeight = terrainHeightGenerator.GetHeight(origin.X + WorldGridMetrics.GridUnitSize, origin.Y);
+                    var bottomLeftHeight = terrainHeightGenerator.GetHeight(origin.X, origin.Y + WorldGridMetrics.GridUnitSize);
+                    var bottomRightHeight = terrainHeightGenerator.GetHeight(origin.X + WorldGridMetrics.GridUnitSize, origin.Y + WorldGridMetrics.GridUnitSize);
                     var terrainTile = new TerrainTile(topLeftHeight, topRightHeight, bottomLeftHeight, bottomRightHeight);
 
                     sink.ReceiveTerrainTile(coord, terrainTile);

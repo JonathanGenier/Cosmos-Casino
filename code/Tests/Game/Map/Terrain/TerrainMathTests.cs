@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Game;
 using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Terrain;
 using NUnit.Framework;
@@ -59,6 +60,26 @@ namespace CosmosCasino.Tests.Game.Map.Terrain
             Assert.That(
                 TerrainMath.TileToWorldOrigin(terrainCoord),
                 Is.EqualTo(MapMath.CellToWorldOrigin(mapCoord)));
+        }
+
+        [TestCase(0, 0)]
+        [TestCase(4, 9)]
+        [TestCase(-4, -9)]
+        [TestCase(-12, 7)]
+        public void TileAndMapCellAtSameCoordinate_HaveSamePhysicalFootprint(int x, int y)
+        {
+            var terrainOrigin = TerrainMath.TileToWorldOrigin(new TerrainTileWorldCoord(x, y));
+            var mapOrigin = MapMath.CellToWorldOrigin(new MapCoord(x, y));
+
+            var terrainMaximum = new WorldCoord(
+                terrainOrigin.X + WorldGridMetrics.GridUnitSize,
+                terrainOrigin.Y + WorldGridMetrics.GridUnitSize);
+            var mapMaximum = new WorldCoord(
+                mapOrigin.X + WorldGridMetrics.GridUnitSize,
+                mapOrigin.Y + WorldGridMetrics.GridUnitSize);
+
+            Assert.That(terrainOrigin, Is.EqualTo(mapOrigin));
+            Assert.That(terrainMaximum, Is.EqualTo(mapMaximum));
         }
 
         #endregion

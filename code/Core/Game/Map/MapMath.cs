@@ -1,5 +1,3 @@
-using CosmosCasino.Core.Game;
-
 namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
@@ -8,17 +6,6 @@ namespace CosmosCasino.Core.Game.Map
     /// </summary>
     public static class MapMath
     {
-        #region Constants
-
-        /// <summary>
-        /// Width and depth of one logical map cell in world units.
-        /// </summary>
-        public const float CellSize = 1f;
-
-        private const float HalfCellSize = CellSize * 0.5f;
-
-        #endregion
-
         #region World To Cell
 
         /// <summary>
@@ -52,8 +39,8 @@ namespace CosmosCasino.Core.Game.Map
         public static MapCoord WorldToCell(float worldX, float worldY)
         {
             return new MapCoord(
-                FloorToInt(worldX + HalfCellSize),
-                FloorToInt(worldY + HalfCellSize)
+                FloorToInt((worldX + WorldGridMetrics.HalfGridUnitSize) / WorldGridMetrics.GridUnitSize),
+                FloorToInt((worldY + WorldGridMetrics.HalfGridUnitSize) / WorldGridMetrics.GridUnitSize)
             );
         }
 
@@ -74,8 +61,8 @@ namespace CosmosCasino.Core.Game.Map
         public static WorldCoord CellToWorldOrigin(MapCoord cell)
         {
             return new WorldCoord(
-                cell.X - HalfCellSize,
-                cell.Y - HalfCellSize
+                (cell.X * WorldGridMetrics.GridUnitSize) - WorldGridMetrics.HalfGridUnitSize,
+                (cell.Y * WorldGridMetrics.GridUnitSize) - WorldGridMetrics.HalfGridUnitSize
             );
         }
 
@@ -91,7 +78,10 @@ namespace CosmosCasino.Core.Game.Map
         /// </returns>
         public static WorldCoord CellToWorldCenter(MapCoord cell)
         {
-            return new WorldCoord(cell.X, cell.Y);
+            return new WorldCoord(
+                cell.X * WorldGridMetrics.GridUnitSize,
+                cell.Y * WorldGridMetrics.GridUnitSize
+            );
         }
 
         #endregion
