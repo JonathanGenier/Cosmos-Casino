@@ -4,9 +4,9 @@
 
 Cosmos Casino is a single-player survival, tycoon, and colony-simulation game built with:
 
-* Godot 4.5.1
+* Godot 4.7.1
 * C#
-* .NET 8
+* .NET 10
 * NUnit
 
 The project prioritizes long-term architectural correctness, maintainability, explicit ownership, testability, and deterministic behavior over short-term implementation convenience.
@@ -14,6 +14,15 @@ The project prioritizes long-term architectural correctness, maintainability, ex
 Prefer architecture that will scale with the project rather than shortcuts that make one feature easier to implement.
 
 ---
+
+## Development Standards
+
+Follow the applicable development standards defined in:
+
+`docs/standards.md`
+
+Apply only the standards relevant to the current change.
+Do not perform unrelated refactoring solely to satisfy those standards.
 
 # Solution Architecture
 
