@@ -4,7 +4,7 @@
 
 Cosmos Casino is a single-player survival, tycoon, and colony-simulation game built with:
 
-* Godot 4.5.1
+* Godot 4.7.1
 * C#
 * .NET 8
 * NUnit
