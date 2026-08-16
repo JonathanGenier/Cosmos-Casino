@@ -64,11 +64,6 @@ public sealed class BuildContext
     /// the build has been cleared and before a new build is started, if applicable.</remarks>
     public event Action? BuildCleared;
 
-    /// <summary>
-    /// Occurs when the preview radius of the grid changes.
-    /// </summary>
-    public event Action<int>? GridPreviewRadiusChanged;
-
     #endregion
 
     #region Properties
@@ -82,11 +77,6 @@ public sealed class BuildContext
     /// Gets a value indicating whether a preview operation is currently active in the context.
     /// </summary>
     public bool IsBuildActive => _activeContext != null && _startCell.HasValue && _currentCell.HasValue;
-
-    /// <summary>
-    /// Gets the radius, in tiles, used for the grid preview display.
-    /// </summary>
-    public int GridPreviewRadius { get; private set; } = BuildGridPreview.DefaultTileDiameter;
 
     #endregion
 
@@ -210,35 +200,6 @@ public sealed class BuildContext
     public void CancelBuild()
     {
         ClearBuild();
-    }
-
-    #endregion
-
-    #region Build Preview API
-
-    /// <summary>
-    /// Requests a resize of the grid preview in the specified direction.
-    /// </summary>
-    /// <param name="direction">A value indicating the direction and magnitude of the resize operation. Positive values increase the grid size;
-    /// negative values decrease it.</param>
-    public void ResizeGridPreview(int direction)
-    {
-        if (direction == 0)
-        {
-            return;
-        }
-
-        // Scroll up shrinks preview, scroll down expands (inverted for UX)
-        int delta = -direction * BuildGridPreview.DiameterResizeTileStep;
-        int newSize = GridPreviewRadius + delta;
-
-        if (newSize < BuildGridPreview.MinTileDiameter || newSize > BuildGridPreview.MaxTileDiameter)
-        {
-            return;
-        }
-
-        GridPreviewRadius = newSize;
-        GridPreviewRadiusChanged?.Invoke(GridPreviewRadius);
     }
 
     #endregion

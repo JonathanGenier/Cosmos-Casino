@@ -77,11 +77,9 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
     {
         if (_buildContext.ActiveContext == null)
         {
-            _buildPreviewManager.ClearGridAndCursorPreviews();
+            _buildPreviewManager.ClearCursorPreview();
             return;
         }
-
-        _buildPreviewManager.ShowGridPreview(cursorContext);
 
         if (_buildPreviewManager.CurrentMode != BuildPreviewMode.Cursor)
         {
@@ -111,7 +109,7 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
 
     private void OnCursorContextLost()
     {
-        _buildPreviewManager.ClearGridAndCursorPreviews();
+        _buildPreviewManager.ClearCursorPreview();
     }
 
     private void OnBuildCleared()

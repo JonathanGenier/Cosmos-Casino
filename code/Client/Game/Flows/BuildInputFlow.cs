@@ -100,7 +100,6 @@ public sealed class BuildInputFlow : IDisposable
         _inputManager.BuildRemoveReleased += OnBuildRemoveReleased;
         _inputManager.BuildCanceled += OnBuildCanceled;
         _inputManager.ModifierChanged += OnModifierChanged;
-        _inputManager.BuildGridPreviewResizeRequested += OnGridPreviewResizeRequested;
         _cursorManager.CursorCellChanged += OnCursorCellChanged;
         _isSubscribed = true;
     }
@@ -126,7 +125,6 @@ public sealed class BuildInputFlow : IDisposable
         _inputManager.BuildRemoveReleased -= OnBuildRemoveReleased;
         _inputManager.BuildCanceled -= OnBuildCanceled;
         _inputManager.ModifierChanged -= OnModifierChanged;
-        _inputManager.BuildGridPreviewResizeRequested -= OnGridPreviewResizeRequested;
         _cursorManager.CursorCellChanged -= OnCursorCellChanged;
         _isSubscribed = false;
     }
@@ -288,16 +286,6 @@ public sealed class BuildInputFlow : IDisposable
         }
 
         return BuildInteractionMode.Default;
-    }
-
-    /// <summary>
-    /// Handles a request to resize the grid preview by the specified delta value.
-    /// </summary>
-    /// <param name="delta">The amount by which to adjust the grid size. Positive values increase the grid size; negative values decrease
-    /// it.</param>
-    private void OnGridPreviewResizeRequested(int delta)
-    {
-        _buildContext.ResizeGridPreview(delta);
     }
 
     #endregion

@@ -7,8 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// Manages the visual preview of build placement within the game world, including grid visualization and cursor
-/// tracking during build operations.
+/// Manages the visual preview of build placement within the game world, including cursor and drag previews.
 /// </summary>
 /// <remarks>Use this class to initialize and control the build preview system, which provides real-time feedback
 /// to users when placing objects. The manager must be initialized with required resources and context before use. The
@@ -27,11 +26,9 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     private ClientPool<FloorPreview>? _floorPool;
     private ClientPool<WallPreview>? _wallPool;
 
-    private PackedScene? _gridPreviewScene;
     private PackedScene? _floorPreviewScene;
     private PackedScene? _wallPreviewScene;
 
-    private BuildGridPreview? _gridPreviewInstance;
     private FloorPreview? _floorPreviewInstance;
     private WallPreview? _wallPreviewInstance;
 
@@ -46,12 +43,6 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// </summary>
     public BuildPreviewMode CurrentMode => _currentMode;
 
-    private PackedScene GridPreviewScene
-    {
-        get => _gridPreviewScene ?? throw new InvalidOperationException($"{nameof(BuildPreviewManager)} not initialized.");
-        set => _gridPreviewScene = value;
-    }
-
     private PackedScene FloorPreviewScene
     {
         get => _floorPreviewScene ?? throw new InvalidOperationException($"{nameof(PackedScene)} not initialized.");
@@ -62,12 +53,6 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     {
         get => _wallPreviewScene ?? throw new InvalidOperationException($"{nameof(PackedScene)} not initialized.");
         set => _wallPreviewScene = value;
-    }
-
-    private BuildGridPreview GridPreviewInstance
-    {
-        get => _gridPreviewInstance ?? throw new InvalidOperationException($"{nameof(BuildPreviewManager)} not initialized.");
-        set => _gridPreviewInstance = value;
     }
 
     private FloorPreview FloorPreviewInstance
@@ -101,12 +86,11 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// <summary>
     /// Initializes the component with the specified preview resources, build context, and cursor manager.
     /// </summary>
-    /// <param name="previewResources">The set of resources used for previewing the grid. Cannot be null.</param>
+    /// <param name="previewResources">The resources used for build previews. Cannot be null.</param>
     public void Initialize(PreviewResources previewResources)
     {
         ArgumentNullException.ThrowIfNull(previewResources);
 
-        GridPreviewScene = previewResources.GridPreviewScene;
         FloorPreviewScene = previewResources.FloorPreviewScene;
         WallPreviewScene = previewResources.WallPreviewScene;
 
@@ -181,25 +165,6 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     }
 
     /// <summary>
-    /// Displays the grid preview at the specified cursor location.
-    /// </summary>
-    /// <param name="cursorContext">The context containing the current cursor position in world coordinates. Cannot be null.</param>
-    public void ShowGridPreview(CursorContext cursorContext)
-    {
-        GridPreviewInstance.Show();
-        GridPreviewInstance.UpdatePosition(cursorContext.WorldPosition);
-    }
-
-    /// <summary>
-    /// Resizes the grid preview by setting the diameter of each tile to the specified value.
-    /// </summary>
-    /// <param name="size">The diameter, in tiles, to set the grid preview. Must be a positive integer.</param>
-    public void ResizeGridPreview(int size)
-    {
-        GridPreviewInstance.SetTileDiameter(size);
-    }
-
-    /// <summary>
     /// Removes any active cursor preview from the user interface.
     /// </summary>
     /// <remarks>Call this method to clear both floor and wall cursor previews, typically when the user
@@ -222,39 +187,18 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
         _currentMode = BuildPreviewMode.Cursor;
     }
 
-    /// <summary>
-    /// Hides the current grid preview, removing it from view.
-    /// </summary>
-    public void ClearGridPreview()
-    {
-        GridPreviewInstance.Hide();
-    }
-
-    /// <summary>
-    /// Clears any active grid and cursor preview overlays from the user interface.
-    /// </summary>
-    /// <remarks>Call this method to remove temporary visual previews related to grid and cursor actions. This
-    /// is typically used to reset the interface before applying new previews or when cancelling an operation.</remarks>
-    public void ClearGridAndCursorPreviews()
-    {
-        ClearGridPreview();
-        ClearCursorPreview();
-    }
-
     #endregion
 
     #region Godot Lifecycle
 
     /// <summary>
-    /// Initializes the node when it enters the scene tree, setting up the grid preview and subscribing to build context
-    /// changes.
+    /// Initializes the node when it enters the scene tree, setting up cursor previews.
     /// </summary>
     /// <remarks>This method is called by the Godot engine as part of the node's lifecycle. It instantiates
-    /// and configures the grid preview, and attaches an event handler to respond to changes in the build context.
+    /// and configures the cursor previews.
     /// Override this method to perform setup tasks that require the node to be part of the scene tree.</remarks>
     protected override void OnReady()
     {
-        InitializeGridCursorPreview();
         InitializeFloorCursorPreview();
         InitializeWallCursorPreview();
     }
@@ -514,20 +458,6 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     #endregion
 
     #region Cursor Preview Initialization
-
-    /// <summary>
-    /// Initializes the grid preview instance and adds it to the scene for display and interaction.
-    /// </summary>
-    /// <remarks>This method creates a new grid preview, configures its initial state, and ensures it is
-    /// hidden until explicitly shown. The grid preview is set up with a default tile diameter of 15 units.</remarks>
-    /// <exception cref="InvalidOperationException">Thrown if the root node of the instantiated scene does not have a BuildGridPreview script attached.</exception>
-    private void InitializeGridCursorPreview()
-    {
-        var node = GridPreviewScene.Instantiate();
-        GridPreviewInstance = node as BuildGridPreview ?? throw new InvalidOperationException($"{nameof(PackedScene)} root node must have {nameof(BuildGridPreview)} script attached.");
-        AddChild(GridPreviewInstance);
-        GridPreviewInstance.Hide();
-    }
 
     /// <summary>
     /// Initializes the floor preview by instantiating the preview scene and adding it as a child node. The preview is
