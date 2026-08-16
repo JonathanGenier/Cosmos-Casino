@@ -2,8 +2,6 @@
 
 This document defines implementation standards for Cosmos Casino.
 
-These standards apply to changes authored or reviewed by both human developers and automated coding agents.
-
 Apply only the sections relevant to the code being changed.
 Do not perform unrelated refactoring solely to satisfy this document.
 
@@ -42,11 +40,11 @@ Do not perform unrelated refactoring solely to satisfy this document.
 
 - [ ] Regions follow this order when applicable:
 
-	  FIELDS
-	  CONSTRUCTORS / INITIALIZATION
-	  EVENTS
-	  PROPERTIES
-	  METHODS
+  FIELDS
+  CONSTRUCTORS / INITIALIZATION
+  EVENTS
+  PROPERTIES
+  METHODS
 
 - [ ] No public fields.
 - [ ] Naming reflects intent and domain meaning rather than implementation mechanics.
@@ -89,11 +87,11 @@ Do not perform unrelated refactoring solely to satisfy this document.
 
 - [ ] Regions follow this order when applicable:
 
-	  FIELDS
-	  CONSTRUCTORS / INITIALIZATION
-	  EVENTS
-	  PROPERTIES
-	  METHODS
+  FIELDS
+  CONSTRUCTORS / INITIALIZATION
+  EVENTS
+  PROPERTIES
+  METHODS
 
 - [ ] No public fields.
 - [ ] Naming reflects intent rather than implementation mechanics.
@@ -121,10 +119,10 @@ Do not perform unrelated refactoring solely to satisfy this document.
 
 - [ ] Regions follow this order when applicable:
 
-	  FIELDS
-	  SETUP & TEARDOWN
-	  TEST CATEGORY
-	  HELPERS
+  FIELDS
+  SETUP & TEARDOWN
+  TEST CATEGORY
+  HELPERS
 
 - [ ] Tests are grouped by behavior or feature.
 - [ ] Test names clearly communicate the behavior or invariant being verified.
