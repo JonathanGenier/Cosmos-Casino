@@ -3,8 +3,7 @@ using CosmosCasino.Core.Game.Map.Terrain.Tile;
 namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
-    /// Manages a sparse collection of map cells indexed by 2D coordinates.
-    /// Cells are created on demand and removed automatically when empty.
+    /// Manages a sparse collection of map cells indexed by horizontal map coordinates.
     /// </summary>
     public sealed class Grid
     {

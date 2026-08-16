@@ -109,7 +109,7 @@ namespace CosmosCasino.Core.Game.Map
         }
 
         /// <summary>
-        /// Determines whether the specified build kind exists at the given coordinate.
+        /// Determines whether the specified build kind exists at the terrain base elevation of the given coordinate.
         /// </summary>
         /// <param name="buildKind">The type of build element to check.</param>
         /// <param name="coord">The map coordinate to query.</param>
@@ -120,7 +120,7 @@ namespace CosmosCasino.Core.Game.Map
         }
 
         /// <summary>
-        /// Validates whether the specified build kind can be placed at the given coordinate.
+        /// Validates whether the specified build kind can be placed at the terrain base elevation of the given coordinate.
         /// </summary>
         /// <param name="buildKind">The type of build element to place.</param>
         /// <param name="coord">The map coordinate to validate.</param>
@@ -131,7 +131,7 @@ namespace CosmosCasino.Core.Game.Map
         }
 
         /// <summary>
-        /// Validates whether the specified build kind can be removed from the given coordinate.
+        /// Validates whether the specified build kind can be removed from the terrain base elevation of the given coordinate.
         /// </summary>
         /// <param name="buildKind">The type of build element to remove.</param>
         /// <param name="coord">The map coordinate to validate.</param>
@@ -142,7 +142,7 @@ namespace CosmosCasino.Core.Game.Map
         }
 
         /// <summary>
-        /// Attempts to place the specified build kind at the given coordinate.
+        /// Attempts to place the specified build kind at the terrain base elevation of the given coordinate.
         /// </summary>
         /// <param name="buildKind">The type of build element to place.</param>
         /// <param name="coord">The map coordinate at which to place.</param>
@@ -153,7 +153,7 @@ namespace CosmosCasino.Core.Game.Map
         }
 
         /// <summary>
-        /// Attempts to remove the specified build kind from the given coordinate.
+        /// Attempts to remove the specified build kind from the terrain base elevation of the given coordinate.
         /// </summary>
         /// <param name="buildKind">The type of build element to remove.</param>
         /// <param name="coord">The map coordinate from which to remove.</param>

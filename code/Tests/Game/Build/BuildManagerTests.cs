@@ -165,6 +165,21 @@ namespace CosmosCasino.Tests.Game.Build
             Assert.That(_mapManager.Has(BuildKind.Floor, cell), Is.True);
         }
 
+        [Test]
+        public void Execute_PlaceFloor_TargetsTerrainBaseElevation()
+        {
+            var coord = new MapCoord(-1, 1);
+            var intent = BuildIntent.PlaceFloor([coord]);
+            Assert.That(_mapManager.TryGetCell(coord, out var cell), Is.True);
+            var baseElevation = cell!.TerrainTile.BaseElevation;
+
+            var result = _buildManager.Execute(intent);
+
+            Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(cell.HasFloorAt(baseElevation), Is.True);
+            Assert.That(cell.HasFloorAt(new Elevation(baseElevation.Value + 1)), Is.False);
+        }
+
         #endregion
 
         #region Execute Wall
@@ -213,7 +228,7 @@ namespace CosmosCasino.Tests.Game.Build
         /// This method is used to arrange test scenarios by directly mutating the map state.
         /// Use this when you need to set up preconditions for testing BuildManager behavior.
         /// </remarks>
-        internal void PlaceFloor(IReadOnlyList<MapCoord> cells)
+        private void PlaceFloor(IReadOnlyList<MapCoord> cells)
         {
             foreach (var cell in cells)
             {
@@ -227,7 +242,7 @@ namespace CosmosCasino.Tests.Game.Build
         /// </summary>
         /// <param name="cellCount">The number of map cell coordinates to create. Defaults to 1. Values less than or equal to 0 will be treated as 1.</param>
         /// <returns>A read-only list of <see cref="MapCoord"/> instances positioned sequentially along the X-axis at Y=0, Z=0.</returns>
-        internal IReadOnlyList<MapCoord> CreateCellsList(int cellCount = 1)
+        private IReadOnlyList<MapCoord> CreateCellsList(int cellCount = 1)
         {
             if (cellCount <= 0)
             {

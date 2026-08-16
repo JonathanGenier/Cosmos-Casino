@@ -1,10 +1,11 @@
+using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using NUnit.Framework;
 
 namespace CosmosCasino.Tests.Game.Map.Terrain.Tile
 {
     [TestFixture]
-    internal class TerrainTileTests
+    internal sealed class TerrainTileTests
     {
         #region Constructor / Initialization
 
@@ -53,6 +54,60 @@ namespace CosmosCasino.Tests.Game.Map.Terrain.Tile
 
             // Assert
             Assert.That(tile.IsSlope, Is.True);
+        }
+
+        #endregion
+
+        #region BaseElevation
+
+        [Test]
+        public void Constructor_FlatPositiveTile_UsesCornerHeightAsBaseElevation()
+        {
+            var tile = new TerrainTile(3f, 3f, 3f, 3f);
+
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(3)));
+        }
+
+        [Test]
+        public void Constructor_SlopedPositiveTile_UsesLowestCornerAsBaseElevation()
+        {
+            var tile = new TerrainTile(4f, 3f, 5f, 4f);
+
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(3)));
+            Assert.That(tile.IsSlope, Is.True);
+        }
+
+        [Test]
+        public void Constructor_NegativeTile_UsesLowestCornerAsBaseElevation()
+        {
+            var tile = new TerrainTile(-1f, -2f, -1f, -2f);
+
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(-2)));
+        }
+
+        [Test]
+        public void Constructor_NegativeFractionalMinimum_FloorsBaseElevation()
+        {
+            var tile = new TerrainTile(-1f, -1.5f, 0f, -1f);
+
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(-2)));
+        }
+
+        [TestCase(Elevation.MinValue)]
+        [TestCase(Elevation.MaxValue)]
+        public void Constructor_BaseElevationBoundary_IsValid(int height)
+        {
+            var tile = new TerrainTile(height, height, height, height);
+
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(height)));
+        }
+
+        [TestCase(Elevation.MinValue - 1)]
+        [TestCase(Elevation.MaxValue + 1)]
+        public void Constructor_BaseElevationOutsideSupportedRange_Throws(int height)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new TerrainTile(height, height, height, height));
         }
 
         #endregion
@@ -182,44 +237,36 @@ namespace CosmosCasino.Tests.Game.Map.Terrain.Tile
         #region Floating Point Edge Cases
 
         [Test]
-        public void Constructor_NaNHeights_IsSlopeTrue()
+        public void Constructor_NaNHeights_ThrowsArgumentOutOfRangeException()
         {
             // Arrange
             var nan = float.NaN;
 
-            // Act
-            var tile = new TerrainTile(nan, nan, nan, nan);
-
-            // Assert
-            // NaN != NaN => slope by definition
-            Assert.That(tile.IsSlope, Is.True);
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new TerrainTile(nan, nan, nan, nan));
         }
 
         [Test]
-        public void Constructor_PositiveInfinityVsFinite_IsSlopeTrue()
+        public void Constructor_PositiveInfinityVsFinite_IsSlopeAndUsesFiniteMinimum()
         {
-            // Arrange
             var tile = new TerrainTile(
                 float.PositiveInfinity,
                 10f,
                 10f,
                 10f);
 
-            // Act / Assert
             Assert.That(tile.IsSlope, Is.True);
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(10)));
         }
 
         [Test]
-        public void Constructor_AllPositiveInfinity_IsSlopeFalse()
+        public void Constructor_AllPositiveInfinity_ThrowsArgumentOutOfRangeException()
         {
             // Arrange
             var inf = float.PositiveInfinity;
 
-            // Act
-            var tile = new TerrainTile(inf, inf, inf, inf);
-
-            // Assert
-            Assert.That(tile.IsSlope, Is.False);
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new TerrainTile(inf, inf, inf, inf));
         }
 
         [Test]

@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Configs;
+using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Terrain;
 using NUnit.Framework;
@@ -6,7 +7,7 @@ using NUnit.Framework;
 namespace CosmosCasino.Tests.Game.Map
 {
     [TestFixture]
-    internal class MapManagerTests
+    internal sealed class MapManagerTests
     {
         #region Generation Bounds
 
@@ -41,6 +42,25 @@ namespace CosmosCasino.Tests.Game.Map
         {
             Assert.That(TerrainConfigs.TileCountPerAxis, Is.Positive);
             Assert.That(TerrainConfigs.TileCountPerAxis % 2, Is.EqualTo(1));
+        }
+
+        #endregion
+
+        #region Build Elevation Compatibility
+
+        [Test]
+        public void CoordinateOnlyBuildOperations_TargetCellTerrainBaseElevation()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(-1, 1);
+            manager.GenerateMap(seed: 0, mapSize: 5);
+            Assert.That(manager.TryGetCell(coord, out var cell), Is.True);
+            var baseElevation = cell!.TerrainTile.BaseElevation;
+
+            var result = manager.TryPlace(BuildKind.Floor, coord);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(cell.HasFloorAt(baseElevation), Is.True);
         }
 
         #endregion
