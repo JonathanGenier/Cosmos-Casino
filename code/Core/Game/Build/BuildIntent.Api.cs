@@ -25,11 +25,19 @@ namespace CosmosCasino.Core.Game.Build
         /// <param name="operation">
         /// Operation to perform (place, replace, remove).
         /// </param>
-        private BuildIntent(IReadOnlyList<MapCoord> cells, BuildKind kind, BuildOperation operation)
+        /// <param name="elevation">
+        /// Shared elevation targeted by every cell in the intent.
+        /// </param>
+        private BuildIntent(
+            IReadOnlyList<MapCoord> cells,
+            BuildKind kind,
+            BuildOperation operation,
+            Elevation elevation)
         {
             Cells = cells;
             Kind = kind;
             Operation = operation;
+            Elevation = elevation;
         }
 
         #endregion
@@ -52,6 +60,11 @@ namespace CosmosCasino.Core.Game.Build
         /// </summary>
         public IReadOnlyList<MapCoord> Cells { get; }
 
+        /// <summary>
+        /// Gets the shared elevation targeted by every cell in this intent.
+        /// </summary>
+        public Elevation Elevation { get; }
+
         #endregion
 
         #region Factories
@@ -60,15 +73,17 @@ namespace CosmosCasino.Core.Game.Build
         /// Creates a build intent to place a floor on the specified map cells.
         /// </summary>
         /// <param name="cells">A read-only list of map cell coordinates where the floor will be placed. Cannot be null or empty.</param>
+        /// <param name="elevation">The shared elevation targeted by every cell.</param>
         /// <returns>A BuildIntent representing the operation to place a floor on the specified cells.</returns>
-        public static BuildIntent PlaceFloor(IReadOnlyList<MapCoord> cells)
+        public static BuildIntent PlaceFloor(IReadOnlyList<MapCoord> cells, Elevation elevation)
         {
             ValidateCells(cells);
 
             return new BuildIntent(
                 cells.ToArray(),
                 BuildKind.Floor,
-                BuildOperation.Place);
+                BuildOperation.Place,
+                elevation);
         }
 
         /// <summary>
@@ -76,30 +91,34 @@ namespace CosmosCasino.Core.Game.Build
         /// </summary>
         /// <param name="cells">A read-only list of map cell coordinates identifying the cells from which the floor should be removed.
         /// Cannot be null or empty.</param>
+        /// <param name="elevation">The shared elevation targeted by every cell.</param>
         /// <returns>A BuildIntent representing the removal of the floor from the specified cells.</returns>
-        public static BuildIntent RemoveFloor(IReadOnlyList<MapCoord> cells)
+        public static BuildIntent RemoveFloor(IReadOnlyList<MapCoord> cells, Elevation elevation)
         {
             ValidateCells(cells);
 
             return new BuildIntent(
                 cells.ToArray(),
                 BuildKind.Floor,
-                BuildOperation.Remove);
+                BuildOperation.Remove,
+                elevation);
         }
 
         /// <summary>
         /// Creates a build intent to place a wall on the specified map cells.
         /// </summary>
         /// <param name="cells">A read-only list of map cell coordinates where the wall will be placed. Cannot be null or empty.</param>
+        /// <param name="elevation">The shared elevation targeted by every cell.</param>
         /// <returns>A BuildIntent representing the action to place a wall on the specified cells.</returns>
-        public static BuildIntent PlaceWall(IReadOnlyList<MapCoord> cells)
+        public static BuildIntent PlaceWall(IReadOnlyList<MapCoord> cells, Elevation elevation)
         {
             ValidateCells(cells);
 
             return new BuildIntent(
                 cells.ToArray(),
                 BuildKind.Wall,
-                BuildOperation.Place);
+                BuildOperation.Place,
+                elevation);
         }
 
         /// <summary>
@@ -107,15 +126,17 @@ namespace CosmosCasino.Core.Game.Build
         /// </summary>
         /// <param name="cells">A read-only list of map cell coordinates that identify the locations from which walls should be removed.
         /// Cannot be null or empty.</param>
+        /// <param name="elevation">The shared elevation targeted by every cell.</param>
         /// <returns>A BuildIntent representing the removal of walls from the specified cells.</returns>
-        public static BuildIntent RemoveWall(IReadOnlyList<MapCoord> cells)
+        public static BuildIntent RemoveWall(IReadOnlyList<MapCoord> cells, Elevation elevation)
         {
             ValidateCells(cells);
 
             return new BuildIntent(
                 cells.ToArray(),
                 BuildKind.Wall,
-                BuildOperation.Remove);
+                BuildOperation.Remove,
+                elevation);
         }
 
         #endregion
@@ -127,14 +148,13 @@ namespace CosmosCasino.Core.Game.Build
         /// suitable for debugging and logging.
         /// </summary>
         /// <returns>
-        /// A string describing the build action and its target cell.
+        /// A string describing the build action, target cell count, and shared logical build elevation.
         /// </returns>
         public override string ToString()
         {
-            return $"{Operation} {Kind} for {Cells.Count} cells";
+            return $"{Operation} {Kind} for {Cells.Count} cells at elevation {Elevation.Value}";
         }
 
         #endregion
     }
 }
-

@@ -1,14 +1,23 @@
 using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Buildables;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
 
 namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
-    /// Represents a single map cell that binds terrain data with buildable state,
-    /// tracking the presence and validity of floors and walls at a given coordinate.
+    /// Represents one horizontal map column, binding terrain data to buildable layers at discrete elevations.
     /// </summary>
     internal sealed class Cell
     {
+        #region Fields
+
+        /// <summary>
+        /// Stores buildable layers by their discrete elevation within this cell.
+        /// </summary>
+        private readonly Dictionary<Elevation, CellLayer> _cellLayers = [];
+
+        #endregion
+
         #region Initialization
 
         /// <summary>
@@ -36,33 +45,48 @@ namespace CosmosCasino.Core.Game.Map
         /// </summary>
         internal TerrainTile TerrainTile { get; }
 
-        /// <summary>
-        /// Gets a value indicating whether a floor is present.
-        /// </summary>
-        internal bool HasFloor { get; private set; }
+        #endregion
+
+        #region Cell Layer Methods
 
         /// <summary>
-        /// Gets a value indicating whether a wall is present.
+        /// Determines whether this cell contains a floor at the specified elevation.
         /// </summary>
-        internal bool HasWall { get; private set; }
+        /// <param name="elevation">The elevation to query.</param>
+        /// <returns><see langword="true"/> when the layer contains a floor; otherwise <see langword="false"/>.</returns>
+        internal bool HasFloorAt(Elevation elevation)
+        {
+            CellLayer? layer = TryGetLayer(elevation);
+
+            return layer is not null && layer.HasFloor;
+        }
 
         /// <summary>
-        /// Gets a value indicating whether the <see cref="Cell"/> contains neither a floor nor a wall.
+        /// Determines whether this cell contains a wall at the specified elevation.
         /// </summary>
-        internal bool IsEmpty => !HasFloor && !HasWall;
+        /// <param name="elevation">The elevation to query.</param>
+        /// <returns><see langword="true"/> when the layer contains a wall; otherwise <see langword="false"/>.</returns>
+        internal bool HasWallAt(Elevation elevation)
+        {
+            CellLayer? layer = TryGetLayer(elevation);
+
+            return layer is not null && layer.HasWall;
+        }
 
         #endregion
 
         #region Floor Validation Methods
 
         /// <summary>
-        /// Validates whether a floor can be placed in the current map cell.
+        /// Validates placing a floor in this cell at the specified elevation without mutating layer state.
         /// </summary>
-        /// <returns>A <see cref="CellValidationResult"/> indicating whether placing a floor is valid. Returns a result
-        /// representing a no-op if the cell already has a floor; otherwise, returns a valid result.</returns>
-        internal CellValidationResult ValidatePlaceFloor()
+        /// <param name="elevation">The elevation at which to validate floor placement.</param>
+        /// <returns>A no-op result when a floor already exists at the elevation; otherwise a valid result.</returns>
+        internal CellValidationResult ValidatePlaceFloor(Elevation elevation)
         {
-            if (HasFloor)
+            CellLayer? layer = TryGetLayer(elevation);
+
+            if (layer is not null && layer.HasFloor)
             {
                 return CellValidationResult.NoOp();
             }
@@ -71,20 +95,22 @@ namespace CosmosCasino.Core.Game.Map
         }
 
         /// <summary>
-        /// Validates whether the floor can be removed from the current map cell.
+        /// Validates removing a floor from this cell at the specified elevation without mutating layer state.
         /// </summary>
-        /// <remarks>The operation is considered invalid if the cell contains a wall. If the cell does not
-        /// have a floor, the operation is treated as a no-op.</remarks>
-        /// <returns>A <see cref="CellValidationResult"/> indicating whether the floor removal operation is valid, invalid, or
-        /// has no effect.</returns>
-        internal CellValidationResult ValidateRemoveFloor()
+        /// <param name="elevation">The elevation from which to validate floor removal.</param>
+        /// <returns>
+        /// A no-op result when no floor exists, an invalid result when a wall blocks removal, or a valid result.
+        /// </returns>
+        internal CellValidationResult ValidateRemoveFloor(Elevation elevation)
         {
-            if (!HasFloor)
+            CellLayer? layer = TryGetLayer(elevation);
+
+            if (layer is null || !layer.HasFloor)
             {
                 return CellValidationResult.NoOp();
             }
 
-            if (HasWall)
+            if (layer.HasWall)
             {
                 return CellValidationResult.Invalid(BuildOperationFailureReason.Blocked);
             }
@@ -97,35 +123,46 @@ namespace CosmosCasino.Core.Game.Map
         #region Floor Operation Methods
 
         /// <summary>
-        /// Marks the cell as having a floor if the specified validation result indicates a valid operation.
+        /// Places a floor at the specified elevation after successful validation, creating the layer if necessary.
         /// </summary>
-        /// <param name="validation">The result of the map cell validation to check before placing the floor. Must have an outcome of
-        /// BuildOperationOutcome.Valid.</param>
-        /// <exception cref="InvalidOperationException">Thrown if the validation result does not indicate a valid operation.</exception>
-        internal void PlaceFloor(CellValidationResult validation)
+        /// <param name="validation">The successful validation result authorizing placement.</param>
+        /// <param name="floor">The floor object to place.</param>
+        /// <param name="elevation">The elevation at which to place the floor.</param>
+        /// <exception cref="InvalidOperationException">Thrown when validation is not valid or the layer already has a floor.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="floor"/> is null.</exception>
+        internal void PlaceFloor(CellValidationResult validation, Floor floor, Elevation elevation)
         {
             if (validation.Outcome != BuildOperationOutcome.Valid)
             {
                 throw new InvalidOperationException("Cannot place floor: validation result is not valid.");
             }
 
-            HasFloor = true;
+            ArgumentNullException.ThrowIfNull(floor);
+
+            CellLayer layer = GetOrCreateLayer(elevation);
+            layer.PlaceFloor(floor);
         }
 
         /// <summary>
-        /// Removes the floor from the current map cell if the specified validation result indicates a valid operation.
+        /// Removes the floor at the specified elevation and discards the layer when it becomes empty.
         /// </summary>
-        /// <param name="validation">The validation result that determines whether the floor can be removed. Must have an outcome of
-        /// BuildOperationOutcome.Valid.</param>
-        /// <exception cref="InvalidOperationException">Thrown if the validation result does not indicate a valid operation.</exception>
-        internal void RemoveFloor(CellValidationResult validation)
+        /// <param name="validation">The successful validation result authorizing removal.</param>
+        /// <param name="elevation">The elevation from which to remove the floor.</param>
+        /// <exception cref="InvalidOperationException">Thrown when validation is not valid or the layer invariant is violated.</exception>
+        internal void RemoveFloor(CellValidationResult validation, Elevation elevation)
         {
             if (validation.Outcome != BuildOperationOutcome.Valid)
             {
                 throw new InvalidOperationException("Cannot remove floor: validation result is not valid.");
             }
 
-            HasFloor = false;
+            CellLayer layer = TryGetLayer(elevation)!;
+            layer.RemoveFloor();
+
+            if (layer.IsEmpty)
+            {
+                _cellLayers.Remove(elevation);
+            }
         }
 
         #endregion
@@ -133,20 +170,23 @@ namespace CosmosCasino.Core.Game.Map
         #region Wall Validation Methods
 
         /// <summary>
-        /// Validates whether a wall can be placed on the current map cell.
+        /// Validates placing a wall in this cell at the specified elevation without mutating layer state.
         /// </summary>
-        /// <remarks>Use this method to check placement rules before attempting to add a wall to the cell.
-        /// The result specifies if the operation is allowed or provides the reason it is not.</remarks>
-        /// <returns>A <see cref="CellValidationResult"/> indicating whether placing a wall is valid, invalid due to missing
-        /// floor, or a no-op if a wall already exists.</returns>
-        internal CellValidationResult ValidatePlaceWall()
+        /// <param name="elevation">The elevation at which to validate wall placement.</param>
+        /// <returns>
+        /// An invalid result when no floor exists at the elevation, a no-op result when a wall already exists,
+        /// or a valid result.
+        /// </returns>
+        internal CellValidationResult ValidatePlaceWall(Elevation elevation)
         {
-            if (!HasFloor)
+            CellLayer? layer = TryGetLayer(elevation);
+
+            if (layer is null || !layer.HasFloor)
             {
                 return CellValidationResult.Invalid(BuildOperationFailureReason.NoFloor);
             }
 
-            if (HasWall)
+            if (layer.HasWall)
             {
                 return CellValidationResult.NoOp();
             }
@@ -155,13 +195,15 @@ namespace CosmosCasino.Core.Game.Map
         }
 
         /// <summary>
-        /// Determines whether removing a wall from the current cell is a valid operation.
+        /// Validates removing a wall from this cell at the specified elevation without mutating layer state.
         /// </summary>
-        /// <returns>A <see cref="CellValidationResult"/> indicating whether the wall can be removed. Returns a result
-        /// representing a no-op if there is no wall to remove; otherwise, returns a valid result.</returns>
-        internal CellValidationResult ValidateRemoveWall()
+        /// <param name="elevation">The elevation from which to validate wall removal.</param>
+        /// <returns>A no-op result when no wall exists at the elevation; otherwise a valid result.</returns>
+        internal CellValidationResult ValidateRemoveWall(Elevation elevation)
         {
-            if (!HasWall)
+            CellLayer? layer = TryGetLayer(elevation);
+
+            if (layer is null || !layer.HasWall)
             {
                 return CellValidationResult.NoOp();
             }
@@ -174,34 +216,74 @@ namespace CosmosCasino.Core.Game.Map
         #region Wall Operation Methods
 
         /// <summary>
-        /// Attempts to place a wall on the map cell using the specified validation result.
+        /// Places a wall in the existing cell layer at the specified elevation after successful validation.
         /// </summary>
-        /// <param name="validation">The result of validating whether a wall can be placed on the map cell. Must indicate a valid outcome.</param>
-        /// <exception cref="InvalidOperationException">Thrown if the validation result does not indicate a valid outcome for wall placement.</exception>
-        internal void PlaceWall(CellValidationResult validation)
+        /// <param name="validation">The successful validation result authorizing placement.</param>
+        /// <param name="wall">The wall object to place.</param>
+        /// <param name="elevation">The elevation at which to place the wall.</param>
+        /// <exception cref="InvalidOperationException">Thrown when validation is not valid or the layer invariant is violated.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="wall"/> is null.</exception>
+        internal void PlaceWall(CellValidationResult validation, Wall wall, Elevation elevation)
         {
             if (validation.Outcome != BuildOperationOutcome.Valid)
             {
                 throw new InvalidOperationException("Cannot place wall: validation result is not valid.");
             }
 
-            HasWall = true;
+            ArgumentNullException.ThrowIfNull(wall);
+
+            CellLayer layer = TryGetLayer(elevation)!;
+            layer.PlaceWall(wall);
         }
 
         /// <summary>
-        /// Removes the wall from the current cell if the specified validation result indicates the operation is valid.
+        /// Removes the wall from the existing cell layer at the specified elevation after successful validation.
         /// </summary>
-        /// <param name="validation">A validation result that determines whether the wall can be removed. The operation proceeds only if the
-        /// outcome is valid.</param>
-        /// <exception cref="InvalidOperationException">Thrown if the validation result does not indicate a valid outcome.</exception>
-        internal void RemoveWall(CellValidationResult validation)
+        /// <param name="validation">The successful validation result authorizing removal.</param>
+        /// <param name="elevation">The elevation from which to remove the wall.</param>
+        /// <exception cref="InvalidOperationException">Thrown when validation is not valid or the layer invariant is violated.</exception>
+        internal void RemoveWall(CellValidationResult validation, Elevation elevation)
         {
             if (validation.Outcome != BuildOperationOutcome.Valid)
             {
                 throw new InvalidOperationException("Cannot remove wall: validation result is not valid.");
             }
 
-            HasWall = false;
+            CellLayer layer = TryGetLayer(elevation)!;
+            layer.RemoveWall();
+        }
+
+        #endregion
+
+        #region Helpers
+
+        /// <summary>
+        /// Gets the existing cell layer at the specified elevation without creating one.
+        /// </summary>
+        /// <param name="elevation">The elevation to query.</param>
+        /// <returns>The existing layer, or <see langword="null"/> when none exists.</returns>
+        private CellLayer? TryGetLayer(Elevation elevation)
+        {
+            _cellLayers.TryGetValue(elevation, out CellLayer? layer);
+            return layer;
+        }
+
+        /// <summary>
+        /// Gets the layer at the specified elevation, creating it when necessary.
+        /// </summary>
+        /// <param name="elevation">The elevation of the layer.</param>
+        /// <returns>The existing or newly created layer.</returns>
+        private CellLayer GetOrCreateLayer(Elevation elevation)
+        {
+            if (_cellLayers.TryGetValue(elevation, out CellLayer? layer))
+            {
+                return layer;
+            }
+
+            layer = new CellLayer();
+            _cellLayers.Add(elevation, layer);
+
+            return layer;
         }
 
         #endregion

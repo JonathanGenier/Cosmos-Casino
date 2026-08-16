@@ -8,6 +8,8 @@ namespace CosmosCasino.Tests.Game.Build
     [TestFixture]
     internal sealed class BuildIntentTests
     {
+        private static readonly Elevation TestElevation = new(-4);
+
         #region BuildFloor
 
         [Test]
@@ -15,7 +17,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange / Act / Assert
             Assert.Throws<ArgumentNullException>(() =>
-                BuildIntent.PlaceFloor(null!));
+                BuildIntent.PlaceFloor(null!, TestElevation));
         }
 
         [Test]
@@ -26,26 +28,28 @@ namespace CosmosCasino.Tests.Game.Build
 
             // Act / Assert
             Assert.Throws<ArgumentException>(() =>
-                BuildIntent.PlaceFloor(cells));
+                BuildIntent.PlaceFloor(cells, TestElevation));
         }
 
         [Test]
         public void BuildFloor_ValidCells_CreatesCorrectIntent()
         {
             // Arrange
+            var elevation = new Elevation(-3);
             var cells = new[]
             {
                 new MapCoord(1, 2)
             };
 
             // Act
-            var intent = BuildIntent.PlaceFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells, elevation);
 
             // Assert
             Assert.That(intent.Kind, Is.EqualTo(BuildKind.Floor));
             Assert.That(intent.Operation, Is.EqualTo(BuildOperation.Place));
             Assert.That(intent.Cells, Has.Count.EqualTo(1));
             Assert.That(intent.Cells[0], Is.EqualTo(cells[0]));
+            Assert.That(intent.Elevation, Is.EqualTo(elevation));
         }
 
         [Test]
@@ -58,7 +62,7 @@ namespace CosmosCasino.Tests.Game.Build
             };
 
             // Act
-            var intent = BuildIntent.PlaceFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells, TestElevation);
             cells.Clear();
 
             // Assert
@@ -74,7 +78,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void RemoveFloor_NullCells_ThrowsArgumentNullException()
         {
             // Arrange / Act / Assert
-            Assert.Throws<ArgumentNullException>(() => BuildIntent.RemoveFloor(null!));
+            Assert.Throws<ArgumentNullException>(() => BuildIntent.RemoveFloor(null!, TestElevation));
         }
 
         [Test]
@@ -84,26 +88,28 @@ namespace CosmosCasino.Tests.Game.Build
             var cells = new List<MapCoord>();
 
             // Act / Assert
-            Assert.Throws<ArgumentException>(() => BuildIntent.RemoveFloor(cells));
+            Assert.Throws<ArgumentException>(() => BuildIntent.RemoveFloor(cells, TestElevation));
         }
 
         [Test]
         public void RemoveFloor_ValidCells_CreatesCorrectIntent()
         {
             // Arrange
+            var elevation = new Elevation(4);
             var cells = new[]
             {
                 new MapCoord(1, 1)
             };
 
             // Act
-            var intent = BuildIntent.RemoveFloor(cells);
+            var intent = BuildIntent.RemoveFloor(cells, elevation);
 
             // Assert
             Assert.That(intent.Kind, Is.EqualTo(BuildKind.Floor));
             Assert.That(intent.Operation, Is.EqualTo(BuildOperation.Remove));
             Assert.That(intent.Cells, Has.Count.EqualTo(1));
             Assert.That(intent.Cells[0], Is.EqualTo(cells[0]));
+            Assert.That(intent.Elevation, Is.EqualTo(elevation));
         }
 
         [Test]
@@ -116,7 +122,7 @@ namespace CosmosCasino.Tests.Game.Build
             };
 
             // Act
-            var intent = BuildIntent.RemoveFloor(cells);
+            var intent = BuildIntent.RemoveFloor(cells, TestElevation);
             cells.Clear();
 
             // Assert
@@ -133,7 +139,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange / Act / Assert
             Assert.Throws<ArgumentNullException>(() =>
-                BuildIntent.PlaceWall(null!));
+                BuildIntent.PlaceWall(null!, TestElevation));
         }
 
         [Test]
@@ -144,26 +150,28 @@ namespace CosmosCasino.Tests.Game.Build
 
             // Act / Assert
             Assert.Throws<ArgumentException>(() =>
-                BuildIntent.PlaceWall(cells));
+                BuildIntent.PlaceWall(cells, TestElevation));
         }
 
         [Test]
         public void BuildWall_ValidCells_CreatesCorrectIntent()
         {
             // Arrange
+            var elevation = new Elevation(6);
             var cells = new[]
             {
                 new MapCoord(5, 0)
             };
 
             // Act
-            var intent = BuildIntent.PlaceWall(cells);
+            var intent = BuildIntent.PlaceWall(cells, elevation);
 
             // Assert
             Assert.That(intent.Kind, Is.EqualTo(BuildKind.Wall));
             Assert.That(intent.Operation, Is.EqualTo(BuildOperation.Place));
             Assert.That(intent.Cells, Has.Count.EqualTo(1));
             Assert.That(intent.Cells[0], Is.EqualTo(cells[0]));
+            Assert.That(intent.Elevation, Is.EqualTo(elevation));
         }
 
         [Test]
@@ -176,7 +184,7 @@ namespace CosmosCasino.Tests.Game.Build
             };
 
             // Act
-            var intent = BuildIntent.PlaceWall(cells);
+            var intent = BuildIntent.PlaceWall(cells, TestElevation);
             cells.Clear();
 
             // Assert
@@ -192,7 +200,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void RemoveWall_NullCells_ThrowsArgumentNullException()
         {
             // Arrange / Act / Assert
-            Assert.Throws<ArgumentNullException>(() => BuildIntent.RemoveWall(null!));
+            Assert.Throws<ArgumentNullException>(() => BuildIntent.RemoveWall(null!, TestElevation));
         }
 
         [Test]
@@ -202,26 +210,28 @@ namespace CosmosCasino.Tests.Game.Build
             var cells = new List<MapCoord>();
 
             // Act / Assert
-            Assert.Throws<ArgumentException>(() => BuildIntent.RemoveWall(cells));
+            Assert.Throws<ArgumentException>(() => BuildIntent.RemoveWall(cells, TestElevation));
         }
 
         [Test]
         public void RemoveWall_ValidCells_CreatesCorrectIntent()
         {
             // Arrange
+            var elevation = new Elevation(-8);
             var cells = new[]
             {
                 new MapCoord(5, 0)
             };
 
             // Act
-            var intent = BuildIntent.RemoveWall(cells);
+            var intent = BuildIntent.RemoveWall(cells, elevation);
 
             // Assert
             Assert.That(intent.Kind, Is.EqualTo(BuildKind.Wall));
             Assert.That(intent.Operation, Is.EqualTo(BuildOperation.Remove));
             Assert.That(intent.Cells, Has.Count.EqualTo(1));
             Assert.That(intent.Cells[0], Is.EqualTo(cells[0]));
+            Assert.That(intent.Elevation, Is.EqualTo(elevation));
         }
 
         [Test]
@@ -234,7 +244,7 @@ namespace CosmosCasino.Tests.Game.Build
             };
 
             // Act
-            var intent = BuildIntent.RemoveWall(cells);
+            var intent = BuildIntent.RemoveWall(cells, TestElevation);
             cells.Clear();
 
             // Assert
@@ -258,7 +268,7 @@ namespace CosmosCasino.Tests.Game.Build
             };
 
             // Act
-            var intent = BuildIntent.PlaceFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells, TestElevation);
 
             // Assert
             Assert.That(intent.Cells.Count, Is.EqualTo(3));
@@ -275,13 +285,13 @@ namespace CosmosCasino.Tests.Game.Build
                 new MapCoord(1, 0)
             };
 
-            var intent = BuildIntent.PlaceWall(cells);
+            var intent = BuildIntent.PlaceWall(cells, TestElevation);
 
             // Act
             var text = intent.ToString();
 
             // Assert
-            Assert.That(text, Is.EqualTo("Place Wall for 2 cells"));
+            Assert.That(text, Is.EqualTo("Place Wall for 2 cells at elevation -4"));
         }
 
         #endregion

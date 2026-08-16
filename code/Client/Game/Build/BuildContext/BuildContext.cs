@@ -13,13 +13,27 @@ public sealed class BuildContext
 {
     #region Fields
 
-
-
+    private readonly MapManager _mapManager;
     private BuildContextBase? _activeContext;
     private MapCoord? _startCell;
     private MapCoord? _currentCell;
+    private Elevation? _startElevation;
     private BuildOperation _currentBuildOperation;
     private BuildInteractionMode _currentBuildInteractionMode;
+
+    #endregion
+
+    #region Initialization
+
+    /// <summary>
+    /// Initializes a build context using the authoritative map state for terrain elevation queries.
+    /// </summary>
+    /// <param name="mapManager">The authoritative map manager.</param>
+    internal BuildContext(MapManager mapManager)
+    {
+        ArgumentNullException.ThrowIfNull(mapManager);
+        _mapManager = mapManager;
+    }
 
     #endregion
 
@@ -76,7 +90,10 @@ public sealed class BuildContext
     /// <summary>
     /// Gets a value indicating whether a preview operation is currently active in the context.
     /// </summary>
-    public bool IsBuildActive => _activeContext != null && _startCell.HasValue && _currentCell.HasValue;
+    public bool IsBuildActive => _activeContext != null
+        && _startCell.HasValue
+        && _currentCell.HasValue
+        && _startElevation.HasValue;
 
     #endregion
 
@@ -127,8 +144,16 @@ public sealed class BuildContext
             return;
         }
 
-        _startCell = MapMath.WorldToCell(start.WorldPosition.ToWorldCoord());
+        var startCell = MapMath.WorldToCell(start.WorldPosition.ToWorldCoord());
+
+        if (!_mapManager.TryGetTerrainBaseElevation(startCell, out var startElevation))
+        {
+            return;
+        }
+
+        _startCell = startCell;
         _currentCell = _startCell;
+        _startElevation = startElevation;
         _currentBuildOperation = buildOperation;
         BuildStarted?.Invoke();
     }
@@ -217,6 +242,7 @@ public sealed class BuildContext
         if (_activeContext == null
             || _startCell == null
             || _currentCell == null
+            || _startElevation == null
             || _currentBuildOperation == BuildOperation.None)
         {
             return null;
@@ -227,6 +253,7 @@ public sealed class BuildContext
             _currentCell.Value,
             _currentBuildOperation,
             _currentBuildInteractionMode,
+            _startElevation.Value,
             out var intent);
 
         return intent;
@@ -248,11 +275,17 @@ public sealed class BuildContext
 
         var cell = cursorContext.CellPosition;
 
+        if (!_mapManager.TryGetTerrainBaseElevation(cell, out var elevation))
+        {
+            return null;
+        }
+
         _activeContext.TryCreateBuildIntent(
             cell,
             cell,
             BuildOperation.Place,
             BuildInteractionMode.Default,
+            elevation,
             out var intent);
 
         return intent;
@@ -303,13 +336,17 @@ public sealed class BuildContext
     /// has been cleared. This method is typically used to reset the build process to its initial state.</remarks>
     private void ClearBuild()
     {
-        if (_startCell == null && _currentCell == null && _currentBuildOperation == BuildOperation.None)
+        if (_startCell == null
+            && _currentCell == null
+            && _startElevation == null
+            && _currentBuildOperation == BuildOperation.None)
         {
             return;
         }
 
         _startCell = null;
         _currentCell = null;
+        _startElevation = null;
         _currentBuildOperation = BuildOperation.None;
         _currentBuildInteractionMode = BuildInteractionMode.Default;
         BuildCleared?.Invoke();

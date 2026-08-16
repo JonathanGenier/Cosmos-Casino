@@ -31,6 +31,7 @@ public sealed class WallBuildContext : BuildContextBase
     /// <param name="endCell">The ending cell coordinate for the wall.</param>
     /// <param name="buildOperation">The type of build operation to perform.</param>
     /// <param name="buildInteractionMode">The interaction mode that influences cell selection for the build operation.</param>
+    /// <param name="elevation">The shared logical elevation targeted by every cell in the wall intent.</param>
     /// <param name="intent">When this method returns, contains the created build intent if successful; otherwise, null.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
     public override bool TryCreateBuildIntent(
@@ -38,6 +39,7 @@ public sealed class WallBuildContext : BuildContextBase
         MapCoord endCell,
         BuildOperation buildOperation,
         BuildInteractionMode buildInteractionMode,
+        Elevation elevation,
         out BuildIntent intent)
     {
         var cells = GetCells(
@@ -55,10 +57,10 @@ public sealed class WallBuildContext : BuildContextBase
         switch (buildOperation)
         {
             case BuildOperation.Place:
-                intent = BuildIntent.PlaceWall(cells);
+                intent = BuildIntent.PlaceWall(cells, elevation);
                 return true;
             case BuildOperation.Remove:
-                intent = BuildIntent.RemoveWall(cells);
+                intent = BuildIntent.RemoveWall(cells, elevation);
                 return true;
             case BuildOperation.None:
                 intent = null!;

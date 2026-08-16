@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace CosmosCasino.Tests.Game.Map.Systems
 {
     [TestFixture]
-    internal class CellSystemTests
+    internal sealed class CellSystemTests
     {
 
 
@@ -25,6 +25,43 @@ namespace CosmosCasino.Tests.Game.Map.Systems
 
             // Assert
             Assert.That(count, Is.EqualTo(0));
+        }
+
+        #endregion
+
+        #region Base Elevation Compatibility
+
+        [Test]
+        public void CoordinateApis_TargetTerrainBaseElevation()
+        {
+            var system = new CellSystem();
+            var coord = Coord();
+            var terrainTile = new TerrainTile(3f, 4f, 3f, 4f);
+            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), terrainTile);
+
+            var result = system.TryPlace(BuildKind.Floor, coord);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(system.TryGetCell(coord, out var cell), Is.True);
+            Assert.That(cell!.HasFloorAt(terrainTile.BaseElevation), Is.True);
+            Assert.That(cell.HasFloorAt(new Elevation(terrainTile.BaseElevation.Value + 1)), Is.False);
+            Assert.That(system.Has(BuildKind.Floor, coord), Is.True);
+        }
+
+        [Test]
+        public void CanPlaceFloor_DoesNotCreateBuildableState()
+        {
+            var system = new CellSystem();
+            var coord = Coord();
+            var terrainTile = FlatTile(2f);
+            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), terrainTile);
+
+            var result = system.CanPlace(BuildKind.Floor, coord);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(system.TryGetCell(coord, out var cell), Is.True);
+            Assert.That(cell!.HasFloorAt(terrainTile.BaseElevation), Is.False);
+            Assert.That(cell.ValidatePlaceFloor(terrainTile.BaseElevation).Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
         }
 
         #endregion
@@ -277,9 +314,9 @@ namespace CosmosCasino.Tests.Game.Map.Systems
 
         #region Helpers
 
-        private static TerrainTile FlatTile()
+        private static TerrainTile FlatTile(float height = 1f)
         {
-            return new TerrainTile(1f, 1f, 1f, 1f);
+            return new TerrainTile(height, height, height, height);
         }
 
 

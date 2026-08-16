@@ -37,22 +37,25 @@ namespace CosmosCasino.Core.Game.Build
 
         #region Floor Methods
 
-        private BuildOperationResult ExecuteOperationOnFloor(BuildOperation buildOperation, MapCoord coord)
+        private BuildOperationResult ExecuteOperationOnFloor(
+            BuildOperation buildOperation,
+            MapCoord coord,
+            Elevation elevation)
         {
             return buildOperation switch
             {
-                BuildOperation.Place => TryPlaceFloor(coord),
-                BuildOperation.Remove => TryRemoveFloor(coord),
+                BuildOperation.Place => TryPlaceFloor(coord, elevation),
+                BuildOperation.Remove => TryRemoveFloor(coord, elevation),
                 _ => throw new NotImplementedException($"{nameof(buildOperation)} not implemented")
             };
         }
 
-        private BuildOperationResult TryPlaceFloor(MapCoord coord)
+        private BuildOperationResult TryPlaceFloor(MapCoord coord, Elevation elevation)
         {
             // TODO: Calculate cost to place said floorType
             // TODO: Check if can afford cost
             // If Yes :
-            BuildOperationResult actionResult = _mapManager.TryPlace(BuildKind.Floor, coord);
+            BuildOperationResult actionResult = _mapManager.TryPlace(BuildKind.Floor, coord, elevation);
 
             if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
@@ -65,9 +68,9 @@ namespace CosmosCasino.Core.Game.Build
         }
 
 
-        private BuildOperationResult TryRemoveFloor(MapCoord coord)
+        private BuildOperationResult TryRemoveFloor(MapCoord coord, Elevation elevation)
         {
-            BuildOperationResult actionResult = _mapManager.TryRemove(BuildKind.Floor, coord);
+            BuildOperationResult actionResult = _mapManager.TryRemove(BuildKind.Floor, coord, elevation);
 
             if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
@@ -81,22 +84,25 @@ namespace CosmosCasino.Core.Game.Build
 
         #region Wall Methods
 
-        private BuildOperationResult ExecuteOperationOnWall(BuildOperation buildOperation, MapCoord coord)
+        private BuildOperationResult ExecuteOperationOnWall(
+            BuildOperation buildOperation,
+            MapCoord coord,
+            Elevation elevation)
         {
             return buildOperation switch
             {
-                BuildOperation.Place => TryPlaceWall(coord),
-                BuildOperation.Remove => TryRemoveWall(coord),
+                BuildOperation.Place => TryPlaceWall(coord, elevation),
+                BuildOperation.Remove => TryRemoveWall(coord, elevation),
                 _ => throw new NotImplementedException($"{nameof(buildOperation)} not implemented")
             };
         }
 
-        private BuildOperationResult TryPlaceWall(MapCoord coord)
+        private BuildOperationResult TryPlaceWall(MapCoord coord, Elevation elevation)
         {
             // TODO: Calculate cost to place said floorType
             // TODO: Check if can afford cost
             // If Yes :
-            BuildOperationResult actionResult = _mapManager.TryPlace(BuildKind.Wall, coord);
+            BuildOperationResult actionResult = _mapManager.TryPlace(BuildKind.Wall, coord, elevation);
 
             if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
@@ -109,9 +115,9 @@ namespace CosmosCasino.Core.Game.Build
             return actionResult;
         }
 
-        private BuildOperationResult TryRemoveWall(MapCoord coord)
+        private BuildOperationResult TryRemoveWall(MapCoord coord, Elevation elevation)
         {
-            BuildOperationResult actionResult = _mapManager.TryRemove(BuildKind.Wall, coord);
+            BuildOperationResult actionResult = _mapManager.TryRemove(BuildKind.Wall, coord, elevation);
 
             if (actionResult.Outcome == BuildOperationOutcome.Valid)
             {
