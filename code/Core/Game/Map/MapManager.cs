@@ -11,7 +11,7 @@ namespace CosmosCasino.Core.Game.Map
     /// build operations, acting as the authoritative entry point for map queries
     /// and mutations.
     /// </summary>
-    public sealed class MapManager
+    public sealed partial class MapManager
     {
         #region Fields
 
@@ -120,6 +120,18 @@ namespace CosmosCasino.Core.Game.Map
         }
 
         /// <summary>
+        /// Determines whether the specified build kind exists at the given coordinate and elevation.
+        /// </summary>
+        /// <param name="buildKind">The type of build element to check.</param>
+        /// <param name="coord">The map coordinate to query.</param>
+        /// <param name="elevation">The elevation to query.</param>
+        /// <returns><c>true</c> if the build element exists; otherwise <c>false</c>.</returns>
+        internal bool Has(BuildKind buildKind, MapCoord coord, Elevation elevation)
+        {
+            return _cellSystem.Has(buildKind, coord, elevation);
+        }
+
+        /// <summary>
         /// Validates whether the specified build kind can be placed at the terrain base elevation of the given coordinate.
         /// </summary>
         /// <param name="buildKind">The type of build element to place.</param>
@@ -128,6 +140,18 @@ namespace CosmosCasino.Core.Game.Map
         internal BuildOperationResult CanPlace(BuildKind buildKind, MapCoord coord)
         {
             return _cellSystem.CanPlace(buildKind, coord);
+        }
+
+        /// <summary>
+        /// Validates whether the specified build kind can be placed at the given coordinate and elevation.
+        /// </summary>
+        /// <param name="buildKind">The type of build element to place.</param>
+        /// <param name="coord">The map coordinate to validate.</param>
+        /// <param name="elevation">The elevation to validate.</param>
+        /// <returns>The result of the placement validation.</returns>
+        internal BuildOperationResult CanPlace(BuildKind buildKind, MapCoord coord, Elevation elevation)
+        {
+            return _cellSystem.CanPlace(buildKind, coord, elevation);
         }
 
         /// <summary>
@@ -142,6 +166,18 @@ namespace CosmosCasino.Core.Game.Map
         }
 
         /// <summary>
+        /// Validates whether the specified build kind can be removed from the given coordinate and elevation.
+        /// </summary>
+        /// <param name="buildKind">The type of build element to remove.</param>
+        /// <param name="coord">The map coordinate to validate.</param>
+        /// <param name="elevation">The elevation to validate.</param>
+        /// <returns>The result of the removal validation.</returns>
+        internal BuildOperationResult CanRemove(BuildKind buildKind, MapCoord coord, Elevation elevation)
+        {
+            return _cellSystem.CanRemove(buildKind, coord, elevation);
+        }
+
+        /// <summary>
         /// Attempts to place the specified build kind at the terrain base elevation of the given coordinate.
         /// </summary>
         /// <param name="buildKind">The type of build element to place.</param>
@@ -153,6 +189,18 @@ namespace CosmosCasino.Core.Game.Map
         }
 
         /// <summary>
+        /// Attempts to place the specified build kind at the given coordinate and elevation.
+        /// </summary>
+        /// <param name="buildKind">The type of build element to place.</param>
+        /// <param name="coord">The map coordinate at which to place.</param>
+        /// <param name="elevation">The elevation at which to place.</param>
+        /// <returns>The result of the placement operation.</returns>
+        internal BuildOperationResult TryPlace(BuildKind buildKind, MapCoord coord, Elevation elevation)
+        {
+            return _cellSystem.TryPlace(buildKind, coord, elevation);
+        }
+
+        /// <summary>
         /// Attempts to remove the specified build kind from the terrain base elevation of the given coordinate.
         /// </summary>
         /// <param name="buildKind">The type of build element to remove.</param>
@@ -161,6 +209,18 @@ namespace CosmosCasino.Core.Game.Map
         internal BuildOperationResult TryRemove(BuildKind buildKind, MapCoord coord)
         {
             return _cellSystem.TryRemove(buildKind, coord);
+        }
+
+        /// <summary>
+        /// Attempts to remove the specified build kind from the given coordinate and elevation.
+        /// </summary>
+        /// <param name="buildKind">The type of build element to remove.</param>
+        /// <param name="coord">The map coordinate from which to remove.</param>
+        /// <param name="elevation">The elevation from which to remove.</param>
+        /// <returns>The result of the removal operation.</returns>
+        internal BuildOperationResult TryRemove(BuildKind buildKind, MapCoord coord, Elevation elevation)
+        {
+            return _cellSystem.TryRemove(buildKind, coord, elevation);
         }
 
         #endregion

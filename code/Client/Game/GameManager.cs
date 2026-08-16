@@ -14,7 +14,7 @@ public sealed partial class GameManager : NodeManager
     // ----------------------------------------------------
     // STATE
 
-    private readonly BuildContext _buildContext = new();
+    private BuildContext? _buildContext;
 
     private bool _sceneReady = false;
     private bool _sessionInitialized = false;
@@ -70,6 +70,12 @@ public sealed partial class GameManager : NodeManager
     /// Gets the current high-level game state.
     /// </summary>
     public GameState State { get; private set; } = GameState.Loading;
+
+    private BuildContext BuildContext
+    {
+        get => _buildContext ?? throw new InvalidOperationException($"{nameof(BuildContext)} is not initialized.");
+        set => _buildContext = value;
+    }
 
     // ----------------------------------------------------------------------------------------------------------------------------
     // EXTERNAL
@@ -308,6 +314,7 @@ public sealed partial class GameManager : NodeManager
         ArgumentNullException.ThrowIfNull(appServices);
 
         AppServices = appServices;
+        BuildContext = new BuildContext(GameSession.MapManager);
 
         CursorManager = AddInitializableNode<CursorManager>(
             cm => cm.Initialize(CollisionLayers.Buildable));
@@ -347,12 +354,12 @@ public sealed partial class GameManager : NodeManager
             throw new InvalidOperationException($"Cannot initialize flows before {nameof(GameManager)} initialization.");
         }
 
-        BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, _buildContext);
-        BuildRequestFlow = new BuildRequestFlow(BuildProcessManager, _buildContext);
+        BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, BuildContext);
+        BuildRequestFlow = new BuildRequestFlow(BuildProcessManager, BuildContext);
         BuildSpawnFlow = new BuildSpawnFlow(BuildProcessManager, SpawnManager);
-        BuildPreviewFlow = new BuildPreviewFlow(_buildContext, BuildProcessManager.BuildPreviewManager, BuildProcessManager);
-        BuildInputFlow = new BuildInputFlow(AppServices.InputManager, CursorManager, _buildContext);
-        CursorPreviewFlow = new CursorPreviewFlow(_buildContext, BuildProcessManager.BuildPreviewManager, CursorManager, BuildProcessManager);
+        BuildPreviewFlow = new BuildPreviewFlow(BuildContext, BuildProcessManager.BuildPreviewManager, BuildProcessManager);
+        BuildInputFlow = new BuildInputFlow(AppServices.InputManager, CursorManager, BuildContext);
+        CursorPreviewFlow = new CursorPreviewFlow(BuildContext, BuildProcessManager.BuildPreviewManager, CursorManager, BuildProcessManager);
         CameraInputFlow = new CameraInputFlow(AppServices.InputManager, CameraManager);
     }
 

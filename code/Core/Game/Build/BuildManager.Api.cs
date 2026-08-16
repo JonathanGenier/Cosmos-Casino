@@ -26,8 +26,8 @@ namespace CosmosCasino.Core.Game.Build
             {
                 var result = intent.Operation switch
                 {
-                    BuildOperation.Place => _mapManager.CanPlace(intent.Kind, coord),
-                    BuildOperation.Remove => _mapManager.CanRemove(intent.Kind, coord),
+                    BuildOperation.Place => _mapManager.CanPlace(intent.Kind, coord, intent.Elevation),
+                    BuildOperation.Remove => _mapManager.CanRemove(intent.Kind, coord, intent.Elevation),
                     _ => throw new NotImplementedException($"{nameof(BuildKind)} not implemented.")
                 };
 
@@ -71,8 +71,8 @@ namespace CosmosCasino.Core.Game.Build
             {
                 var result = intent.Kind switch
                 {
-                    BuildKind.Floor => ExecuteOperationOnFloor(buildOperation, coord),
-                    BuildKind.Wall => ExecuteOperationOnWall(buildOperation, coord),
+                    BuildKind.Floor => ExecuteOperationOnFloor(buildOperation, coord, intent.Elevation),
+                    BuildKind.Wall => ExecuteOperationOnWall(buildOperation, coord, intent.Elevation),
                     _ => throw new NotImplementedException($"{nameof(BuildKind)} not implemented.")
                 };
 
@@ -85,4 +85,3 @@ namespace CosmosCasino.Core.Game.Build
         #endregion
     }
 }
-

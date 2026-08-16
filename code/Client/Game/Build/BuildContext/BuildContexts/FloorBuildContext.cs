@@ -30,6 +30,7 @@ public sealed class FloorBuildContext : BuildContextBase
     /// <param name="endCell">The ending cell coordinate of the intended floor area.</param>
     /// <param name="buildOperation">The type of build operation to perform (e.g., place or remove).</param>
     /// <param name="buildInteractionMode">The interaction mode that influences how cells are selected for the build operation.</param>
+    /// <param name="elevation">The shared logical elevation targeted by every cell in the floor intent.</param>
     /// <param name="intent">When this method returns, contains the build intent for the floor if the operation succeeds; otherwise, null.
     /// This parameter is passed uninitialized.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
@@ -38,6 +39,7 @@ public sealed class FloorBuildContext : BuildContextBase
         MapCoord endCell,
         BuildOperation buildOperation,
         BuildInteractionMode buildInteractionMode,
+        Elevation elevation,
         out BuildIntent intent)
     {
         var cells = GetCells(startCell, endCell, buildOperation, buildInteractionMode);
@@ -51,10 +53,10 @@ public sealed class FloorBuildContext : BuildContextBase
         switch (buildOperation)
         {
             case BuildOperation.Place:
-                intent = BuildIntent.PlaceFloor(cells);
+                intent = BuildIntent.PlaceFloor(cells, elevation);
                 break;
             case BuildOperation.Remove:
-                intent = BuildIntent.RemoveFloor(cells);
+                intent = BuildIntent.RemoveFloor(cells, elevation);
                 break;
             case BuildOperation.None:
                 intent = null!;

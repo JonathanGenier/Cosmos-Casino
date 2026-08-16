@@ -3,7 +3,7 @@ namespace CosmosCasino.Core.Game.Map
     /// <summary>
     /// Represents a discrete vertical layer in the authoritative map domain.
     /// </summary>
-    internal readonly record struct Elevation
+    public readonly partial record struct Elevation
     {
         #region Constants
 
@@ -19,16 +19,16 @@ namespace CosmosCasino.Core.Game.Map
 
         #endregion
 
-        #region Initialization
+        #region Validation
 
         /// <summary>
-        /// Initializes a new elevation with the specified discrete value.
+        /// Validates the specified discrete elevation value.
         /// </summary>
         /// <param name="value">The discrete elevation value.</param>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="value"/> is outside the inclusive supported range.
         /// </exception>
-        internal Elevation(int value)
+        private static void ValidateValue(int value)
         {
             if (value < MinValue || value > MaxValue)
             {
@@ -37,18 +37,7 @@ namespace CosmosCasino.Core.Game.Map
                     value,
                     $"Elevation must be between {MinValue} and {MaxValue}.");
             }
-
-            Value = value;
         }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the discrete elevation value.
-        /// </summary>
-        internal int Value { get; }
 
         #endregion
     }

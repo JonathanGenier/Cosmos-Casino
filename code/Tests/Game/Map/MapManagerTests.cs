@@ -67,6 +67,32 @@ namespace CosmosCasino.Tests.Game.Map
 
         #region Terrain Alignment
 
+        [TestCase(0, 0)]
+        [TestCase(-1, 1)]
+        public void TryGetTerrainBaseElevation_ExistingCoordinate_ReturnsTerrainBaseElevation(int x, int y)
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(x, y);
+            manager.GenerateMap(seed: 0, mapSize: 5);
+            Assert.That(manager.TryGetCell(coord, out var cell), Is.True);
+
+            bool found = manager.TryGetTerrainBaseElevation(coord, out var elevation);
+
+            Assert.That(found, Is.True);
+            Assert.That(elevation, Is.EqualTo(cell!.TerrainTile.BaseElevation));
+        }
+
+        [Test]
+        public void TryGetTerrainBaseElevation_MissingCoordinate_ReturnsFalse()
+        {
+            var manager = new MapManager();
+            manager.GenerateMap(seed: 0, mapSize: 5);
+
+            bool found = manager.TryGetTerrainBaseElevation(new MapCoord(3, 0), out _);
+
+            Assert.That(found, Is.False);
+        }
+
         [Test]
         public void TryGetTerrain_TerrainWorldCoordAndMapCoordIdentifySameTile()
         {

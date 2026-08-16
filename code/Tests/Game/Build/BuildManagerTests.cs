@@ -12,6 +12,7 @@ namespace CosmosCasino.Tests.Game.Build
 
         private MapManager _mapManager = null!;
         private BuildManager _buildManager = null!;
+        private Elevation _buildElevation;
 
         #endregion
 
@@ -23,6 +24,7 @@ namespace CosmosCasino.Tests.Game.Build
             _mapManager = new MapManager();
             _mapManager.GenerateMap(0, 11);
             _buildManager = new BuildManager(_mapManager);
+            _buildElevation = new Elevation(4);
         }
 
         #endregion
@@ -34,7 +36,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCellsList();
-            var intent = BuildIntent.PlaceFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells, _buildElevation);
 
             // Act
             var result = _buildManager.Evaluate(intent);
@@ -42,7 +44,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Assert
             Assert.That(result.Results, Has.Count.EqualTo(1));
             Assert.That(result.Results[0].Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c)), Is.False);
+            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c, _buildElevation)), Is.False);
         }
 
         [Test]
@@ -50,7 +52,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCellsList(3);
-            var intent = BuildIntent.PlaceFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells, _buildElevation);
 
             // Act
             var result = _buildManager.Evaluate(intent);
@@ -58,7 +60,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Assert
             Assert.That(result.Results, Has.Count.EqualTo(cells.Count));
             Assert.That(result.Results.All(r => r.Outcome == BuildOperationOutcome.Valid), Is.True);
-            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c)), Is.False);
+            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c, _buildElevation)), Is.False);
         }
 
         [Test]
@@ -67,14 +69,14 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = CreateCellsList();
             PlaceFloor(cells);
-            var intent = BuildIntent.PlaceFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells, _buildElevation);
 
             // Act
             var result = _buildManager.Evaluate(intent);
 
             // Assert
             Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
-            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c)), Is.True);
+            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c, _buildElevation)), Is.True);
         }
 
         #endregion
@@ -87,14 +89,14 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = CreateCellsList();
             PlaceFloor(cells);
-            var intent = BuildIntent.PlaceWall(cells);
+            var intent = BuildIntent.PlaceWall(cells, _buildElevation);
 
             // Act
             var result = _buildManager.Evaluate(intent);
 
             // Assert
             Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_mapManager.Has(BuildKind.Wall, cells[0]), Is.False);
+            Assert.That(_mapManager.Has(BuildKind.Wall, cells[0], _buildElevation), Is.False);
         }
 
         [Test]
@@ -102,7 +104,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCellsList(2);
-            var intent = BuildIntent.PlaceWall(cells);
+            var intent = BuildIntent.PlaceWall(cells, _buildElevation);
 
             // Act
             var result = _buildManager.Evaluate(intent);
@@ -110,7 +112,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Assert
             Assert.That(result.Results, Has.Count.EqualTo(cells.Count));
             Assert.That(result.Results.All(r => r.Outcome == BuildOperationOutcome.Invalid), Is.True);
-            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Wall, c)), Is.False);
+            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Wall, c, _buildElevation)), Is.False);
         }
 
         #endregion
@@ -122,14 +124,14 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCellsList();
-            var intent = BuildIntent.PlaceFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells, _buildElevation);
 
             // Act
             var result = _buildManager.Execute(intent);
 
             // Assert
             Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_mapManager.Has(BuildKind.Floor, cells[0]), Is.True);
+            Assert.That(_mapManager.Has(BuildKind.Floor, cells[0], _buildElevation), Is.True);
         }
 
         [Test]
@@ -137,7 +139,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCellsList(3);
-            var intent = BuildIntent.PlaceFloor(cells);
+            var intent = BuildIntent.PlaceFloor(cells, _buildElevation);
 
             // Act
             var result = _buildManager.Execute(intent);
@@ -145,7 +147,7 @@ namespace CosmosCasino.Tests.Game.Build
             // Assert
             Assert.That(result.Results, Has.Count.EqualTo(cells.Count));
             Assert.That(result.Results.All(r => r.Outcome == BuildOperationOutcome.Valid), Is.True);
-            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c)), Is.True);
+            Assert.That(cells.All(c => _mapManager.Has(BuildKind.Floor, c, _buildElevation)), Is.True);
         }
 
         [Test]
@@ -153,7 +155,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cell = new MapCoord(0, 0);
-            var intent = BuildIntent.PlaceFloor([cell, cell]);
+            var intent = BuildIntent.PlaceFloor([cell, cell], _buildElevation);
 
             // Act
             var result = _buildManager.Execute(intent);
@@ -162,22 +164,24 @@ namespace CosmosCasino.Tests.Game.Build
             Assert.That(result.Results, Has.Count.EqualTo(2));
             Assert.That(result.Results[0].Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
             Assert.That(result.Results[1].Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
-            Assert.That(_mapManager.Has(BuildKind.Floor, cell), Is.True);
+            Assert.That(_mapManager.Has(BuildKind.Floor, cell, _buildElevation), Is.True);
         }
 
         [Test]
-        public void Execute_PlaceFloor_TargetsTerrainBaseElevation()
+        public void Execute_PlaceFloor_TargetsIntentElevation()
         {
             var coord = new MapCoord(-1, 1);
-            var intent = BuildIntent.PlaceFloor([coord]);
             Assert.That(_mapManager.TryGetCell(coord, out var cell), Is.True);
             var baseElevation = cell!.TerrainTile.BaseElevation;
+            int offset = baseElevation.Value < Elevation.MaxValue ? 1 : -1;
+            var intentElevation = new Elevation(baseElevation.Value + offset);
+            var intent = BuildIntent.PlaceFloor([coord], intentElevation);
 
             var result = _buildManager.Execute(intent);
 
             Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(cell.HasFloorAt(baseElevation), Is.True);
-            Assert.That(cell.HasFloorAt(new Elevation(baseElevation.Value + 1)), Is.False);
+            Assert.That(cell.HasFloorAt(intentElevation), Is.True);
+            Assert.That(cell.HasFloorAt(baseElevation), Is.False);
         }
 
         #endregion
@@ -190,14 +194,14 @@ namespace CosmosCasino.Tests.Game.Build
             // Arrange
             var cells = CreateCellsList();
             PlaceFloor(cells);
-            var intent = BuildIntent.PlaceWall(cells);
+            var intent = BuildIntent.PlaceWall(cells, _buildElevation);
 
             // Act
             var result = _buildManager.Execute(intent);
 
             // Assert
             Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_mapManager.Has(BuildKind.Wall, cells[0]), Is.True);
+            Assert.That(_mapManager.Has(BuildKind.Wall, cells[0], _buildElevation), Is.True);
         }
 
         [Test]
@@ -205,14 +209,14 @@ namespace CosmosCasino.Tests.Game.Build
         {
             // Arrange
             var cells = CreateCellsList(2);
-            var intent = BuildIntent.PlaceWall(cells);
+            var intent = BuildIntent.PlaceWall(cells, _buildElevation);
 
             // Act
             var result = _buildManager.Execute(intent);
 
             // Assert
             Assert.That(result.Results.All(r => r.Outcome == BuildOperationOutcome.Invalid), Is.True);
-            Assert.That(cells.All(c => !_mapManager.Has(BuildKind.Wall, c)), Is.True);
+            Assert.That(cells.All(c => !_mapManager.Has(BuildKind.Wall, c, _buildElevation)), Is.True);
         }
 
         #endregion
@@ -232,7 +236,7 @@ namespace CosmosCasino.Tests.Game.Build
         {
             foreach (var cell in cells)
             {
-                _mapManager.TryPlace(BuildKind.Floor, cell);
+                _mapManager.TryPlace(BuildKind.Floor, cell, _buildElevation);
             }
         }
 

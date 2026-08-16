@@ -45,10 +45,17 @@ public abstract class BuildContextBase
     /// <param name="endCell">The coordinates of the ending map cell for the build intent.</param>
     /// <param name="buildOperation">The type of build operation to perform (e.g., place, remove).</param>
     /// <param name="buildInteractionMode">The interaction mode affecting the build operation.</param>
+    /// <param name="elevation">The shared logical elevation targeted by every cell in the build intent.</param>
     /// <param name="intent">When this method returns, contains the resulting build intent if the operation succeeds; otherwise, the default
     /// value.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
-    public abstract bool TryCreateBuildIntent(MapCoord startCell, MapCoord endCell, BuildOperation buildOperation, BuildInteractionMode buildInteractionMode, out BuildIntent intent);
+    public abstract bool TryCreateBuildIntent(
+        MapCoord startCell,
+        MapCoord endCell,
+        BuildOperation buildOperation,
+        BuildInteractionMode buildInteractionMode,
+        Elevation elevation,
+        out BuildIntent intent);
 
     /// <summary>
     /// Returns a read-only list of map cell coordinates representing the path or sequence of cells between the
