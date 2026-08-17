@@ -21,3 +21,7 @@ script = ExtResource("1_50dhg")
 
 [node name="GroundMesh" type="MeshInstance3D" parent="."]
 material_override = SubResource("ShaderMaterial_3xahe")
+
+[node name="TerrainBody" type="StaticBody3D" parent="."]
+
+[node name="TerrainCollision" type="CollisionShape3D" parent="TerrainBody"]

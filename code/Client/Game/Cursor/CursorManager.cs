@@ -55,9 +55,9 @@ public sealed partial class CursorManager : InitializableNodeManager
     /// <summary>
     /// Initializes the cursor system with the specified collision mask and plane height.
     /// </summary>
-    /// <param name="buildableCollisionMask">A bitmask that specifies which layers are considered buildable for collision detection.</param>
+    /// <param name="collisionMask">A bitmask specifying which world surfaces participate in cursor collision detection.</param>
     /// <param name="planeHeight">The height, in world units, at which the cursor's reference plane is positioned. The default is 0.</param>
-    public void Initialize(uint buildableCollisionMask, float planeHeight = 0f)
+    public void Initialize(uint collisionMask, float planeHeight = 0f)
     {
         if (IsInitialized)
         {
@@ -65,7 +65,7 @@ public sealed partial class CursorManager : InitializableNodeManager
         }
 
         var rayProvider = new CursorRayProvider();
-        var physicsResolver = new CursorPhysicsResolver(buildableCollisionMask);
+        var physicsResolver = new CursorPhysicsResolver(collisionMask);
         var planeResolver = new CursorPlaneResolver(planeHeight);
 
         Resolver = new CursorResolver(rayProvider, physicsResolver, planeResolver);

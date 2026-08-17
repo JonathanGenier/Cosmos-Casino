@@ -317,7 +317,7 @@ public sealed partial class GameManager : NodeManager
         BuildContext = new BuildContext(GameSession.MapManager);
 
         CursorManager = AddInitializableNode<CursorManager>(
-            cm => cm.Initialize(CollisionLayers.Buildable));
+            cm => cm.Initialize(CollisionLayers.Buildable | CollisionLayers.Terrain));
 
         var buildProcessServices = new BuildProcessServices(
             GameSession.BuildManager,

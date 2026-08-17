@@ -3,24 +3,19 @@ using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using Godot;
 using System;
 
-// TODO TerrainChunkView currently has too many responsibilities
-// such as Data Binding, Positioning, Mesh Generation.
-// Split into TerrainChunkMeshBuilder, 
-
 /// <summary>
-/// Client-side visual representation of a single terrain chunk.
-/// Responsible for positioning the chunk in world space and
-/// building its renderable mesh from core terrain data.
+/// Owns the Client-side render and collision representation of one terrain chunk.
 /// </summary>
 public sealed partial class TerrainChunkView : Node3D
 {
     #region Fields
 
-    private TerrainTile[,]? _tiles;         // Array of tiles in this chunk
+    private TerrainTile[,]? _tiles;
     private MeshInstance3D? _groundMesh;
+    private StaticBody3D? _terrainBody;
+    private ConcavePolygonShape3D? _terrainCollision;
 
     private bool _isInitialized;
-    private bool _isMeshBuilt;
 
     #endregion
 
@@ -35,6 +30,18 @@ public sealed partial class TerrainChunkView : Node3D
     {
         get => _groundMesh ?? throw new InvalidOperationException("GroundMesh has not been initialized.");
         set => _groundMesh = value;
+    }
+
+    private StaticBody3D TerrainBody
+    {
+        get => _terrainBody ?? throw new InvalidOperationException("TerrainBody has not been initialized.");
+        set => _terrainBody = value;
+    }
+
+    private ConcavePolygonShape3D TerrainCollision
+    {
+        get => _terrainCollision ?? throw new InvalidOperationException("TerrainCollision has not been initialized.");
+        set => _terrainCollision = value;
     }
 
     private TerrainChunkGridCoord Coord { get; set; }
@@ -63,7 +70,7 @@ public sealed partial class TerrainChunkView : Node3D
 
     /// <summary>
     /// Called when the node enters the scene tree.
-    /// Positions the chunk in world space and builds its renderable mesh.
+    /// Positions the chunk in world space and builds its render and collision representations.
     /// </summary>
     /// <exception cref="InvalidOperationException">
     /// Thrown if the view has not been initialized prior to readiness.
@@ -76,6 +83,13 @@ public sealed partial class TerrainChunkView : Node3D
         }
 
         GroundMesh = GetNode<MeshInstance3D>("GroundMesh");
+        TerrainBody = GetNode<StaticBody3D>("TerrainBody");
+
+        TerrainBody.CollisionLayer = CollisionLayers.Terrain;
+        TerrainBody.CollisionMask = CollisionLayers.None;
+
+        TerrainCollision = new ConcavePolygonShape3D();
+        GetNode<CollisionShape3D>("TerrainBody/TerrainCollision").Shape = TerrainCollision;
 
         var chunkOriginTile = TerrainMath.ChunkLocalToWorldTileCoord(
             Coord,
@@ -84,54 +98,20 @@ public sealed partial class TerrainChunkView : Node3D
 
         Position = TerrainMath.TileToWorldOrigin(chunkOriginTile).ToGodotVector3();
 
-        BuildFullMesh();
+        RebuildTerrainRepresentation();
     }
 
     #endregion
 
-    #region Mesh Generation
+    #region Representation
 
     /// <summary>
-    /// Builds and assigns the renderable mesh for the terrain chunk.
+    /// Rebuilds the chunk-local render mesh and updates the existing collision shape.
     /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if the mesh has already been built.
-    /// </exception>
-    private void BuildFullMesh()
+    private void RebuildTerrainRepresentation()
     {
-        if (_isMeshBuilt)
-        {
-            throw new InvalidOperationException("Mesh has already been built.");
-        }
-
-        var surfaceTool = new SurfaceTool();
-        var mesh = new ArrayMesh();
-
-        surfaceTool.Begin(Mesh.PrimitiveType.Triangles);
-
-        int sizeX = Tiles.GetLength(0);
-        int sizeY = Tiles.GetLength(1);
-
-        for (int y = 0; y < sizeY; y++)
-        {
-            for (int x = 0; x < sizeX; x++)
-            {
-                var tile = Tiles[x, y];
-                var cellChunkPosition = new Vector2I(x, y);
-
-                TerrainTileBuilder.BuildTile(
-                    surfaceTool,
-                    tile,
-                    cellChunkPosition
-                );
-            }
-        }
-
-        surfaceTool.GenerateNormals();
-        surfaceTool.Commit(mesh);
-        GroundMesh.Mesh = mesh;
-
-        _isMeshBuilt = true;
+        GroundMesh.Mesh = TerrainChunkMeshBuilder.Build(Tiles);
+        TerrainChunkCollisionBuilder.Rebuild(TerrainCollision, Tiles);
     }
 
     #endregion
