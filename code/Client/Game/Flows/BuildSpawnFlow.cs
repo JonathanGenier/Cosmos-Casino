@@ -127,10 +127,18 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
 
     #region Spawn/Despawn Methods
 
+    /// <summary>
+    /// Spawns a successful build visual, positioning Floors at the executed intent's logical build elevation.
+    /// </summary>
+    /// <param name="result">The successful per-cell build result.</param>
+    /// <param name="buildIntent">The executed intent that owns the authoritative build elevation.</param>
     private void SpawnBuild(BuildOperationResult result, BuildIntent buildIntent)
     {
         CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildIntent.Kind);
-        Vector3 position = MapMath.CellToWorldCenter(spawnKey.Coord).ToGodotVector3();
+        var worldCenter = MapMath.CellToWorldCenter(spawnKey.Coord);
+        Vector3 position = buildIntent.Kind == BuildKind.Floor
+            ? worldCenter.ToGodotVector3(buildIntent.Elevation)
+            : worldCenter.ToGodotVector3();
         Vector3 scale = new(WorldGridMetrics.GridUnitSize, 1f, WorldGridMetrics.GridUnitSize);
         Transform3D transform = new(Basis.Identity.Scaled(scale), position);
         BuildSpawnDescriptor descriptor = BuildSpawnDescriptorResolver.Resolve(buildIntent);

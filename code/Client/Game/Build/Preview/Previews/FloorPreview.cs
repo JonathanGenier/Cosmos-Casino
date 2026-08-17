@@ -100,7 +100,7 @@ public sealed partial class FloorPreview : Node3D
     }
 
     /// <summary>
-    /// Resets the preview to its default color state.
+    /// Resets the preview to its default color state and local origin for safe pooled reuse.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown if the required ShaderMaterial is not assigned to surface 0.</exception>
     public void Reset()
@@ -111,6 +111,7 @@ public sealed partial class FloorPreview : Node3D
         }
 
         _material.SetShaderParameter("color", PreviewColors.NoOpColor);
+        Position = Vector3.Zero;
     }
 
     #endregion
