@@ -35,7 +35,7 @@ namespace CosmosCasino.Tests.Game.Build
         public void BuildFloor_ValidCells_CreatesCorrectIntent()
         {
             // Arrange
-            var elevation = new Elevation(-3);
+            var elevation = new Elevation(-3.5f);
             var cells = new[]
             {
                 new MapCoord(1, 2)
