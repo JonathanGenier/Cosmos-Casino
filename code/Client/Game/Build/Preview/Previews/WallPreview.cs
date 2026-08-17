@@ -47,7 +47,7 @@ public sealed partial class WallPreview : Node3D
         else
         {
             throw new InvalidOperationException(
-                "No ShaderMaterial found on FloorPreview mesh."
+                "No ShaderMaterial found on WallPreview mesh."
             );
         }
 
@@ -84,7 +84,7 @@ public sealed partial class WallPreview : Node3D
     {
         if (_material == null)
         {
-            throw new InvalidOperationException("FloorPreview requires a ShaderMaterial on surface 0.");
+            throw new InvalidOperationException("WallPreview requires a ShaderMaterial on surface 0.");
         }
 
         var color = outcome switch
@@ -106,7 +106,7 @@ public sealed partial class WallPreview : Node3D
     {
         if (_material == null)
         {
-            throw new InvalidOperationException("FloorPreview requires a ShaderMaterial on surface 0.");
+            throw new InvalidOperationException("WallPreview requires a ShaderMaterial on surface 0.");
         }
 
         _material.SetShaderParameter("color", PreviewColors.NoOpColor);
