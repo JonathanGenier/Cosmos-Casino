@@ -13,27 +13,12 @@ public sealed class BuildContext
 {
     #region Fields
 
-    private readonly MapManager _mapManager;
     private BuildContextBase? _activeContext;
     private MapCoord? _startCell;
     private MapCoord? _currentCell;
     private Elevation? _startElevation;
     private BuildOperation _currentBuildOperation;
     private BuildInteractionMode _currentBuildInteractionMode;
-
-    #endregion
-
-    #region Initialization
-
-    /// <summary>
-    /// Initializes a build context using the authoritative map state for terrain elevation queries.
-    /// </summary>
-    /// <param name="mapManager">The authoritative map manager.</param>
-    internal BuildContext(MapManager mapManager)
-    {
-        ArgumentNullException.ThrowIfNull(mapManager);
-        _mapManager = mapManager;
-    }
 
     #endregion
 
@@ -144,16 +129,14 @@ public sealed class BuildContext
             return;
         }
 
-        var startCell = MapMath.WorldToCell(start.WorldPosition.ToWorldCoord());
-
-        if (!_mapManager.TryGetTerrainBaseElevation(startCell, out var startElevation))
+        if (!start.IsValid)
         {
             return;
         }
 
-        _startCell = startCell;
+        _startCell = start.Target.Coord;
         _currentCell = _startCell;
-        _startElevation = startElevation;
+        _startElevation = start.Target.Elevation;
         _currentBuildOperation = buildOperation;
         BuildStarted?.Invoke();
     }
@@ -179,7 +162,7 @@ public sealed class BuildContext
             return;
         }
 
-        var newCell = MapMath.WorldToCell(current.WorldPosition.ToWorldCoord());
+        var newCell = current.Target.Coord;
         bool cellChanged = newCell != _currentCell;
         bool interactionChanged = SetBuildInteractionMode(buildInteractionMode);
 
@@ -205,7 +188,7 @@ public sealed class BuildContext
             return;
         }
 
-        var currentCell = MapMath.WorldToCell(current.WorldPosition.ToWorldCoord());
+        var currentCell = current.Target.Coord;
 
         if (currentCell != _currentCell)
         {
@@ -273,19 +256,12 @@ public sealed class BuildContext
             return null;
         }
 
-        var cell = cursorContext.CellPosition;
-
-        if (!_mapManager.TryGetTerrainBaseElevation(cell, out var elevation))
-        {
-            return null;
-        }
-
         _activeContext.TryCreateBuildIntent(
-            cell,
-            cell,
+            cursorContext.Target.Coord,
+            cursorContext.Target.Coord,
             BuildOperation.Place,
             BuildInteractionMode.Default,
-            elevation,
+            cursorContext.Target.Elevation,
             out var intent);
 
         return intent;

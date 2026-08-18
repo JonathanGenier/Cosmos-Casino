@@ -1,4 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://tt5euv8t06il"]
+[gd_scene format=3 uid="uid://tt5euv8t06il"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_j8s6s"]
+size = Vector3(1, 2.982727, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_snedq"]
 albedo_color = Color(0.73300546, 0.7330054, 0.7330054, 1)
@@ -7,8 +10,16 @@ albedo_color = Color(0.73300546, 0.7330054, 0.7330054, 1)
 material = SubResource("StandardMaterial3D_snedq")
 size = Vector3(1, 3, 1)
 
-[node name="Wall" type="Node3D"]
+[node name="Wall" type="Node3D" unique_id=1970155401]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1785343569]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=1349128890]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+shape = SubResource("BoxShape3D_j8s6s")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=433817246]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 mesh = SubResource("BoxMesh_1elht")
+skeleton = NodePath("../..")

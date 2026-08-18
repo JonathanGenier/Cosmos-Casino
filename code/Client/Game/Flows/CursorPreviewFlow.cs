@@ -41,7 +41,7 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
         _cursorManager = cursorManager;
         _buildProcessManager = buildProcessManager;
 
-        _cursorManager.CursorCellChanged += OnCursorCellChanged;
+        _cursorManager.CursorTargetChanged += OnCursorTargetChanged;
         _cursorManager.CursorContextLost += OnCursorContextLost;
         _buildContext.BuildCleared += OnBuildCleared;
     }
@@ -63,7 +63,7 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
             return;
         }
 
-        _cursorManager.CursorCellChanged -= OnCursorCellChanged;
+        _cursorManager.CursorTargetChanged -= OnCursorTargetChanged;
         _cursorManager.CursorContextLost -= OnCursorContextLost;
         _buildContext.BuildCleared -= OnBuildCleared;
         _isDisposed = true;
@@ -102,7 +102,7 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
 
     #region Event Handlers
 
-    private void OnCursorCellChanged(CursorContext cursorContext)
+    private void OnCursorTargetChanged(CursorContext cursorContext)
     {
         UpdateCursorPreview(cursorContext);
     }

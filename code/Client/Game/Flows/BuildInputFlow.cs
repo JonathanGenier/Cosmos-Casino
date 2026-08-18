@@ -100,7 +100,7 @@ public sealed class BuildInputFlow : IDisposable
         _inputManager.BuildRemoveReleased += OnBuildRemoveReleased;
         _inputManager.BuildCanceled += OnBuildCanceled;
         _inputManager.ModifierChanged += OnModifierChanged;
-        _cursorManager.CursorCellChanged += OnCursorCellChanged;
+        _cursorManager.CursorTargetChanged += OnCursorTargetChanged;
         _isSubscribed = true;
     }
 
@@ -125,7 +125,7 @@ public sealed class BuildInputFlow : IDisposable
         _inputManager.BuildRemoveReleased -= OnBuildRemoveReleased;
         _inputManager.BuildCanceled -= OnBuildCanceled;
         _inputManager.ModifierChanged -= OnModifierChanged;
-        _cursorManager.CursorCellChanged -= OnCursorCellChanged;
+        _cursorManager.CursorTargetChanged -= OnCursorTargetChanged;
         _isSubscribed = false;
     }
 
@@ -204,7 +204,7 @@ public sealed class BuildInputFlow : IDisposable
     /// Handles updates when the cursor cell changes during a primary action.
     /// </summary>
     /// <param name="currentContext">The current cursor context representing the new cell position.</param>
-    private void OnCursorCellChanged(CursorContext currentContext)
+    private void OnCursorTargetChanged(CursorContext currentContext)
     {
         UpdateActiveBuild(currentContext);
     }

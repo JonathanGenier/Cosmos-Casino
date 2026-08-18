@@ -98,6 +98,11 @@ public sealed partial class SpawnManager : InitializableNodeManager
             throw new InvalidOperationException($"SpawnId '{spawnId}' does not instantiate a Node3D.");
         }
 
+        if (key is CellSlotSpawnKey cellSlotKey)
+        {
+            ConfigureBuildablePicking(node, cellSlotKey);
+        }
+
         node.Transform = transform;
         AddChildToSpawnLayer(node, layer);
 
@@ -242,6 +247,45 @@ public sealed partial class SpawnManager : InitializableNodeManager
         }
 
         return parent;
+    }
+
+    #endregion
+
+    #region Buildable Picking
+
+    private void ConfigureBuildablePicking(Node root, CellSlotSpawnKey spawnKey)
+    {
+        int configuredColliderCount = ConfigureBuildablePickingRecursive(root, spawnKey);
+
+        if (configuredColliderCount == 0)
+        {
+            throw new InvalidOperationException(
+                $"Spawned buildable '{spawnKey}' does not contain a {nameof(CollisionObject3D)}.");
+        }
+    }
+
+    private int ConfigureBuildablePickingRecursive(Node node, CellSlotSpawnKey spawnKey)
+    {
+        int configuredColliderCount = 0;
+
+        if (node is CollisionObject3D collider)
+        {
+            collider.CollisionLayer = CollisionLayers.Buildable;
+            collider.CollisionMask = CollisionLayers.None;
+
+            var pickTarget = new BuildablePickTarget();
+            pickTarget.Initialize(spawnKey);
+            collider.AddChild(pickTarget);
+
+            configuredColliderCount++;
+        }
+
+        foreach (Node child in node.GetChildren())
+        {
+            configuredColliderCount += ConfigureBuildablePickingRecursive(child, spawnKey);
+        }
+
+        return configuredColliderCount;
     }
 
     #endregion
