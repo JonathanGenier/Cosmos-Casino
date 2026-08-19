@@ -3,7 +3,7 @@ using Godot;
 /// <summary>
 /// Immutable physical cursor hit returned by Godot physics.
 /// </summary>
-public readonly struct CursorPhysicsHit
+internal readonly struct CursorPhysicsHit
 {
     #region Initialization
 

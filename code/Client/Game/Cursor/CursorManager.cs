@@ -80,15 +80,15 @@ public sealed partial class CursorManager : InitializableNodeManager
     #region Cursor Position
 
     /// <summary>
-    /// Attempts to retrieve the current cursor context, including the screen and world positions, if available.
+    /// Attempts to retrieve the current cursor context, including the screen position, world position, and logical target.
     /// </summary>
     /// <remarks>If the cursor is currently hovering over a GUI control, the method returns <see
-    /// langword="false"/> and the world position in <paramref name="cursorContext"/> is not set. This method does not
+    /// langword="false"/> and the target in <paramref name="cursorContext"/> is not set. This method does not
     /// modify the state of the cursor manager.</remarks>
     /// <param name="cursorContext">When this method returns, contains a <see cref="CursorContext"/> structure with the current cursor's screen
-    /// position and, if resolved, the corresponding world position. If the method returns <see langword="false"/>, the
-    /// world position may be uninitialized.</param>
-    /// <returns><see langword="true"/> if the cursor context was successfully resolved and a valid world position is available;
+    /// position and, if resolved, the corresponding world position and logical target. If the method returns <see langword="false"/>, the
+    /// target may be uninitialized.</param>
+    /// <returns><see langword="true"/> if the cursor context was successfully resolved and a valid logical target is available;
     /// otherwise, <see langword="false"/>.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the cursor manager has not been initialized.</exception>
     public bool TryGetCursorContext(out CursorContext cursorContext)
@@ -129,11 +129,11 @@ public sealed partial class CursorManager : InitializableNodeManager
     #region Godot Processes
 
     /// <summary>
-    /// Handles per-frame processing for cursor context updates, including tracking world and cell position changes.
+    /// Handles per-frame processing for cursor context updates, including tracking world position and logical target changes.
     /// </summary>
     /// <remarks>This method is called automatically by the engine each frame. It manages state related to the
-    /// cursor's position in both world and cell coordinates, and raises events when the cursor context is lost or when
-    /// the cell position changes. Override this method to implement custom per-frame logic related to cursor
+    /// cursor's world position and logical target, and raises events when the cursor context is lost or when
+    /// the logical target changes. Override this method to implement custom per-frame logic related to cursor
     /// processing.</remarks>
     /// <param name="delta">The elapsed time, in seconds, since the previous frame. This value can be used for time-based calculations.</param>
     protected override void OnProcess(double delta)

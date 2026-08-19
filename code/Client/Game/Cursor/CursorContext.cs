@@ -62,7 +62,7 @@ public readonly struct CursorContext
     public bool IsValid { get; }
 
     /// <summary>
-    /// Gets the cell coordinates corresponding to the current world position.
+    /// Gets the map cell coordinates of the current logical target.
     /// </summary>
     public MapCoord CellPosition => Target.Coord;
 
