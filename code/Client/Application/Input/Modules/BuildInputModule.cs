@@ -52,18 +52,27 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
     #region Process
 
     /// <summary>
-    /// Processes input events for the current frame, emitting signals for build input actions if enabled and not
-    /// blocked by the UI.
+    /// Processes input events for the current frame, emitting signals for build input actions when enabled.
     /// </summary>
     /// <param name="delta">The elapsed time, in seconds, since the last frame. Used to synchronize input processing with the frame rate.</param>
     public void Process(double delta)
     {
-        if (!_isEnabled || _inputManager.IsInputBlockedByUi)
+        if (!_isEnabled)
         {
             return;
         }
 
-        ProcessMouseInputs();
+        if (ProcessMouseReleaseInputs())
+        {
+            return;
+        }
+
+        if (_inputManager.IsInputBlockedByUi)
+        {
+            return;
+        }
+
+        ProcessMouseStartInputs();
     }
 
     #endregion
@@ -83,7 +92,24 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
 
     #region Internal Methods
 
-    private void ProcessMouseInputs()
+    private bool ProcessMouseReleaseInputs()
+    {
+        if (_inputManager.IsPrimaryReleased)
+        {
+            _inputManager.EmitSignal(InputManager.SignalName.BuildPlaceReleased);
+            return true;
+        }
+
+        if (_inputManager.IsSecondaryReleased)
+        {
+            _inputManager.EmitSignal(InputManager.SignalName.BuildRemoveReleased);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void ProcessMouseStartInputs()
     {
         // -------------------------------------
         // 1. Mouse Cancel
@@ -104,24 +130,12 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
             return;
         }
 
-        if (_inputManager.IsPrimaryReleased)
-        {
-            _inputManager.EmitSignal(InputManager.SignalName.BuildPlaceReleased);
-            return;
-        }
-
         // -------------------------------------
         // 3. Mouse Remove
         // -------------------------------------
         if (_inputManager.IsSecondaryPressed)
         {
             _inputManager.EmitSignal(InputManager.SignalName.BuildRemovePressed);
-            return;
-        }
-
-        if (_inputManager.IsSecondaryReleased)
-        {
-            _inputManager.EmitSignal(InputManager.SignalName.BuildRemoveReleased);
             return;
         }
     }

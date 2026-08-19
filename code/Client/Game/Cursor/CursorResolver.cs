@@ -6,7 +6,7 @@ using System;
 /// </summary>
 /// <remarks>The CursorResolver attempts to determine the cursor's target by first evaluating physics-based
 /// intersections and, if unsuccessful, falling back to a plane-based terrain resolution.</remarks>
-public sealed class CursorResolver
+internal sealed class CursorResolver
 {
     #region Fields
 
