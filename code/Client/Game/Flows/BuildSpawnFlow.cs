@@ -6,13 +6,13 @@ using System;
 
 
 /// <summary>
-/// Coordinates the flow for building and spawning floor elements in the game, handling build completion events and
-/// managing the placement or removal of floor objects.
+/// Coordinates the flow for building and spawning buildable elements in the game, handling build completion events
+/// and managing the placement or removal of buildable visuals.
 /// </summary>
 /// <remarks>This class subscribes to build completion events from the client build manager and uses the spawn
 /// manager to update the game world accordingly. It is responsible for displaying failure messages and ensuring that
-/// floor objects are spawned or despawned based on the outcome of build operations. Instances of this class should be
-/// disposed when no longer needed to unsubscribe from events and release resources.</remarks>
+/// buildable objects are spawned or despawned based on the outcome of build operations. Instances of this class should
+/// be disposed when no longer needed to unsubscribe from events and release resources.</remarks>
 public class BuildSpawnFlow : IGameFlow, IDisposable
 {
     #region Fields
@@ -83,7 +83,7 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
                 }
                 else if (buildIntent.Operation == BuildOperation.Remove)
                 {
-                    RemoveBuild(result, buildIntent.Kind);
+                    RemoveBuild(result, buildIntent);
                     continue;
                 }
             }
@@ -127,10 +127,16 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
 
     #region Spawn/Despawn Methods
 
+    /// <summary>
+    /// Spawns a successful build visual at the executed intent's logical build elevation.
+    /// </summary>
+    /// <param name="result">The successful per-cell build result.</param>
+    /// <param name="buildIntent">The executed intent that owns the authoritative build elevation.</param>
     private void SpawnBuild(BuildOperationResult result, BuildIntent buildIntent)
     {
-        CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildIntent.Kind);
-        Vector3 position = MapMath.CellToWorldCenter(spawnKey.Coord).ToGodotVector3();
+        CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildIntent);
+        var worldCenter = MapMath.CellToWorldCenter(spawnKey.Coord);
+        Vector3 position = worldCenter.ToGodotVector3(spawnKey.Elevation);
         Vector3 scale = new(WorldGridMetrics.GridUnitSize, 1f, WorldGridMetrics.GridUnitSize);
         Transform3D transform = new(Basis.Identity.Scaled(scale), position);
         BuildSpawnDescriptor descriptor = BuildSpawnDescriptorResolver.Resolve(buildIntent);
@@ -142,9 +148,9 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
             descriptor.Layer);
     }
 
-    private void RemoveBuild(BuildOperationResult result, BuildKind buildKind)
+    private void RemoveBuild(BuildOperationResult result, BuildIntent buildIntent)
     {
-        CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildKind);
+        CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildIntent);
         _spawnManager.Despawn(spawnKey);
     }
 
@@ -152,17 +158,17 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
 
     #region Spawn Key
 
-    private CellSlotSpawnKey GetSpawnKey(BuildOperationResult result, BuildKind buildKind)
+    private CellSlotSpawnKey GetSpawnKey(BuildOperationResult result, BuildIntent buildIntent)
     {
         MapCoord coord = result.MapCoord;
-        CellSlot slot = buildKind switch
+        CellSlot slot = buildIntent.Kind switch
         {
             BuildKind.Floor => CellSlot.Floor,
             BuildKind.Wall => CellSlot.Wall,
-            _ => throw new InvalidOperationException($"{nameof(BuildKind)} {buildKind} not implemented"),
+            _ => throw new InvalidOperationException($"{nameof(BuildKind)} {buildIntent.Kind} not implemented"),
         };
 
-        return new CellSlotSpawnKey(coord, slot);
+        return new CellSlotSpawnKey(coord, buildIntent.Elevation, slot);
     }
 
     #endregion

@@ -1,10 +1,10 @@
-using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using Godot;
+using System;
 
 /// <summary>
 /// Provides utility methods for constructing terrain tiles into a mesh using a <see cref="SurfaceTool"/>.
-/// Responsible for converting logical <see cref="Cell"/> data into renderable geometry,
+/// Responsible for converting logical <see cref="TerrainTile"/> data into renderable geometry,
 /// including vertex positions, UVs, color-encoded tile metadata, and slope-aware triangulation.
 /// </summary>
 public static class TerrainTileBuilder
@@ -30,55 +30,22 @@ public static class TerrainTileBuilder
     /// </summary>
     /// <param name="surfaceTool">The surface tool used to emit vertices and build the mesh.</param>
     /// <param name="terrainTile">The logical terrain tile containing height and slope data.</param>
-    /// <param name="chunkPosition">The position of the chunk within the world.</param>
+    /// <param name="chunkPosition">The tile position within its chunk.</param>
     public static void BuildTile(SurfaceTool surfaceTool, TerrainTile terrainTile, Vector2I chunkPosition)
     {
-        float x = chunkPosition.X * WorldGridMetrics.GridUnitSize;
-        float z = chunkPosition.Y * WorldGridMetrics.GridUnitSize;
-
-        float topLeftHeight = terrainTile.TopLeftHeight;
-        float topRightHeight = terrainTile.TopRightHeight;
-        float bottomLeftHeight = terrainTile.BottomLeftHeight;
-        float bottomRightHeight = terrainTile.BottomRightHeight;
-        float centerHeight = CalculateCenterHeight(topLeftHeight, topRightHeight, bottomLeftHeight, bottomRightHeight);
-
-        Vector3 topLeftVertex = new(x, topLeftHeight, z);
-        Vector3 topRightVertex = new(x + WorldGridMetrics.GridUnitSize, topRightHeight, z);
-        Vector3 bottomLeftVertex = new(x, bottomLeftHeight, z + WorldGridMetrics.GridUnitSize);
-        Vector3 bottomRightVertex = new(x + WorldGridMetrics.GridUnitSize, bottomRightHeight, z + WorldGridMetrics.GridUnitSize);
-        Vector3 centerVertex = new(x + WorldGridMetrics.HalfGridUnitSize, centerHeight, z + WorldGridMetrics.HalfGridUnitSize);
-
+        Span<Vector3> vertices = stackalloc Vector3[TerrainTileGeometry.VerticesPerTile];
+        TerrainTileGeometry.WriteTriangleVertices(terrainTile, chunkPosition, vertices);
         Color colorMask = EncodeTileMask(terrainTile);
 
-        AddTriangle(surfaceTool, colorMask, bottomLeftVertex, centerVertex, bottomRightVertex, 0);
-        AddTriangle(surfaceTool, colorMask, bottomRightVertex, centerVertex, topRightVertex, 3);
-        AddTriangle(surfaceTool, colorMask, topRightVertex, centerVertex, topLeftVertex, 6);
-        AddTriangle(surfaceTool, colorMask, topLeftVertex, centerVertex, bottomLeftVertex, 9);
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            AddVertex(surfaceTool, colorMask, Uvs[i], vertices[i]);
+        }
     }
 
     #endregion
 
     #region Triangles and Vertices
-
-    /// <summary>
-    /// Emits a single triangle into the mesh by adding three vertices with predefined UVs
-    /// and a shared encoded color mask.
-    /// </summary>
-    /// <param name="surfaceTool">The surface tool used to add vertices.</param>
-    /// <param name="colorMask">A color encoding slope and neighbor metadata for the tile.</param>
-    /// <param name="vertexA">The first vertex position.</param>
-    /// <param name="vertexB">The second vertex position.</param>
-    /// <param name="vertexC">The third vertex position.</param>
-    /// <param name="uvIndex">
-    /// The starting index into the internal UV array corresponding to this triangle.
-    /// </param>
-    private static void AddTriangle(SurfaceTool surfaceTool, Color colorMask, Vector3 vertexA, Vector3 vertexB, Vector3 vertexC, int uvIndex)
-    {
-
-        AddVertex(surfaceTool, colorMask, Uvs[uvIndex + 0], vertexA);
-        AddVertex(surfaceTool, colorMask, Uvs[uvIndex + 1], vertexB);
-        AddVertex(surfaceTool, colorMask, Uvs[uvIndex + 2], vertexC);
-    }
 
     /// <summary>
     /// Adds a single vertex to the mesh with UVs, smoothing group, color mask,
@@ -87,7 +54,7 @@ public static class TerrainTileBuilder
     /// <param name="surfaceTool">The surface tool receiving the vertex.</param>
     /// <param name="colorMask">A color encoding tile slope and neighbor information.</param>
     /// <param name="uv">The UV coordinate for this vertex.</param>
-    /// <param name="vertex">The world-space position of the vertex.</param>
+    /// <param name="vertex">The chunk-local position of the vertex.</param>
     private static void AddVertex(SurfaceTool surfaceTool, Color colorMask, Vector2 uv, Vector3 vertex)
     {
         surfaceTool.SetUV(uv);
@@ -95,108 +62,6 @@ public static class TerrainTileBuilder
         surfaceTool.SetSmoothGroup(1);
         surfaceTool.SetColor(colorMask);
         surfaceTool.AddVertex(vertex);
-    }
-
-    #endregion
-
-    #region Heights
-
-    /// <summary>
-    /// Calculates the height of the center vertex of a tile based on the heights of its four corners.
-    /// Applies deterministic rules to preserve sharp slopes, diagonals, and flat regions,
-    /// avoiding unwanted smoothing artifacts.
-    /// </summary>
-    /// <param name="topLeft">Height of the top-left corner.</param>
-    /// <param name="topRight">Height of the top-right corner.</param>
-    /// <param name="bottomLeft">Height of the bottom-left corner.</param>
-    /// <param name="bottomRight">Height of the bottom-right corner.</param>
-    /// <returns>
-    /// The computed center height for the tile.
-    /// </returns>
-    private static float CalculateCenterHeight(float topLeft, float topRight, float bottomLeft, float bottomRight)
-    {
-        // ------------------------------------------------------------------------------
-        // Four of a kind (Flat Tile)
-        // ------------------------------------------------------------------------------
-
-        // X X
-        // X X
-        if (topLeft == topRight && topRight == bottomLeft && bottomLeft == bottomRight)
-        {
-            return topLeft;
-        }
-
-        // ------------------------------------------------------------------------------
-        // Three of a kind: (Corner convex sloped)
-        // ------------------------------------------------------------------------------
-
-        // X Y
-        // X X
-        if (topLeft == bottomRight && topLeft == bottomLeft)
-        {
-            return topLeft;
-        }
-
-        // X X
-        // X Y
-        if (topLeft == topRight && topLeft == bottomLeft)
-        {
-            return topLeft;
-        }
-
-        // X X
-        // Y X
-        if (topLeft == topRight && topLeft == bottomRight)
-        {
-            return topLeft;
-        }
-
-        // Y X
-        // X X
-        if (topRight == bottomRight && topRight == bottomLeft)
-        {
-            return topRight;
-        }
-
-        // ------------------------------------------------------------------------------
-        // 2 of a kind (Diagonal Convex Sloped)
-        // ------------------------------------------------------------------------------
-
-        // X Y
-        // Y X
-        if (topLeft == bottomRight && topLeft != topRight && topLeft != bottomLeft)
-        {
-            return topLeft;
-        }
-
-        // Y X
-        // X Y
-        if (topRight == bottomLeft && topRight != topLeft && topRight != bottomRight)
-        {
-            return topRight;
-        }
-
-        // ------------------------------------------------------------------------------
-        // 2 of a kind (Opposites Linear Sloped)
-        // ------------------------------------------------------------------------------
-
-        // Check if heights on opposite sides are consistent.
-        // X X
-        // Y Y
-        if (topLeft == topRight && bottomLeft == bottomRight && topLeft != bottomLeft)
-        {
-            return (topLeft + bottomLeft) * 0.5f;
-        }
-
-        // X Y
-        // X Y
-        if (topLeft == bottomLeft && topRight == bottomRight && topLeft != topRight)
-        {
-            return (topLeft + topRight) * 0.5f;
-        }
-
-        // Default: Smooth interpolation based on slopes.
-        return topLeft + ((topRight - topLeft) * 0.5f) + ((bottomLeft - topLeft) * 0.5f);
     }
 
     #endregion

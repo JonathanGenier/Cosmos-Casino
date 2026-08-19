@@ -114,12 +114,7 @@ namespace CosmosCasino.Core.Game.Map.Terrain.Tile
 
             float minHeight = Math.Min(Math.Min(TopLeftHeight, TopRightHeight), Math.Min(BottomLeftHeight, BottomRightHeight));
 
-            if (!float.IsFinite(minHeight))
-            {
-                throw new ArgumentOutOfRangeException(nameof(minHeight), minHeight, "Terrain base height must be finite.");
-            }
-
-            BaseElevation = new Elevation((int)Math.Floor(minHeight));
+            BaseElevation = Elevation.FloorFromWorldHeight(minHeight);
         }
 
         #endregion

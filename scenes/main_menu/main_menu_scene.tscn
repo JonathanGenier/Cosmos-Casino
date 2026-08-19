@@ -1,17 +1,17 @@
-[gd_scene load_steps=3 format=3 uid="uid://0b0venf65idy"]
+[gd_scene format=3 uid="uid://0b0venf65idy"]
 
 [ext_resource type="Script" uid="uid://dq1htjw16slkx" path="res://code/Client/MainMenu/MainMenuManager.cs" id="1_lx82y"]
 [ext_resource type="PackedScene" uid="uid://b50cildorh28g" path="res://scenes/game/camera_rig.tscn" id="2_lx82y"]
 
-[node name="MainMenu" type="Node3D"]
+[node name="MainMenu" type="Node3D" unique_id=183556484]
 script = ExtResource("1_lx82y")
 
-[node name="Menu" type="Control" parent="."]
+[node name="Menu" type="Control" parent="." unique_id=154354783]
 layout_mode = 3
 anchor_right = 0.25
 anchor_bottom = 1.0
 
-[node name="PlayButton" type="Button" parent="Menu"]
+[node name="PlayButton" type="Button" parent="Menu" unique_id=1915284073]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,4 +20,4 @@ grow_horizontal = 2
 grow_vertical = 2
 text = "PLAY"
 
-[node name="Camera_Rig" parent="." instance=ExtResource("2_lx82y")]
+[node name="Camera_Rig" parent="." unique_id=1055302752 instance=ExtResource("2_lx82y")]

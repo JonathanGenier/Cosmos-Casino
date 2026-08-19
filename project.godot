@@ -49,3 +49,4 @@ folder_colors={
 [layer_names]
 
 3d_physics/layer_1="Buildable"
+3d_physics/layer_2="Terrain"

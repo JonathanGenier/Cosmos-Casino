@@ -220,11 +220,11 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
         switch (buildResult.Intent.Kind)
         {
             case BuildKind.Floor:
-                ShowFloorDragPreview(cells, results);
+                ShowFloorDragPreview(cells, results, buildResult.Intent.Elevation);
                 break;
 
             case BuildKind.Wall:
-                ShowWallDragPreview(cells, results);
+                ShowWallDragPreview(cells, results, buildResult.Intent.Elevation);
                 break;
         }
     }
@@ -239,7 +239,11 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// <param name="cells">A read-only list of map cell coordinates where floor previews should be shown.</param>
     /// <param name="results">A read-only dictionary mapping each map cell coordinate to its corresponding build operation result, used to
     /// determine the validity of each preview.</param>
-    private void ShowFloorDragPreview(IReadOnlyList<MapCoord> cells, IReadOnlyDictionary<MapCoord, BuildOperationResult> results)
+    /// <param name="elevation">The shared logical build elevation used by every floor preview in the drag.</param>
+    private void ShowFloorDragPreview(
+        IReadOnlyList<MapCoord> cells,
+        IReadOnlyDictionary<MapCoord, BuildOperationResult> results,
+        Elevation elevation)
     {
         int i = 0;
 
@@ -249,7 +253,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var cell = cells[i];
             var result = GetResultOrThrow(results, cell);
 
-            _floorPreviews[i].SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3());
+            _floorPreviews[i].SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3(elevation));
             _floorPreviews[i].SetValidity(result.Outcome);
             _floorPreviews[i].Show();
         }
@@ -261,7 +265,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var result = GetResultOrThrow(results, cell);
             var preview = FloorPool!.Fetch();
 
-            preview.SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3());
+            preview.SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3(elevation));
             preview.SetValidity(result.Outcome);
             preview.Show();
             _floorPreviews.Add(preview);
@@ -290,7 +294,11 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// <param name="cells">A read-only list of map cell coordinates where wall previews should be shown.</param>
     /// <param name="results">A read-only dictionary mapping each map cell coordinate to its corresponding build operation result, used to
     /// determine the validity of each preview.</param>
-    private void ShowWallDragPreview(IReadOnlyList<MapCoord> cells, IReadOnlyDictionary<MapCoord, BuildOperationResult> results)
+    /// <param name="elevation">The shared logical build elevation used by every wall preview in the drag.</param>
+    private void ShowWallDragPreview(
+        IReadOnlyList<MapCoord> cells,
+        IReadOnlyDictionary<MapCoord, BuildOperationResult> results,
+        Elevation elevation)
     {
         int i = 0;
 
@@ -300,7 +308,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var cell = cells[i];
             var result = GetResultOrThrow(results, cell);
 
-            _wallPreviews[i].SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3());
+            _wallPreviews[i].SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3(elevation));
             _wallPreviews[i].SetValidity(result.Outcome);
             _wallPreviews[i].Show();
         }
@@ -312,7 +320,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             var result = GetResultOrThrow(results, cell);
             var preview = WallPool!.Fetch();
 
-            preview.SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3());
+            preview.SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3(elevation));
             preview.SetValidity(result.Outcome);
             preview.Show();
             _wallPreviews.Add(preview);
@@ -382,18 +390,18 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             throw new InvalidOperationException("Cursor preview expects exactly one cell.");
         }
 
-        var worldPosition = MapMath.CellToWorldCenter(buildResult.Intent.Cells.First()).ToGodotVector3();
+        var worldCenter = MapMath.CellToWorldCenter(buildResult.Intent.Cells.First());
         var kind = buildResult.Intent.Kind;
         var outcome = buildResult.Results.First().Outcome;
 
         switch (kind)
         {
             case BuildKind.Floor:
-                ShowFloorCursorPreview(worldPosition, outcome);
+                ShowFloorCursorPreview(worldCenter.ToGodotVector3(buildResult.Intent.Elevation), outcome);
                 HideWallCursorPreview();
                 break;
             case BuildKind.Wall:
-                ShowWallCursorPreview(worldPosition, outcome);
+                ShowWallCursorPreview(worldCenter.ToGodotVector3(buildResult.Intent.Elevation), outcome);
                 HideFloorCursorPreview();
                 break;
             default:

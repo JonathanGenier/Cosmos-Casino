@@ -2,28 +2,38 @@ using CosmosCasino.Core.Game.Map;
 using Godot;
 
 /// <summary>
-/// Represents an immutable snapshot of the cursor's state, including its position in both screen space and world space,
-/// and whether the world-space position is valid.
+/// Represents an immutable snapshot of the cursor's state, including screen position, world position, and logical target.
 /// </summary>
 public readonly struct CursorContext
 {
     #region Initialization
 
     /// <summary>
-    /// Initializes a new instance of the CursorContext class with the specified screen and world positions and validity
-    /// state.
+    /// Initializes a valid cursor context with the specified screen position, world position, and logical target.
     /// </summary>
     /// <param name="screenPosition">The position of the cursor in screen coordinates.</param>
-    /// <param name="worldPosition">The position of the cursor in world coordinates.</param>
-    /// <param name="isValid">A value indicating whether the cursor context is valid. Set to <see langword="true"/> if the context is valid;
-    /// otherwise, <see langword="false"/>.</param>
+    /// <param name="worldPosition">The physical or fallback position of the cursor in world coordinates.</param>
+    /// <param name="target">The logical cursor target.</param>
     public CursorContext(
         Vector2 screenPosition,
         Vector3 worldPosition,
+        CursorTarget target)
+    {
+        ScreenPosition = screenPosition;
+        WorldPosition = worldPosition;
+        Target = target;
+        IsValid = true;
+    }
+
+    private CursorContext(
+        Vector2 screenPosition,
+        Vector3 worldPosition,
+        CursorTarget target,
         bool isValid)
     {
         ScreenPosition = screenPosition;
         WorldPosition = worldPosition;
+        Target = target;
         IsValid = isValid;
     }
 
@@ -37,9 +47,14 @@ public readonly struct CursorContext
     public Vector2 ScreenPosition { get; }
 
     /// <summary>
-    /// Gets the position of the object in world coordinates.
+    /// Gets the physical or fallback cursor position in world coordinates.
     /// </summary>
     public Vector3 WorldPosition { get; }
+
+    /// <summary>
+    /// Gets the logical cursor target.
+    /// </summary>
+    public CursorTarget Target { get; }
 
     /// <summary>
     /// Gets a value indicating whether the current object is in a valid state.
@@ -49,7 +64,21 @@ public readonly struct CursorContext
     /// <summary>
     /// Gets the cell coordinates corresponding to the current world position.
     /// </summary>
-    public MapCoord CellPosition => MapMath.WorldToCell(WorldPosition.ToWorldCoord());
+    public MapCoord CellPosition => Target.Coord;
+
+    #endregion
+
+    #region Factories
+
+    /// <summary>
+    /// Creates an invalid cursor context at the specified screen position.
+    /// </summary>
+    /// <param name="screenPosition">The position of the cursor in screen coordinates.</param>
+    /// <returns>An invalid cursor context.</returns>
+    public static CursorContext Invalid(Vector2 screenPosition)
+    {
+        return new CursorContext(screenPosition, default, default, false);
+    }
 
     #endregion
 }

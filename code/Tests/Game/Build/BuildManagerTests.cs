@@ -135,6 +135,21 @@ namespace CosmosCasino.Tests.Game.Build
         }
 
         [Test]
+        public void Execute_PlaceFloor_HalfStepElevationTargetsIndependentLayer()
+        {
+            var coord = new MapCoord(0, 0);
+            var elevation = new Elevation(2.5f);
+            var intent = BuildIntent.PlaceFloor([coord], elevation);
+
+            var result = _buildManager.Execute(intent);
+
+            Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(_mapManager.Has(BuildKind.Floor, coord, elevation), Is.True);
+            Assert.That(_mapManager.Has(BuildKind.Floor, coord, new Elevation(2f)), Is.False);
+            Assert.That(_mapManager.Has(BuildKind.Floor, coord, new Elevation(3f)), Is.False);
+        }
+
+        [Test]
         public void Execute_PlaceFloor_MultipleCells_CreatesAllFloors()
         {
             // Arrange
@@ -173,7 +188,7 @@ namespace CosmosCasino.Tests.Game.Build
             var coord = new MapCoord(-1, 1);
             Assert.That(_mapManager.TryGetCell(coord, out var cell), Is.True);
             var baseElevation = cell!.TerrainTile.BaseElevation;
-            int offset = baseElevation.Value < Elevation.MaxValue ? 1 : -1;
+            float offset = baseElevation.Value < Elevation.MaxValue ? Elevation.StepSize : -Elevation.StepSize;
             var intentElevation = new Elevation(baseElevation.Value + offset);
             var intent = BuildIntent.PlaceFloor([coord], intentElevation);
 

@@ -17,26 +17,75 @@ namespace CosmosCasino.Core.Game.Map
         /// </summary>
         internal const int MaxValue = 20;
 
+        /// <summary>
+        /// Gets the physical world-space size of one discrete elevation step.
+        /// </summary>
+        internal const float StepSize = 0.5f;
+
+        #endregion
+
+        #region Fields
+
+        private readonly int _halfStepIndex;
+
+        #endregion
+
+        #region Factories
+
+        /// <summary>
+        /// Floors a world height to the nearest supported discrete elevation at or below it.
+        /// </summary>
+        /// <param name="worldHeight">The world-space height to resolve.</param>
+        /// <returns>The discrete elevation at or immediately below <paramref name="worldHeight"/>.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="worldHeight"/> is non-finite or floors outside the supported range.
+        /// </exception>
+        internal static Elevation FloorFromWorldHeight(float worldHeight)
+        {
+            if (!float.IsFinite(worldHeight))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(worldHeight),
+                    worldHeight,
+                    "World height must be finite.");
+            }
+
+            float flooredValue = MathF.Floor(worldHeight / StepSize) * StepSize;
+            return new Elevation(flooredValue);
+        }
+
         #endregion
 
         #region Validation
 
         /// <summary>
-        /// Validates the specified discrete elevation value.
+        /// Resolves the exact half-step index represented by the specified elevation value.
         /// </summary>
         /// <param name="value">The discrete elevation value.</param>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="value"/> is outside the inclusive supported range.
         /// </exception>
-        private static void ValidateValue(int value)
+        private static int GetHalfStepIndex(float value)
         {
-            if (value < MinValue || value > MaxValue)
+            if (!float.IsFinite(value) || value < MinValue || value > MaxValue)
             {
                 throw new ArgumentOutOfRangeException(
                     nameof(value),
                     value,
-                    $"Elevation must be between {MinValue} and {MaxValue}.");
+                    $"Elevation must be finite and between {MinValue} and {MaxValue}.");
             }
+
+            float halfStepIndex = value / StepSize;
+
+            if (halfStepIndex != MathF.Truncate(halfStepIndex))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(value),
+                    value,
+                    $"Elevation must align to {StepSize} world-unit increments.");
+            }
+
+            return (int)halfStepIndex;
         }
 
         #endregion

@@ -66,14 +66,15 @@ namespace CosmosCasino.Tests.Game.Map
         [Test]
         public void PlaceFloor_AtDifferentElevations_CreatesIndependentContents()
         {
-            var lower = new Elevation(0);
-            var upper = new Elevation(1);
+            var lower = new Elevation(2f);
+            var upper = new Elevation(2.5f);
 
             PlaceFloor(lower);
             PlaceFloor(upper);
 
             Assert.That(_cell.HasFloorAt(lower), Is.True);
             Assert.That(_cell.HasFloorAt(upper), Is.True);
+            Assert.That(_cell.HasFloorAt(new Elevation(3f)), Is.False);
         }
 
         [Test]

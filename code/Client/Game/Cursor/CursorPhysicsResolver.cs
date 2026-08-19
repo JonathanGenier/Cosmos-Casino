@@ -1,7 +1,7 @@
 using Godot;
 
 /// <summary>
-/// Provides functionality to resolve cursor hit positions in a 3D physics world using raycasting with configurable
+/// Provides functionality to resolve physical cursor hits in a 3D physics world using raycasting with configurable
 /// collision filtering and maximum distance.
 /// </summary>
 public sealed class CursorPhysicsResolver
@@ -32,19 +32,17 @@ public sealed class CursorPhysicsResolver
     #region Resolver
 
     /// <summary>
-    /// Attempts to find the first intersection point between the specified ray and any physics body in the scene.
+    /// Attempts to find the first physical intersection between the specified ray and any physics body in the scene.
     /// </summary>
     /// <remarks>This method only considers collisions with physics bodies and ignores areas. The intersection
     /// test is limited by the configured maximum distance and collision mask. If the scene tree or world is not
     /// available, the method returns <see langword="false"/>.</remarks>
     /// <param name="ray">The ray to cast into the scene. Specifies the origin and direction for the intersection test.</param>
-    /// <param name="worldPosition">When this method returns, contains the position of the first intersection point if an intersection is found;
-    /// otherwise, contains <see cref="Vector3.Zero"/>.</param>
-    /// <returns><see langword="true"/> if the ray intersects a physics body and the intersection position is found; otherwise,
-    /// <see langword="false"/>.</returns>
-    public bool TryResolve(in Ray3D ray, out Vector3 worldPosition)
+    /// <param name="hit">When this method returns, contains the first physical hit if one is found.</param>
+    /// <returns><see langword="true"/> if the ray intersects a physics body and the hit is resolved; otherwise, <see langword="false"/>.</returns>
+    public bool TryResolve(in Ray3D ray, out CursorPhysicsHit hit)
     {
-        worldPosition = default;
+        hit = default;
 
         var tree = Engine.GetMainLoop() as SceneTree;
         if (tree == null)
@@ -70,7 +68,12 @@ public sealed class CursorPhysicsResolver
             return false;
         }
 
-        worldPosition = (Vector3)result["position"];
+        if ((GodotObject)result["collider"] is not CollisionObject3D collider)
+        {
+            return false;
+        }
+
+        hit = new CursorPhysicsHit((Vector3)result["position"], collider);
         return true;
     }
 

@@ -3,7 +3,7 @@ using Godot;
 using System;
 
 /// <summary>
-/// Manages the initialization and resolution of the world-space cursor position within the application.
+/// Manages the initialization and resolution of the logical cursor target within the application.
 /// </summary>
 /// <remarks>The CursorManager coordinates cursor position detection, including handling collision masks and plane
 /// height for cursor placement. The manager must be initialized before use. This class is not thread-safe.</remarks>
@@ -16,20 +16,19 @@ public sealed partial class CursorManager : InitializableNodeManager
     private Vector3 _lastWorldPosition;
     private bool _hasLastWorldPosition;
 
-    private MapCoord _lastCell;
-    private bool _hasLastCell;
+    private CursorTarget _lastTarget;
+    private bool _hasLastTarget;
 
     #endregion
 
     #region Events
 
     /// <summary>
-    /// Occurs when the cursor moves to a different cell in the grid.
+    /// Occurs when the cursor resolves to a different logical target.
     /// </summary>
-    /// <remarks>Subscribers can use this event to respond to changes in the cursor's position, such as
-    /// updating UI elements or triggering related actions. The event provides a <see cref="CursorContext"/> object
-    /// containing information about the new cell.</remarks>
-    public event Action<CursorContext>? CursorCellChanged;
+    /// <remarks>Subscribers can use this event to respond to changes in the cursor target, such as updating
+    /// build previews when the cursor moves from terrain to a buildable at the same map coordinate.</remarks>
+    public event Action<CursorContext>? CursorTargetChanged;
 
     /// <summary>
     /// Occurs when the cursor context is lost.
@@ -55,20 +54,24 @@ public sealed partial class CursorManager : InitializableNodeManager
     /// <summary>
     /// Initializes the cursor system with the specified collision mask and plane height.
     /// </summary>
-    /// <param name="buildableCollisionMask">A bitmask that specifies which layers are considered buildable for collision detection.</param>
+    /// <param name="mapManager">The authoritative map manager used to resolve terrain target elevation.</param>
+    /// <param name="collisionMask">A bitmask specifying which world surfaces participate in cursor collision detection.</param>
     /// <param name="planeHeight">The height, in world units, at which the cursor's reference plane is positioned. The default is 0.</param>
-    public void Initialize(uint buildableCollisionMask, float planeHeight = 0f)
+    public void Initialize(MapManager mapManager, uint collisionMask, float planeHeight = 0f)
     {
         if (IsInitialized)
         {
             throw new InvalidOperationException($"{nameof(CursorManager)} already initialized.");
         }
 
-        var rayProvider = new CursorRayProvider();
-        var physicsResolver = new CursorPhysicsResolver(buildableCollisionMask);
-        var planeResolver = new CursorPlaneResolver(planeHeight);
+        ArgumentNullException.ThrowIfNull(mapManager);
 
-        Resolver = new CursorResolver(rayProvider, physicsResolver, planeResolver);
+        var rayProvider = new CursorRayProvider();
+        var physicsResolver = new CursorPhysicsResolver(collisionMask);
+        var planeResolver = new CursorPlaneResolver(planeHeight);
+        var targetResolver = new CursorTargetResolver(mapManager);
+
+        Resolver = new CursorResolver(rayProvider, physicsResolver, planeResolver, targetResolver);
         MarkInitialized();
     }
 
@@ -107,14 +110,18 @@ public sealed partial class CursorManager : InitializableNodeManager
 
         if (viewport.GuiGetHoveredControl() != null)
         {
-            cursorContext = new CursorContext(screenPosition, default, false);
+            cursorContext = CursorContext.Invalid(screenPosition);
             return false;
         }
 
-        var isValid = Resolver.TryResolve(out var worldPosition);
-        cursorContext = new CursorContext(screenPosition, worldPosition, isValid);
+        if (!Resolver.TryResolve(out var worldPosition, out var target))
+        {
+            cursorContext = CursorContext.Invalid(screenPosition);
+            return false;
+        }
 
-        return isValid;
+        cursorContext = new CursorContext(screenPosition, worldPosition, target);
+        return true;
     }
 
     #endregion
@@ -133,10 +140,10 @@ public sealed partial class CursorManager : InitializableNodeManager
     {
         if (!TryGetCursorContext(out var cursorContext))
         {
-            if (_hasLastWorldPosition || _hasLastCell)
+            if (_hasLastWorldPosition || _hasLastTarget)
             {
                 _hasLastWorldPosition = false;
-                _hasLastCell = false;
+                _hasLastTarget = false;
                 CursorContextLost?.Invoke();
             }
 
@@ -154,19 +161,19 @@ public sealed partial class CursorManager : InitializableNodeManager
             _lastWorldPosition = cursorContext.WorldPosition;
         }
 
-        // Cell position change (discrete)
-        var cell = cursorContext.CellPosition;
+        // Logical target change (discrete)
+        var target = cursorContext.Target;
 
-        if (!_hasLastCell)
+        if (!_hasLastTarget)
         {
-            _hasLastCell = true;
-            _lastCell = cell;
-            CursorCellChanged?.Invoke(cursorContext);
+            _hasLastTarget = true;
+            _lastTarget = target;
+            CursorTargetChanged?.Invoke(cursorContext);
         }
-        else if (cell != _lastCell)
+        else if (target != _lastTarget)
         {
-            _lastCell = cell;
-            CursorCellChanged?.Invoke(cursorContext);
+            _lastTarget = target;
+            CursorTargetChanged?.Invoke(cursorContext);
         }
     }
 

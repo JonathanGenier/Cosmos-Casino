@@ -314,10 +314,10 @@ public sealed partial class GameManager : NodeManager
         ArgumentNullException.ThrowIfNull(appServices);
 
         AppServices = appServices;
-        BuildContext = new BuildContext(GameSession.MapManager);
+        BuildContext = new BuildContext();
 
         CursorManager = AddInitializableNode<CursorManager>(
-            cm => cm.Initialize(CollisionLayers.Buildable));
+            cm => cm.Initialize(GameSession.MapManager, CollisionLayers.Buildable | CollisionLayers.Terrain));
 
         var buildProcessServices = new BuildProcessServices(
             GameSession.BuildManager,

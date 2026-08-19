@@ -44,7 +44,9 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
             Assert.That(system.TryGetCell(coord, out var cell), Is.True);
             Assert.That(cell!.HasFloorAt(terrainTile.BaseElevation), Is.True);
-            Assert.That(cell.HasFloorAt(new Elevation(terrainTile.BaseElevation.Value + 1)), Is.False);
+            Assert.That(
+                cell.HasFloorAt(new Elevation(terrainTile.BaseElevation.Value + Elevation.StepSize)),
+                Is.False);
             Assert.That(system.Has(BuildKind.Floor, coord), Is.True);
         }
 

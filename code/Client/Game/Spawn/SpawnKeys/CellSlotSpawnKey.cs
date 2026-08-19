@@ -2,25 +2,28 @@ using CosmosCasino.Core.Game.Map;
 using System;
 
 /// <summary>
-/// Represents a unique key identifying a specific logical slot within a map cell, used to distinguish spawned entities
-/// by their cell and slot location.
+/// Represents a unique key identifying a specific logical slot at a map cell elevation, used to distinguish spawned
+/// entities by their cell, elevation, and slot location.
 /// </summary>
 /// <remarks>A CellSlotSpawnKey combines a map cell coordinate with a logical slot (such as Floor, Wall, or
-/// Furniture) to uniquely identify where an entity is spawned within a map. This struct is typically used as a key in
-/// collections or systems that need to track or reference entities by their cell and slot. CellSlotSpawnKey supports
-/// value equality and can be used in hash-based collections.</remarks>
+/// Furniture) and an elevation to uniquely identify where an entity is spawned within a map. This struct is typically
+/// used as a key in collections or systems that need to track or reference entities by their cell, elevation, and slot.
+/// CellSlotSpawnKey supports value equality and can be used in hash-based collections.</remarks>
 public readonly struct CellSlotSpawnKey : IEquatable<CellSlotSpawnKey>, ISpawnKey
 {
     #region Initialization
 
     /// <summary>
-    /// Initializes a new instance of the CellSlotSpawnKey structure with the specified cell coordinates and slot.
+    /// Initializes a new instance of the CellSlotSpawnKey structure with the specified cell coordinates, elevation,
+    /// and slot.
     /// </summary>
     /// <param name="coord">The coordinates of the map cell to associate with this key.</param>
+    /// <param name="elevation">The logical elevation to associate with this key.</param>
     /// <param name="slot">The slot within the specified map cell to associate with this key.</param>
-    public CellSlotSpawnKey(MapCoord coord, CellSlot slot)
+    public CellSlotSpawnKey(MapCoord coord, Elevation elevation, CellSlot slot)
     {
         Coord = coord;
+        Elevation = elevation;
         Slot = slot;
     }
 
@@ -32,6 +35,11 @@ public readonly struct CellSlotSpawnKey : IEquatable<CellSlotSpawnKey>, ISpawnKe
     /// Gets the coordinates of this map cell.
     /// </summary>
     public MapCoord Coord { get; }
+
+    /// <summary>
+    /// Gets the logical elevation associated with this map cell slot.
+    /// </summary>
+    public Elevation Elevation { get; }
 
     /// <summary>
     /// Gets the slot information associated with this map cell.
@@ -52,8 +60,8 @@ public readonly struct CellSlotSpawnKey : IEquatable<CellSlotSpawnKey>, ISpawnKe
     /// The second spawn key to compare.
     /// </param>
     /// <returns>
-    /// <c>true</c> if both spawn keys refer to the same cell coordinate
-    /// and slot; otherwise <c>false</c>.
+    /// <c>true</c> if both spawn keys refer to the same cell coordinate,
+    /// elevation, and slot; otherwise <c>false</c>.
     /// </returns>
     public static bool operator ==(CellSlotSpawnKey left, CellSlotSpawnKey right)
     {
@@ -71,7 +79,7 @@ public readonly struct CellSlotSpawnKey : IEquatable<CellSlotSpawnKey>, ISpawnKe
     /// </param>
     /// <returns>
     /// <c>true</c> if the spawn keys do not refer to the same cell
-    /// coordinate and slot; otherwise <c>false</c>.
+    /// coordinate, elevation, and slot; otherwise <c>false</c>.
     /// </returns>
     public static bool operator !=(CellSlotSpawnKey left, CellSlotSpawnKey right)
     {
@@ -90,12 +98,14 @@ public readonly struct CellSlotSpawnKey : IEquatable<CellSlotSpawnKey>, ISpawnKe
     /// The spawn key to compare against.
     /// </param>
     /// <returns>
-    /// <c>true</c> if both keys refer to the same cell coordinate
-    /// and slot; otherwise <c>false</c>.
+    /// <c>true</c> if both keys refer to the same cell coordinate,
+    /// elevation, and slot; otherwise <c>false</c>.
     /// </returns>
     public bool Equals(CellSlotSpawnKey other)
     {
-        return Coord.Equals(other.Coord) && Slot == other.Slot;
+        return Coord.Equals(other.Coord)
+            && Elevation.Equals(other.Elevation)
+            && Slot == other.Slot;
     }
 
     /// <summary>
@@ -106,7 +116,7 @@ public readonly struct CellSlotSpawnKey : IEquatable<CellSlotSpawnKey>, ISpawnKe
     /// </param>
     /// <returns>
     /// <c>true</c> if the object is a <see cref="CellSlotSpawnKey"/>
-    /// with identical cell and slot values; otherwise <c>false</c>.
+    /// with identical cell, elevation, and slot values; otherwise <c>false</c>.
     /// </returns>
     public override bool Equals(object? obj)
     {
@@ -121,13 +131,14 @@ public readonly struct CellSlotSpawnKey : IEquatable<CellSlotSpawnKey>, ISpawnKe
     /// Computes a hash code suitable for use in hash-based collections.
     /// </summary>
     /// <returns>
-    /// A hash code derived from the cell coordinate and slot.
+    /// A hash code derived from the cell coordinate, elevation, and slot.
     /// </returns>
     public override int GetHashCode()
     {
         unchecked
         {
             int hash = Coord.GetHashCode();
+            hash = (hash * 397) ^ Elevation.GetHashCode();
             hash = (hash * 397) ^ (int)Slot;
             return hash;
         }
@@ -141,11 +152,11 @@ public readonly struct CellSlotSpawnKey : IEquatable<CellSlotSpawnKey>, ISpawnKe
     /// Returns a human-readable string representation of this spawn key.
     /// </summary>
     /// <returns>
-    /// A string describing the cell coordinate and slot.
+    /// A string describing the cell coordinate, elevation, and slot.
     /// </returns>
     public override string ToString()
     {
-        return $"{Coord} [{Slot}]";
+        return $"{Coord} @ {Elevation.Value} [{Slot}]";
     }
 
     #endregion

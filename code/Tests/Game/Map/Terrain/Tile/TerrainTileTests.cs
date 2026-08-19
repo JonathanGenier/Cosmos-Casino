@@ -69,42 +69,59 @@ namespace CosmosCasino.Tests.Game.Map.Terrain.Tile
         }
 
         [Test]
-        public void Constructor_SlopedPositiveTile_UsesLowestCornerAsBaseElevation()
+        public void Constructor_FlatHalfStepTile_PreservesHalfStepBaseElevation()
         {
-            var tile = new TerrainTile(4f, 3f, 5f, 4f);
+            var tile = new TerrainTile(2.5f, 2.5f, 2.5f, 2.5f);
 
-            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(3)));
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(2.5f)));
+        }
+
+        [Test]
+        public void Constructor_HalfStepSlope_UsesLowestCornerAsBaseElevation()
+        {
+            var tile = new TerrainTile(2.5f, 3f, 2.5f, 3f);
+
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(2.5f)));
             Assert.That(tile.IsSlope, Is.True);
         }
 
         [Test]
-        public void Constructor_NegativeTile_UsesLowestCornerAsBaseElevation()
+        public void Constructor_WholeStepSlope_UsesLowestCornerAsBaseElevation()
         {
-            var tile = new TerrainTile(-1f, -2f, -1f, -2f);
+            var tile = new TerrainTile(3f, 3.5f, 3f, 3.5f);
 
-            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(-2)));
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(3f)));
         }
 
         [Test]
-        public void Constructor_NegativeFractionalMinimum_FloorsBaseElevation()
+        public void Constructor_NegativeHalfStepSlope_UsesLowestCornerAsBaseElevation()
         {
-            var tile = new TerrainTile(-1f, -1.5f, 0f, -1f);
+            var tile = new TerrainTile(-1.5f, -1f, -1.5f, -1f);
 
-            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(-2)));
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(-1.5f)));
+        }
+
+        [TestCase(2.75f, 2.5f)]
+        [TestCase(-1.25f, -1.5f)]
+        public void Constructor_ArbitraryFractionalMinimum_FloorsToHalfStep(float minimum, float expected)
+        {
+            var tile = new TerrainTile(minimum, minimum + 0.25f, minimum, minimum + 0.25f);
+
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(expected)));
         }
 
         [TestCase(Elevation.MinValue)]
         [TestCase(Elevation.MaxValue)]
-        public void Constructor_BaseElevationBoundary_IsValid(int height)
+        public void Constructor_BaseElevationBoundary_IsValid(float height)
         {
             var tile = new TerrainTile(height, height, height, height);
 
             Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(height)));
         }
 
-        [TestCase(Elevation.MinValue - 1)]
-        [TestCase(Elevation.MaxValue + 1)]
-        public void Constructor_BaseElevationOutsideSupportedRange_Throws(int height)
+        [TestCase(Elevation.MinValue - Elevation.StepSize)]
+        [TestCase(Elevation.MaxValue + Elevation.StepSize)]
+        public void Constructor_BaseElevationOutsideSupportedRange_Throws(float height)
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
                 new TerrainTile(height, height, height, height));
