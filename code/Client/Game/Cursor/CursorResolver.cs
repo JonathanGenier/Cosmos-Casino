@@ -27,7 +27,7 @@ public sealed class CursorResolver
     /// <param name="physicsResolver">The resolver responsible for handling cursor interactions with physical objects.</param>
     /// <param name="planeResolver">The resolver used to determine cursor placement on planar surfaces.</param>
     /// <param name="targetResolver">The resolver used to interpret physical hits and fallback positions as logical targets.</param>
-    public CursorResolver(
+    internal CursorResolver(
         CursorRayProvider rayProvider,
         CursorPhysicsResolver physicsResolver,
         CursorPlaneResolver planeResolver,

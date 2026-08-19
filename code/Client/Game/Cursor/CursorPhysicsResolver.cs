@@ -4,7 +4,7 @@ using Godot;
 /// Provides functionality to resolve physical cursor hits in a 3D physics world using raycasting with configurable
 /// collision filtering and maximum distance.
 /// </summary>
-public sealed class CursorPhysicsResolver
+internal sealed class CursorPhysicsResolver
 {
     #region Fields
 

@@ -4,7 +4,7 @@ using System;
 /// <summary>
 /// Client-only pick identity attached to spawned buildable collision objects.
 /// </summary>
-public sealed partial class BuildablePickTarget : Node
+internal sealed partial class BuildablePickTarget : Node
 {
     #region Fields
 
@@ -18,7 +18,7 @@ public sealed partial class BuildablePickTarget : Node
     /// <summary>
     /// Gets the logical spawn identity represented by the owning buildable collider.
     /// </summary>
-    public CellSlotSpawnKey SpawnKey
+    internal CellSlotSpawnKey SpawnKey
     {
         get
         {
@@ -36,26 +36,18 @@ public sealed partial class BuildablePickTarget : Node
     #region Resolution
 
     /// <summary>
-    /// Attempts to find a buildable pick identity on or above the specified node.
+    /// Attempts to find a buildable pick identity attached directly to the specified collider.
     /// </summary>
-    /// <param name="node">The node to start from, typically the physics collider returned by a raycast.</param>
+    /// <param name="collider">The physics collider returned by a raycast.</param>
     /// <param name="spawnKey">When this method returns, contains the resolved spawn key if one was found.</param>
     /// <returns><see langword="true"/> if a buildable pick target was found; otherwise, <see langword="false"/>.</returns>
-    public static bool TryFind(Node node, out CellSlotSpawnKey spawnKey)
+    internal static bool TryFind(CollisionObject3D collider, out CellSlotSpawnKey spawnKey)
     {
-        for (Node? current = node; current != null; current = current.GetParent())
+        foreach (Node child in collider.GetChildren())
         {
-            if (current is BuildablePickTarget target && target.TryGetSpawnKey(out spawnKey))
+            if (child is BuildablePickTarget target && target.TryGetSpawnKey(out spawnKey))
             {
                 return true;
-            }
-
-            foreach (Node child in current.GetChildren())
-            {
-                if (child is BuildablePickTarget childTarget && childTarget.TryGetSpawnKey(out spawnKey))
-                {
-                    return true;
-                }
             }
         }
 
@@ -72,7 +64,7 @@ public sealed partial class BuildablePickTarget : Node
     /// </summary>
     /// <param name="spawnKey">The spawned buildable identity.</param>
     /// <exception cref="InvalidOperationException">Thrown if the pick target has already been initialized.</exception>
-    public void Initialize(CellSlotSpawnKey spawnKey)
+    internal void Initialize(CellSlotSpawnKey spawnKey)
     {
         if (_hasSpawnKey)
         {

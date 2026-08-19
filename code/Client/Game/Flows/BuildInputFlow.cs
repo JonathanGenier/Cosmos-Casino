@@ -154,17 +154,19 @@ public sealed class BuildInputFlow : IDisposable
     /// </summary>
     private void OnBuildPlaceReleased()
     {
-        if (!_isPrimaryHeld || _isSecondaryHeld)
-        {
-            return;
-        }
-
-        if (!_cursorManager.TryGetCursorContext(out var endContext))
+        if (!_isPrimaryHeld)
         {
             return;
         }
 
         _isPrimaryHeld = false;
+
+        if (!_cursorManager.TryGetCursorContext(out var endContext))
+        {
+            _buildContext.CancelBuild();
+            return;
+        }
+
         _buildContext.EndBuild(endContext);
     }
 
@@ -186,24 +188,26 @@ public sealed class BuildInputFlow : IDisposable
 
     private void OnBuildRemoveReleased()
     {
-        if (!_isSecondaryHeld || _isPrimaryHeld)
-        {
-            return;
-        }
-
-        if (!_cursorManager.TryGetCursorContext(out var endContext))
+        if (!_isSecondaryHeld)
         {
             return;
         }
 
         _isSecondaryHeld = false;
+
+        if (!_cursorManager.TryGetCursorContext(out var endContext))
+        {
+            _buildContext.CancelBuild();
+            return;
+        }
+
         _buildContext.EndBuild(endContext);
     }
 
     /// <summary>
-    /// Handles updates when the cursor cell changes during a primary action.
+    /// Handles updates when the logical cursor target changes during an active build action.
     /// </summary>
-    /// <param name="currentContext">The current cursor context representing the new cell position.</param>
+    /// <param name="currentContext">The current cursor context representing the new logical target.</param>
     private void OnCursorTargetChanged(CursorContext currentContext)
     {
         UpdateActiveBuild(currentContext);

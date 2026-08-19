@@ -5,7 +5,7 @@ using System;
 /// <summary>
 /// Resolves physical cursor hits and fallback positions into logical cursor targets.
 /// </summary>
-public sealed class CursorTargetResolver
+internal sealed class CursorTargetResolver
 {
     #region Fields
 
@@ -38,21 +38,21 @@ public sealed class CursorTargetResolver
     /// <exception cref="InvalidOperationException">Thrown when a buildable collider has no buildable pick identity.</exception>
     public bool TryResolve(CursorPhysicsHit hit, out CursorTarget target)
     {
-        if (BuildablePickTarget.TryFind(hit.Collider, out var spawnKey))
+        if (IsInLayer(hit.Collider, CollisionLayers.Terrain))
         {
-            target = CursorTarget.Buildable(spawnKey);
-            return true;
+            return TryResolveTerrain(hit.WorldPosition, out target);
         }
 
         if (IsInLayer(hit.Collider, CollisionLayers.Buildable))
         {
+            if (BuildablePickTarget.TryFind(hit.Collider, out var spawnKey))
+            {
+                target = CursorTarget.Buildable(spawnKey);
+                return true;
+            }
+
             throw new InvalidOperationException(
                 $"Buildable collider '{hit.Collider.Name}' does not expose a {nameof(BuildablePickTarget)}.");
-        }
-
-        if (IsInLayer(hit.Collider, CollisionLayers.Terrain))
-        {
-            return TryResolveTerrain(hit.WorldPosition, out target);
         }
 
         target = default;

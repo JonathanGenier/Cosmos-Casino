@@ -118,9 +118,9 @@ public sealed class BuildContext
     /// Begins a new build operation at the specified starting context using the provided build operation.
     /// </summary>
     /// <remarks>If a build is already in progress or the starting cell is already set, this method does
-    /// nothing. The build operation is initiated at the cell corresponding to the provided world position, and any
+    /// nothing. The build operation is initiated at the provided logical target, and any
     /// registered build start event handlers are invoked.</remarks>
-    /// <param name="start">The context representing the starting position for the build operation. Must specify a valid world position.</param>
+    /// <param name="start">The context representing the starting target for the build operation. Must be valid.</param>
     /// <param name="buildOperation">The build operation to perform. Determines the type of build action that will be initiated.</param>
     public void BeginBuild(CursorContext start, BuildOperation buildOperation)
     {
@@ -150,7 +150,7 @@ public sealed class BuildContext
     /// If neither the cell position nor the interaction mode has changed, no update is performed.
     /// </remarks>
     /// <param name="current">
-    /// The current cursor context containing the world position used to determine the active map cell.
+    /// The current cursor context containing the logical target used to determine the active map cell.
     /// </param>
     /// <param name="buildInteractionMode">
     /// The current interaction mode that influences how the build preview is interpreted and generated.
@@ -180,7 +180,7 @@ public sealed class BuildContext
     /// </summary>
     /// <remarks>If the cursor has moved to a different cell since the last update, the build change event is
     /// triggered before the build end event. This method has no effect if there is no active build context.</remarks>
-    /// <param name="current">The current cursor context containing the world position at the time the build operation ends.</param>
+    /// <param name="current">The current cursor context containing the logical target at the time the build operation ends.</param>
     public void EndBuild(CursorContext current)
     {
         if (_activeContext == null || _startCell == null)
@@ -245,7 +245,7 @@ public sealed class BuildContext
     /// <summary>
     /// Attempts to create a build intent based on the specified cursor context.
     /// </summary>
-    /// <param name="cursorContext">The cursor context that provides a single cell position and validation state. Must be valid to create 
+    /// <param name="cursorContext">The cursor context that provides a single logical target and validation state. Must be valid to create
     /// a build intent.</param>
     /// <returns>A <see cref="BuildIntent"/> representing the build action to perform if the context is valid; otherwise, <see
     /// langword="null"/>.</returns>
