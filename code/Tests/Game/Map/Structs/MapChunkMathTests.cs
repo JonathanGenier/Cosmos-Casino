@@ -85,6 +85,70 @@ namespace CosmosCasino.Tests.Game.Map
             }
         }
 
+        [Test]
+        public void ChunkLocalToCell_LargestRepresentablePositiveCoordinate_ReturnsIntMaxValue()
+        {
+            int size = MapChunkMetrics.ChunkSize;
+            int chunkAxis = int.MaxValue / size;
+            int localAxis = int.MaxValue % size;
+            var chunk = new MapChunkCoord(chunkAxis, chunkAxis);
+            var local = new MapChunkLocalCoord(localAxis, localAxis);
+
+            MapCellCoord cell = MapMath.ChunkLocalToCell(chunk, local, y: 0);
+
+            Assert.That(cell.X, Is.EqualTo(int.MaxValue));
+            Assert.That(cell.Z, Is.EqualTo(int.MaxValue));
+        }
+
+        [Test]
+        public void ChunkLocalToCell_SmallestRepresentableNegativeCoordinate_ReturnsIntMinValue()
+        {
+            int size = MapChunkMetrics.ChunkSize;
+            int localAxis = PositiveModulo(int.MinValue, size);
+            int chunkAxis = (int)(((long)int.MinValue - localAxis) / size);
+            var chunk = new MapChunkCoord(chunkAxis, chunkAxis);
+            var local = new MapChunkLocalCoord(localAxis, localAxis);
+
+            MapCellCoord cell = MapMath.ChunkLocalToCell(chunk, local, y: 0);
+
+            Assert.That(cell.X, Is.EqualTo(int.MinValue));
+            Assert.That(cell.Z, Is.EqualTo(int.MinValue));
+        }
+
+        [Test]
+        public void ChunkLocalToCell_PositiveOverflow_ThrowsArgumentOutOfRangeException()
+        {
+            int size = MapChunkMetrics.ChunkSize;
+            int maxChunkAxis = int.MaxValue / size;
+            int maxLocalAxis = int.MaxValue % size;
+            var chunk = maxLocalAxis < size - 1
+                ? new MapChunkCoord(maxChunkAxis, maxChunkAxis)
+                : new MapChunkCoord(maxChunkAxis + 1, maxChunkAxis + 1);
+            var local = maxLocalAxis < size - 1
+                ? new MapChunkLocalCoord(maxLocalAxis + 1, maxLocalAxis + 1)
+                : new MapChunkLocalCoord(0, 0);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                MapMath.ChunkLocalToCell(chunk, local, y: 0));
+        }
+
+        [Test]
+        public void ChunkLocalToCell_NegativeOverflow_ThrowsArgumentOutOfRangeException()
+        {
+            int size = MapChunkMetrics.ChunkSize;
+            int minLocalAxis = PositiveModulo(int.MinValue, size);
+            int minChunkAxis = (int)(((long)int.MinValue - minLocalAxis) / size);
+            var chunk = minLocalAxis > 0
+                ? new MapChunkCoord(minChunkAxis, minChunkAxis)
+                : new MapChunkCoord(minChunkAxis - 1, minChunkAxis - 1);
+            var local = minLocalAxis > 0
+                ? new MapChunkLocalCoord(minLocalAxis - 1, minLocalAxis - 1)
+                : new MapChunkLocalCoord(size - 1, size - 1);
+
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                MapMath.ChunkLocalToCell(chunk, local, y: 0));
+        }
+
         #endregion
 
         #region Vertical Invariance
@@ -138,6 +202,16 @@ namespace CosmosCasino.Tests.Game.Map
 
             Assert.That(MapMath.CellToChunk(eastOfBoundary), Is.EqualTo(new MapChunkCoord(0, 0)));
             Assert.That(MapMath.CellToChunk(westOfBoundary), Is.EqualTo(new MapChunkCoord(-1, 0)));
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private static int PositiveModulo(int value, int modulus)
+        {
+            int remainder = value % modulus;
+            return remainder < 0 ? remainder + modulus : remainder;
         }
 
         #endregion

@@ -1,5 +1,3 @@
-using CosmosCasino.Core.Game.Map;
-
 namespace CosmosCasino.Core.Configs
 {
     /// <summary>
@@ -11,6 +9,12 @@ namespace CosmosCasino.Core.Configs
     /// </summary>
     public static class TerrainConfigs
     {
+        /// <summary>
+        /// Current legacy terrain-render/storage chunk dimension.
+        /// Terrain chunks use their existing centered coordinate partition until terrain ownership is migrated in CC-88.
+        /// </summary>
+        public const int ChunkSize = 15;
+
         /// <summary>
         /// Number of terrain chunks generated along one axis of the playable map.
         /// 
@@ -53,15 +57,9 @@ namespace CosmosCasino.Core.Configs
         public const float NoisePersistence = 0.5f;
 
         /// <summary>
-        /// Gets the number of terrain tiles along one axis of a single terrain chunk.
-        /// This temporarily mirrors the authoritative map chunk size until terrain ownership moves under map chunks.
-        /// </summary>
-        public static int ChunkSize => MapChunkMetrics.ChunkSize;
-
-        /// <summary>
-        /// Gets the total number of terrain tiles generated along one axis of the playable map.
+        /// Total number of terrain tiles generated along one axis of the playable map.
         /// This value must be odd so the map has one unique center tile.
         /// </summary>
-        public static int TileCountPerAxis => ChunkSize * ChunkCountPerAxis;
+        public const int TileCountPerAxis = ChunkSize * ChunkCountPerAxis;
     }
 }

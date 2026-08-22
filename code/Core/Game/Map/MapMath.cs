@@ -139,17 +139,24 @@ namespace CosmosCasino.Core.Game.Map
 
         /// <summary>
         /// Resolves a global logical cell coordinate from a map chunk coordinate, chunk-local coordinate, and vertical level.
+        /// <see cref="MapChunkCoord"/> stores signed <see cref="int"/> chunk coordinates, but not every possible
+        /// chunk/local pair can be represented as an <see cref="int"/>-backed <see cref="MapCellCoord"/> after
+        /// scaling by <see cref="MapChunkMetrics.ChunkSize"/>. Values outside the representable global cell range are
+        /// rejected instead of silently overflowing.
         /// </summary>
         /// <param name="chunk">The global X/Z map chunk coordinate.</param>
         /// <param name="local">The zero-based X/Z coordinate inside <paramref name="chunk"/>.</param>
         /// <param name="y">The global vertical Y coordinate.</param>
         /// <returns>The global logical cell coordinate represented by the chunk/local pair and vertical level.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when the resolved global X or Z coordinate cannot be represented by <see cref="MapCellCoord"/>.
+        /// </exception>
         public static MapCellCoord ChunkLocalToCell(MapChunkCoord chunk, MapChunkLocalCoord local, int y)
         {
             return new MapCellCoord(
-                (chunk.X * MapChunkMetrics.ChunkSize) + local.X,
+                ResolveRepresentableGlobalCellAxis(chunk.X, local.X, nameof(chunk)),
                 y,
-                (chunk.Z * MapChunkMetrics.ChunkSize) + local.Z);
+                ResolveRepresentableGlobalCellAxis(chunk.Z, local.Z, nameof(chunk)));
         }
 
         #endregion
@@ -188,6 +195,21 @@ namespace CosmosCasino.Core.Game.Map
 
             int remainder = value % modulus;
             return remainder < 0 ? remainder + modulus : remainder;
+        }
+
+        private static int ResolveRepresentableGlobalCellAxis(int chunkAxis, int localAxis, string paramName)
+        {
+            long value = ((long)chunkAxis * MapChunkMetrics.ChunkSize) + localAxis;
+
+            if (value < int.MinValue || value > int.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(
+                    paramName,
+                    value,
+                    $"Resolved global cell coordinate must be within [{int.MinValue}, {int.MaxValue}].");
+            }
+
+            return (int)value;
         }
 
         #endregion

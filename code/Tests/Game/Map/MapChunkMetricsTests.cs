@@ -16,9 +16,17 @@ namespace CosmosCasino.Tests.Game.Map
         }
 
         [Test]
-        public void TerrainChunkSize_MirrorsMapChunkSizeDuringTerrainOwnershipMigration()
+        public void TerrainChunkSize_IsPositive()
         {
-            Assert.That(TerrainConfigs.ChunkSize, Is.EqualTo(MapChunkMetrics.ChunkSize));
+            Assert.That(TerrainConfigs.ChunkSize, Is.Positive);
+        }
+
+        [Test]
+        public void TerrainTileCountPerAxis_IsDerivedFromLegacyTerrainChunkSize()
+        {
+            Assert.That(
+                TerrainConfigs.TileCountPerAxis,
+                Is.EqualTo(TerrainConfigs.ChunkSize * TerrainConfigs.ChunkCountPerAxis));
         }
 
         #endregion
