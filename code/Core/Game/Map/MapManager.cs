@@ -9,12 +9,15 @@ namespace CosmosCasino.Core.Game.Map
     /// <summary>
     /// Coordinates map-level systems including terrain generation and cell-based
     /// build operations, acting as the authoritative entry point for map queries
-    /// and mutations.
+    /// and mutations. Map chunks are resolved by this manager as global X/Z
+    /// spatial ownership regions; current terrain and sparse cell storage remain
+    /// in their existing systems until their planned migrations.
     /// </summary>
     public sealed partial class MapManager
     {
         #region Fields
 
+        private readonly Dictionary<MapChunkCoord, MapChunk> _chunks = new();
         private readonly CellSystem _cellSystem;
         private readonly TerrainSystem _terrainSystem;
 
@@ -39,6 +42,11 @@ namespace CosmosCasino.Core.Game.Map
         /// Gets the total number of cells currently managed by the map.
         /// </summary>
         internal int CellCount => _cellSystem.CellCount;
+
+        /// <summary>
+        /// Gets the number of map chunk identities currently resolved by the map manager.
+        /// </summary>
+        internal int ChunkCount => _chunks.Count;
 
         #endregion
 
@@ -91,6 +99,67 @@ namespace CosmosCasino.Core.Game.Map
                 .Select(coord => new TerrainTileWorldCoord(coord.X, coord.Y));
 
             _terrainSystem.ResolveSlopeNeighbors(allCoords, coord => TryGetTerrain(coord, out var t) ? t : null);
+        }
+
+        #endregion
+
+        #region Chunk Operations
+
+        /// <summary>
+        /// Resolves the chunk coordinate that owns the specified global logical cell coordinate.
+        /// </summary>
+        /// <param name="coord">The global logical cell coordinate to resolve.</param>
+        /// <returns>The owning map chunk coordinate.</returns>
+        internal MapChunkCoord ResolveChunkCoord(MapCellCoord coord)
+        {
+            return MapMath.CellToChunk(coord);
+        }
+
+        /// <summary>
+        /// Resolves the chunk-local coordinate for the specified global logical cell coordinate.
+        /// </summary>
+        /// <param name="coord">The global logical cell coordinate to resolve.</param>
+        /// <returns>The chunk-local X/Z coordinate inside the owning map chunk.</returns>
+        internal MapChunkLocalCoord ResolveChunkLocalCoord(MapCellCoord coord)
+        {
+            return MapMath.CellToChunkLocal(coord);
+        }
+
+        /// <summary>
+        /// Retrieves an existing map chunk or creates the identity for the chunk owning the specified global cell.
+        /// </summary>
+        /// <param name="coord">The global logical cell coordinate to resolve.</param>
+        /// <returns>The owning map chunk identity.</returns>
+        internal MapChunk GetOrCreateChunk(MapCellCoord coord)
+        {
+            return GetOrCreateChunk(ResolveChunkCoord(coord));
+        }
+
+        /// <summary>
+        /// Retrieves an existing map chunk or creates the identity for the specified map chunk coordinate.
+        /// </summary>
+        /// <param name="coord">The global X/Z map chunk coordinate to resolve.</param>
+        /// <returns>The resolved map chunk identity.</returns>
+        internal MapChunk GetOrCreateChunk(MapChunkCoord coord)
+        {
+            if (!_chunks.TryGetValue(coord, out var chunk))
+            {
+                chunk = new MapChunk(coord);
+                _chunks.Add(coord, chunk);
+            }
+
+            return chunk;
+        }
+
+        /// <summary>
+        /// Attempts to retrieve an already resolved map chunk identity.
+        /// </summary>
+        /// <param name="coord">The global X/Z map chunk coordinate to query.</param>
+        /// <param name="chunk">The resolved map chunk, if present.</param>
+        /// <returns><c>true</c> if the chunk has been resolved; otherwise, <c>false</c>.</returns>
+        internal bool TryGetChunk(MapChunkCoord coord, [NotNullWhen(true)] out MapChunk? chunk)
+        {
+            return _chunks.TryGetValue(coord, out chunk);
         }
 
         #endregion

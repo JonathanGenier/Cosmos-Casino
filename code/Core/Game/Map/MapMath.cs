@@ -1,8 +1,9 @@
 namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
-    /// Authoritative map coordinate conversion utilities.
-    /// A map cell (x, y) is centered at world (x, y) and occupies [x - 0.5, x + 0.5) by [y - 0.5, y + 0.5).
+    /// Authoritative map coordinate conversion utilities. Existing world/cell conversion methods operate on the
+    /// legacy horizontal <see cref="MapCoord"/> used by current terrain and build APIs. Chunk ownership methods
+    /// operate on global <see cref="MapCellCoord"/> values where X/Z are horizontal and Y is vertical.
     /// </summary>
     public static class MapMath
     {
@@ -86,11 +87,107 @@ namespace CosmosCasino.Core.Game.Map
 
         #endregion
 
+        #region Cell To Chunk
+
+        /// <summary>
+        /// Resolves the authoritative map chunk owning the specified global logical cell coordinate.
+        /// Only the cell's horizontal X/Z coordinates determine chunk ownership.
+        /// </summary>
+        /// <param name="cell">The global logical cell coordinate to resolve.</param>
+        /// <returns>The global X/Z map chunk coordinate that owns <paramref name="cell"/>.</returns>
+        public static MapChunkCoord CellToChunk(MapCellCoord cell)
+        {
+            return GlobalToChunk(cell.X, cell.Z);
+        }
+
+        /// <summary>
+        /// Resolves the authoritative map chunk owning the specified global horizontal X/Z coordinates.
+        /// </summary>
+        /// <param name="x">Global horizontal X coordinate.</param>
+        /// <param name="z">Global horizontal Z coordinate.</param>
+        /// <returns>The global X/Z map chunk coordinate that owns the specified horizontal position.</returns>
+        public static MapChunkCoord GlobalToChunk(int x, int z)
+        {
+            return new MapChunkCoord(
+                FloorDivide(x, MapChunkMetrics.ChunkSize),
+                FloorDivide(z, MapChunkMetrics.ChunkSize));
+        }
+
+        /// <summary>
+        /// Resolves the chunk-local X/Z coordinate of a global logical cell coordinate.
+        /// The vertical Y component does not affect the returned local coordinate.
+        /// </summary>
+        /// <param name="cell">The global logical cell coordinate to resolve.</param>
+        /// <returns>The zero-based X/Z coordinate local to the owning map chunk.</returns>
+        public static MapChunkLocalCoord CellToChunkLocal(MapCellCoord cell)
+        {
+            return GlobalToChunkLocal(cell.X, cell.Z);
+        }
+
+        /// <summary>
+        /// Resolves the chunk-local X/Z coordinate of global horizontal X/Z coordinates.
+        /// </summary>
+        /// <param name="x">Global horizontal X coordinate.</param>
+        /// <param name="z">Global horizontal Z coordinate.</param>
+        /// <returns>The zero-based X/Z coordinate local to the owning map chunk.</returns>
+        public static MapChunkLocalCoord GlobalToChunkLocal(int x, int z)
+        {
+            return new MapChunkLocalCoord(
+                PositiveModulo(x, MapChunkMetrics.ChunkSize),
+                PositiveModulo(z, MapChunkMetrics.ChunkSize));
+        }
+
+        /// <summary>
+        /// Resolves a global logical cell coordinate from a map chunk coordinate, chunk-local coordinate, and vertical level.
+        /// </summary>
+        /// <param name="chunk">The global X/Z map chunk coordinate.</param>
+        /// <param name="local">The zero-based X/Z coordinate inside <paramref name="chunk"/>.</param>
+        /// <param name="y">The global vertical Y coordinate.</param>
+        /// <returns>The global logical cell coordinate represented by the chunk/local pair and vertical level.</returns>
+        public static MapCellCoord ChunkLocalToCell(MapChunkCoord chunk, MapChunkLocalCoord local, int y)
+        {
+            return new MapCellCoord(
+                (chunk.X * MapChunkMetrics.ChunkSize) + local.X,
+                y,
+                (chunk.Z * MapChunkMetrics.ChunkSize) + local.Z);
+        }
+
+        #endregion
+
         #region Helpers
 
         private static int FloorToInt(float value)
         {
             return (int)MathF.Floor(value);
+        }
+
+        private static int FloorDivide(int value, int divisor)
+        {
+            if (divisor <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(divisor), divisor, "Divisor must be positive.");
+            }
+
+            int quotient = value / divisor;
+            int remainder = value % divisor;
+
+            if (remainder != 0 && value < 0)
+            {
+                quotient--;
+            }
+
+            return quotient;
+        }
+
+        private static int PositiveModulo(int value, int modulus)
+        {
+            if (modulus <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(modulus), modulus, "Modulus must be positive.");
+            }
+
+            int remainder = value % modulus;
+            return remainder < 0 ? remainder + modulus : remainder;
         }
 
         #endregion
