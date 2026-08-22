@@ -1,5 +1,3 @@
-using CosmosCasino.Core.Game.Map.Terrain.Tile;
-
 namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
@@ -33,12 +31,11 @@ namespace CosmosCasino.Core.Game.Map
         /// Creates a new cell at the specified coordinate if one does not already exist.
         /// </summary>
         /// <param name="coord">The map coordinate at which to create the cell.</param>
-        /// <param name="terrainTile">The terrain tile associated with the new cell.</param>
-        internal void CreateCell(MapCoord coord, TerrainTile terrainTile)
+        internal void CreateCell(MapCoord coord)
         {
             if (!_cells.ContainsKey(coord))
             {
-                var cell = new Cell(coord, terrainTile);
+                var cell = new Cell(coord);
                 _cells.Add(coord, cell);
             }
         }

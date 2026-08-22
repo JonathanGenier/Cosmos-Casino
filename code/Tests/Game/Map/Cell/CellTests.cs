@@ -1,7 +1,6 @@
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Buildables;
 using CosmosCasino.Core.Game.Map;
-using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using NUnit.Framework;
 
 namespace CosmosCasino.Tests.Game.Map
@@ -20,7 +19,7 @@ namespace CosmosCasino.Tests.Game.Map
         [SetUp]
         public void Setup()
         {
-            _cell = new Cell(new MapCoord(0, 0), new TerrainTile(0f, 0f, 0f, 0f));
+            _cell = new Cell(new MapCoord(0, 0));
         }
 
         #endregion

@@ -1,7 +1,5 @@
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Buildables;
-using CosmosCasino.Core.Game.Map.Terrain;
-using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using System.Diagnostics.CodeAnalysis;
 
 namespace CosmosCasino.Core.Game.Map.Systems
@@ -10,7 +8,7 @@ namespace CosmosCasino.Core.Game.Map.Systems
     /// Manages map cells and mediates build validation and operations by delegating
     /// to individual cells, acting as the authoritative cell-level build system.
     /// </summary>
-    internal sealed class CellSystem : ITerrainTileSink
+    internal sealed class CellSystem
     {
         #region Fields
 
@@ -39,21 +37,16 @@ namespace CosmosCasino.Core.Game.Map.Systems
 
         #endregion
 
-        #region ITerrainTileSink Implementation
+        #region Cell API
 
         /// <summary>
-        /// Receives a generated terrain tile and creates a corresponding cell.
+        /// Creates a compatibility cell at the specified coordinate if one does not already exist.
         /// </summary>
-        /// <param name="coord">The terrain world-tile coordinate of the terrain tile.</param>
-        /// <param name="terrainTile">The terrain tile used to initialize the cell.</param>
-        void ITerrainTileSink.ReceiveTerrainTile(TerrainTileWorldCoord coord, TerrainTile terrainTile)
+        /// <param name="coord">The map coordinate at which to create the cell.</param>
+        internal void CreateCell(MapCoord coord)
         {
-            _grid.CreateCell(new MapCoord(coord.X, coord.Y), terrainTile);
+            _grid.CreateCell(coord);
         }
-
-        #endregion
-
-        #region Cell API
 
         /// <summary>
         /// Enumerates all map coordinates currently associated with cells.
@@ -79,35 +72,6 @@ namespace CosmosCasino.Core.Game.Map.Systems
         #endregion
 
         #region Has API
-
-        /// <summary>
-        /// Determines whether the specified build kind exists at the terrain base elevation of the given coordinate.
-        /// </summary>
-        /// <param name="buildKind">The type of build element to check.</param>
-        /// <param name="coord">The map coordinate to query.</param>
-        /// <returns><c>true</c> if the build element exists; otherwise <c>false</c>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown for unsupported build kinds.</exception>
-        internal bool Has(BuildKind buildKind, MapCoord coord)
-        {
-            if (buildKind is not BuildKind.Floor and not BuildKind.Wall)
-            {
-                throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported.");
-            }
-
-            if (!TryGetCell(coord, out var cell))
-            {
-                return false;
-            }
-
-            Elevation elevation = cell.TerrainTile.BaseElevation;
-
-            return buildKind switch
-            {
-                BuildKind.Floor => cell.HasFloorAt(elevation),
-                BuildKind.Wall => cell.HasWallAt(elevation),
-                _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
-            };
-        }
 
         /// <summary>
         /// Determines whether the specified build kind exists at the given coordinate and elevation.
@@ -142,30 +106,6 @@ namespace CosmosCasino.Core.Game.Map.Systems
         #region Validation API
 
         /// <summary>
-        /// Validates whether the specified build kind can be placed at the terrain base elevation of the given coordinate.
-        /// </summary>
-        /// <param name="buildKind">The type of build element to place.</param>
-        /// <param name="coord">The map coordinate to validate.</param>
-        /// <returns>The result of the placement validation.</returns>
-        /// <exception cref="InvalidOperationException">Thrown for unsupported build kinds.</exception>
-        internal BuildOperationResult CanPlace(BuildKind buildKind, MapCoord coord)
-        {
-            if (!TryGetCell(coord, out var cell))
-            {
-                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
-            }
-
-            Elevation elevation = cell.TerrainTile.BaseElevation;
-
-            return buildKind switch
-            {
-                BuildKind.Floor => CanPlaceFloor(cell, elevation),
-                BuildKind.Wall => CanPlaceWall(cell, elevation),
-                _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
-            };
-        }
-
-        /// <summary>
         /// Validates whether the specified build kind can be placed at the given coordinate and elevation.
         /// </summary>
         /// <param name="buildKind">The type of build element to place.</param>
@@ -184,30 +124,6 @@ namespace CosmosCasino.Core.Game.Map.Systems
             {
                 BuildKind.Floor => CanPlaceFloor(cell, elevation),
                 BuildKind.Wall => CanPlaceWall(cell, elevation),
-                _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
-            };
-        }
-
-        /// <summary>
-        /// Validates whether the specified build kind can be removed from the terrain base elevation of the given coordinate.
-        /// </summary>
-        /// <param name="buildKind">The type of build element to remove.</param>
-        /// <param name="coord">The map coordinate to validate.</param>
-        /// <returns>The result of the removal validation.</returns>
-        /// <exception cref="InvalidOperationException">Thrown for unsupported build kinds.</exception>
-        internal BuildOperationResult CanRemove(BuildKind buildKind, MapCoord coord)
-        {
-            if (!TryGetCell(coord, out var cell))
-            {
-                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
-            }
-
-            Elevation elevation = cell.TerrainTile.BaseElevation;
-
-            return buildKind switch
-            {
-                BuildKind.Floor => CanRemoveFloor(cell, elevation),
-                BuildKind.Wall => CanRemoveWall(cell, elevation),
                 _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
             };
         }
@@ -240,30 +156,6 @@ namespace CosmosCasino.Core.Game.Map.Systems
         #region Operations API
 
         /// <summary>
-        /// Attempts to place the specified build kind at the terrain base elevation of the given coordinate.
-        /// </summary>
-        /// <param name="buildKind">The type of build element to place.</param>
-        /// <param name="coord">The map coordinate at which to place.</param>
-        /// <returns>The result of the placement operation.</returns>
-        /// <exception cref="InvalidOperationException">Thrown for unsupported build kinds.</exception>
-        internal BuildOperationResult TryPlace(BuildKind buildKind, MapCoord coord)
-        {
-            if (!TryGetCell(coord, out var cell))
-            {
-                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
-            }
-
-            Elevation elevation = cell.TerrainTile.BaseElevation;
-
-            return buildKind switch
-            {
-                BuildKind.Floor => TryPlaceFloor(cell, elevation),
-                BuildKind.Wall => TryPlaceWall(cell, elevation),
-                _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
-            };
-        }
-
-        /// <summary>
         /// Attempts to place the specified build kind at the given coordinate and elevation.
         /// </summary>
         /// <param name="buildKind">The type of build element to place.</param>
@@ -282,30 +174,6 @@ namespace CosmosCasino.Core.Game.Map.Systems
             {
                 BuildKind.Floor => TryPlaceFloor(cell, elevation),
                 BuildKind.Wall => TryPlaceWall(cell, elevation),
-                _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
-            };
-        }
-
-        /// <summary>
-        /// Attempts to remove the specified build kind from the terrain base elevation of the given coordinate.
-        /// </summary>
-        /// <param name="buildKind">The type of build element to remove.</param>
-        /// <param name="coord">The map coordinate from which to remove.</param>
-        /// <returns>The result of the removal operation.</returns>
-        /// <exception cref="InvalidOperationException">Thrown for unsupported build kinds.</exception>
-        internal BuildOperationResult TryRemove(BuildKind buildKind, MapCoord coord)
-        {
-            if (!TryGetCell(coord, out var cell))
-            {
-                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
-            }
-
-            Elevation elevation = cell.TerrainTile.BaseElevation;
-
-            return buildKind switch
-            {
-                BuildKind.Floor => TryRemoveFloor(cell, elevation),
-                BuildKind.Wall => TryRemoveWall(cell, elevation),
                 _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
             };
         }

@@ -1,5 +1,4 @@
 using CosmosCasino.Core.Game.Map;
-using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using NUnit.Framework;
 
 namespace CosmosCasino.Tests.Game.Map
@@ -36,7 +35,7 @@ namespace CosmosCasino.Tests.Game.Map
             var coord = new MapCoord(0, 0);
 
             // Act
-            grid.CreateCell(coord, FlatTile());
+            grid.CreateCell(coord);
 
             // Assert
             Assert.That(grid.CellCount, Is.EqualTo(1));
@@ -51,28 +50,25 @@ namespace CosmosCasino.Tests.Game.Map
             var coord = new MapCoord(1, 2);
 
             // Act
-            grid.CreateCell(coord, FlatTile());
-            grid.CreateCell(coord, FlatTile());
+            grid.CreateCell(coord);
+            grid.CreateCell(coord);
 
             // Assert
             Assert.That(grid.CellCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void CreateCell_DuplicateCoord_DoesNotOverwriteExistingCell()
+        public void CreateCell_DuplicateCoord_PreservesExistingCell()
         {
             // Arrange
             var grid = new Grid();
             var coord = new MapCoord(3, 3);
 
-            var firstTile = FlatTile();
-            var secondTile = new TerrainTile(2f, 2f, 2f, 2f);
-
             // Act
-            grid.CreateCell(coord, firstTile);
+            grid.CreateCell(coord);
             var firstCell = grid.GetCell(coord);
 
-            grid.CreateCell(coord, secondTile);
+            grid.CreateCell(coord);
             var secondCell = grid.GetCell(coord);
 
             // Assert
@@ -86,9 +82,9 @@ namespace CosmosCasino.Tests.Game.Map
             var grid = new Grid();
 
             // Act
-            grid.CreateCell(new MapCoord(0, 0), FlatTile());
-            grid.CreateCell(new MapCoord(1, 0), FlatTile());
-            grid.CreateCell(new MapCoord(0, 1), FlatTile());
+            grid.CreateCell(new MapCoord(0, 0));
+            grid.CreateCell(new MapCoord(1, 0));
+            grid.CreateCell(new MapCoord(0, 1));
 
             // Assert
             Assert.That(grid.CellCount, Is.EqualTo(3));
@@ -104,7 +100,7 @@ namespace CosmosCasino.Tests.Game.Map
             // Arrange
             var grid = new Grid();
             var coord = new MapCoord(5, 5);
-            grid.CreateCell(coord, FlatTile());
+            grid.CreateCell(coord);
 
             // Act
             var cell = grid.GetCell(coord);
@@ -144,7 +140,7 @@ namespace CosmosCasino.Tests.Game.Map
 
             foreach (var coord in coords)
             {
-                grid.CreateCell(coord, FlatTile());
+                grid.CreateCell(coord);
             }
 
             // Act
@@ -166,7 +162,7 @@ namespace CosmosCasino.Tests.Game.Map
             var initialCount = grid.AllCoords.Count();
 
             // Act
-            grid.CreateCell(new MapCoord(0, 0), FlatTile());
+            grid.CreateCell(new MapCoord(0, 0));
 
             // Assert
             Assert.That(grid.AllCoords.Count(), Is.EqualTo(initialCount + 1));
@@ -186,7 +182,7 @@ namespace CosmosCasino.Tests.Game.Map
             // Act
             for (int i = 0; i < 10; i++)
             {
-                grid.CreateCell(coord, FlatTile());
+                grid.CreateCell(coord);
                 var cell = grid.GetCell(coord);
 
                 Assert.That(cell, Is.Not.Null);
@@ -198,13 +194,5 @@ namespace CosmosCasino.Tests.Game.Map
 
         #endregion
 
-        #region Helper Methods
-
-        private static TerrainTile FlatTile()
-        {
-            return new TerrainTile(1f, 1f, 1f, 1f);
-        }
-
-        #endregion
     }
 }

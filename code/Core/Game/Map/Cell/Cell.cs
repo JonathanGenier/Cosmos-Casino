@@ -1,11 +1,10 @@
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Buildables;
-using CosmosCasino.Core.Game.Map.Terrain.Tile;
 
 namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
-    /// Represents one horizontal map column, binding terrain data to buildable layers at discrete elevations.
+    /// Represents one horizontal map column containing buildable layers at discrete elevations.
     /// </summary>
     internal sealed class Cell
     {
@@ -21,14 +20,12 @@ namespace CosmosCasino.Core.Game.Map
         #region Initialization
 
         /// <summary>
-        /// Initializes a new map cell at the specified coordinate with its associated terrain tile.
+        /// Initializes a new map cell at the specified coordinate.
         /// </summary>
         /// <param name="coord">The map coordinate identifying this cell.</param>
-        /// <param name="terrainTile">The terrain tile providing elevation and slope data for the cell.</param>
-        internal Cell(MapCoord coord, TerrainTile terrainTile)
+        internal Cell(MapCoord coord)
         {
             Coord = coord;
-            TerrainTile = terrainTile;
         }
 
         #endregion
@@ -39,11 +36,6 @@ namespace CosmosCasino.Core.Game.Map
         /// Gets the map coordinate that uniquely identifies this cell.
         /// </summary>
         internal MapCoord Coord { get; }
-
-        /// <summary>
-        /// Gets the terrain tile backing this cell’s elevation and slope data.
-        /// </summary>
-        internal TerrainTile TerrainTile { get; }
 
         #endregion
 

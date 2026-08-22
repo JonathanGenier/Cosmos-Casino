@@ -10,8 +10,7 @@ namespace CosmosCasino.Core.Game.Map
     /// Coordinates map-level systems including terrain generation and cell-based
     /// build operations, acting as the authoritative entry point for map queries
     /// and mutations. Map chunks are resolved by this manager as global X/Z
-    /// spatial ownership regions; current terrain and sparse cell storage remain
-    /// in their existing systems until their planned migrations.
+    /// spatial ownership regions and own terrain storage for their local region.
     /// </summary>
     public sealed partial class MapManager
     {
@@ -19,6 +18,7 @@ namespace CosmosCasino.Core.Game.Map
 
         private readonly Dictionary<MapChunkCoord, MapChunk> _chunks = new();
         private readonly CellSystem _cellSystem;
+        private readonly TerrainTileSink _terrainSink;
         private readonly TerrainSystem _terrainSystem;
 
         #endregion
@@ -31,6 +31,7 @@ namespace CosmosCasino.Core.Game.Map
         internal MapManager()
         {
             _terrainSystem = new TerrainSystem();
+            _terrainSink = new TerrainTileSink(this);
             _cellSystem = new CellSystem();
         }
 
@@ -60,14 +61,7 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns><c>true</c> if terrain exists at the coordinate; otherwise <c>false</c>.</returns>
         public bool TryGetTerrain(MapCoord coord, [NotNullWhen(true)] out TerrainTile terrainTile)
         {
-            if (TryGetCell(coord, out var cell))
-            {
-                terrainTile = cell.TerrainTile;
-                return true;
-            }
-
-            terrainTile = default!;
-            return false;
+            return TryGetTerrain(new TerrainTileWorldCoord(coord.X, coord.Y), out terrainTile);
         }
 
         /// <summary>
@@ -78,7 +72,16 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns><c>true</c> if terrain exists at the coordinate; otherwise <c>false</c>.</returns>
         public bool TryGetTerrain(TerrainTileWorldCoord coord, [NotNullWhen(true)] out TerrainTile terrainTile)
         {
-            return TryGetTerrain(new MapCoord(coord.X, coord.Y), out terrainTile);
+            MapChunkCoord chunkCoord = ResolveTerrainChunkCoord(coord);
+
+            if (!TryGetChunk(chunkCoord, out var chunk))
+            {
+                terrainTile = default!;
+                return false;
+            }
+
+            MapChunkLocalCoord localCoord = ResolveTerrainChunkLocalCoord(coord);
+            return chunk.TryGetTerrain(localCoord, out terrainTile);
         }
 
         #endregion
@@ -92,13 +95,52 @@ namespace CosmosCasino.Core.Game.Map
         /// <param name="mapSize">The number of cells per axis to generate.</param>
         internal void GenerateMap(int seed, int mapSize)
         {
-            _terrainSystem.GenerateTerrain(seed, mapSize, _cellSystem);
+            _terrainSystem.GenerateTerrain(seed, mapSize, _terrainSink);
+            _terrainSystem.ResolveSlopeNeighbors(EnumerateTerrainCoords(), coord => TryGetTerrain(coord, out var t) ? t : null);
+        }
 
-            var allCoords = _cellSystem
-                .EnumerateAllCoords()
-                .Select(coord => new TerrainTileWorldCoord(coord.X, coord.Y));
+        #endregion
 
-            _terrainSystem.ResolveSlopeNeighbors(allCoords, coord => TryGetTerrain(coord, out var t) ? t : null);
+        #region Terrain Operations
+
+        /// <summary>
+        /// Stores generated terrain at the specified global terrain world-tile coordinate.
+        /// </summary>
+        /// <param name="coord">The global terrain tile coordinate to store.</param>
+        /// <param name="terrainTile">The generated terrain tile to store.</param>
+        internal void StoreGeneratedTerrain(TerrainTileWorldCoord coord, TerrainTile terrainTile)
+        {
+            ArgumentNullException.ThrowIfNull(terrainTile);
+
+            MapChunkCoord chunkCoord = ResolveTerrainChunkCoord(coord);
+            MapChunkLocalCoord localCoord = ResolveTerrainChunkLocalCoord(coord);
+            MapChunk chunk = GetOrCreateChunk(chunkCoord);
+
+            chunk.StoreGeneratedTerrain(localCoord, terrainTile);
+            _cellSystem.CreateCell(ToMapCoord(coord));
+        }
+
+        /// <summary>
+        /// Replaces existing terrain at the specified global terrain world-tile coordinate.
+        /// </summary>
+        /// <param name="coord">The global terrain tile coordinate to mutate.</param>
+        /// <param name="terrainTile">The replacement terrain tile.</param>
+        /// <returns>
+        /// <c>true</c> when authoritative terrain existed and was replaced; otherwise, <c>false</c>.
+        /// </returns>
+        internal bool TryReplaceTerrain(TerrainTileWorldCoord coord, TerrainTile terrainTile)
+        {
+            ArgumentNullException.ThrowIfNull(terrainTile);
+
+            MapChunkCoord chunkCoord = ResolveTerrainChunkCoord(coord);
+
+            if (!TryGetChunk(chunkCoord, out var chunk))
+            {
+                return false;
+            }
+
+            MapChunkLocalCoord localCoord = ResolveTerrainChunkLocalCoord(coord);
+            return chunk.TryReplaceTerrain(localCoord, terrainTile);
         }
 
         #endregion
@@ -185,7 +227,13 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns><c>true</c> if the build element exists; otherwise <c>false</c>.</returns>
         internal bool Has(BuildKind buildKind, MapCoord coord)
         {
-            return _cellSystem.Has(buildKind, coord);
+            if (buildKind is not BuildKind.Floor and not BuildKind.Wall)
+            {
+                throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported.");
+            }
+
+            return TryGetTerrainBaseElevation(coord, out var elevation)
+                && _cellSystem.Has(buildKind, coord, elevation);
         }
 
         /// <summary>
@@ -208,7 +256,12 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the placement validation.</returns>
         internal BuildOperationResult CanPlace(BuildKind buildKind, MapCoord coord)
         {
-            return _cellSystem.CanPlace(buildKind, coord);
+            if (!TryGetTerrainBaseElevation(coord, out var elevation))
+            {
+                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
+            }
+
+            return _cellSystem.CanPlace(buildKind, coord, elevation);
         }
 
         /// <summary>
@@ -231,7 +284,12 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the removal validation.</returns>
         internal BuildOperationResult CanRemove(BuildKind buildKind, MapCoord coord)
         {
-            return _cellSystem.CanRemove(buildKind, coord);
+            if (!TryGetTerrainBaseElevation(coord, out var elevation))
+            {
+                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
+            }
+
+            return _cellSystem.CanRemove(buildKind, coord, elevation);
         }
 
         /// <summary>
@@ -254,7 +312,12 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the placement operation.</returns>
         internal BuildOperationResult TryPlace(BuildKind buildKind, MapCoord coord)
         {
-            return _cellSystem.TryPlace(buildKind, coord);
+            if (!TryGetTerrainBaseElevation(coord, out var elevation))
+            {
+                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
+            }
+
+            return _cellSystem.TryPlace(buildKind, coord, elevation);
         }
 
         /// <summary>
@@ -277,7 +340,12 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the removal operation.</returns>
         internal BuildOperationResult TryRemove(BuildKind buildKind, MapCoord coord)
         {
-            return _cellSystem.TryRemove(buildKind, coord);
+            if (!TryGetTerrainBaseElevation(coord, out var elevation))
+            {
+                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
+            }
+
+            return _cellSystem.TryRemove(buildKind, coord, elevation);
         }
 
         /// <summary>
@@ -290,6 +358,61 @@ namespace CosmosCasino.Core.Game.Map
         internal BuildOperationResult TryRemove(BuildKind buildKind, MapCoord coord, Elevation elevation)
         {
             return _cellSystem.TryRemove(buildKind, coord, elevation);
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private static MapCoord ToMapCoord(TerrainTileWorldCoord coord)
+        {
+            return new MapCoord(coord.X, coord.Y);
+        }
+
+        private static MapChunkCoord ResolveTerrainChunkCoord(TerrainTileWorldCoord coord)
+        {
+            return MapMath.GlobalToChunk(coord.X, coord.Y);
+        }
+
+        private static MapChunkLocalCoord ResolveTerrainChunkLocalCoord(TerrainTileWorldCoord coord)
+        {
+            return MapMath.GlobalToChunkLocal(coord.X, coord.Y);
+        }
+
+        private IEnumerable<TerrainTileWorldCoord> EnumerateTerrainCoords()
+        {
+            foreach (var chunk in _chunks.Values)
+            {
+                foreach (var local in chunk.EnumerateTerrainLocals())
+                {
+                    MapCellCoord cellCoord = MapMath.ChunkLocalToCell(chunk.Coord, local, y: 0);
+                    yield return new TerrainTileWorldCoord(cellCoord.X, cellCoord.Z);
+                }
+            }
+        }
+
+        private void ReceiveGeneratedTerrainTile(TerrainTileWorldCoord coord, TerrainTile terrainTile)
+        {
+            StoreGeneratedTerrain(coord, terrainTile);
+        }
+
+        #endregion
+
+        #region Terrain Sink
+
+        private sealed class TerrainTileSink : ITerrainTileSink
+        {
+            private readonly MapManager _mapManager;
+
+            internal TerrainTileSink(MapManager mapManager)
+            {
+                _mapManager = mapManager;
+            }
+
+            public void ReceiveTerrainTile(TerrainTileWorldCoord coord, TerrainTile terrainTile)
+            {
+                _mapManager.ReceiveGeneratedTerrainTile(coord, terrainTile);
+            }
         }
 
         #endregion

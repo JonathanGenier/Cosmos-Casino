@@ -13,9 +13,9 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns><c>true</c> if terrain exists at the coordinate; otherwise <c>false</c>.</returns>
         public bool TryGetTerrainBaseElevation(MapCoord coord, out Elevation elevation)
         {
-            if (TryGetCell(coord, out var cell))
+            if (TryGetTerrain(coord, out var terrainTile))
             {
-                elevation = cell.TerrainTile.BaseElevation;
+                elevation = terrainTile.BaseElevation;
                 return true;
             }
 
