@@ -10,7 +10,8 @@ namespace CosmosCasino.Core.Configs
     public static class TerrainConfigs
     {
         /// <summary>
-        /// Number of terrain tiles along one axis of a single terrain chunk.
+        /// Current legacy terrain-render/storage chunk dimension.
+        /// Terrain chunks use their existing centered coordinate partition until terrain ownership is migrated in CC-88.
         /// </summary>
         public const int ChunkSize = 15;
 
@@ -21,12 +22,6 @@ namespace CosmosCasino.Core.Configs
         /// combination with <see cref="ChunkSize"/>.
         /// </summary>
         public const int ChunkCountPerAxis = 15;
-
-        /// <summary>
-        /// Total number of terrain tiles generated along one axis of the playable map.
-        /// This value must be odd so the map has one unique center tile.
-        /// </summary>
-        public const int TileCountPerAxis = ChunkSize * ChunkCountPerAxis;
 
         /// <summary>
         /// Number of noise octaves used when generating terrain height values.
@@ -60,5 +55,11 @@ namespace CosmosCasino.Core.Configs
         /// diminishes.
         /// </summary>
         public const float NoisePersistence = 0.5f;
+
+        /// <summary>
+        /// Total number of terrain tiles generated along one axis of the playable map.
+        /// This value must be odd so the map has one unique center tile.
+        /// </summary>
+        public const int TileCountPerAxis = ChunkSize * ChunkCountPerAxis;
     }
 }

@@ -1,8 +1,8 @@
 namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
-    /// Immutable value type representing a 2D grid coordinate used to
-    /// identify a single cell within the map.
+    /// Immutable value type representing the legacy 2D horizontal map coordinate used by current terrain and build
+    /// APIs. Use <see cref="MapCellCoord"/> for global 3D occupancy coordinates.
     /// </summary>
     public readonly struct MapCoord : IEquatable<MapCoord>
     {
@@ -14,7 +14,7 @@ namespace CosmosCasino.Core.Game.Map
         public readonly int X;
 
         /// <summary>
-        /// Y-axis coordinate of the cell.
+        /// Legacy second horizontal coordinate of the cell, aligned with terrain tile Y and client world Z.
         /// </summary>
         public readonly int Y;
 
@@ -27,7 +27,7 @@ namespace CosmosCasino.Core.Game.Map
         /// grid coordinates.
         /// </summary>
         /// <param name="x">X-axis coordinate.</param>
-        /// <param name="y">Y-axis coordinate.</param>
+        /// <param name="y">Legacy second horizontal coordinate.</param>
         public MapCoord(int x, int y)
         {
             X = x;
