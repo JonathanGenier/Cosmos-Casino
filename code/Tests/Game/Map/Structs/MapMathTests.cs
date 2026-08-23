@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace CosmosCasino.Tests.Game.Map
 {
     [TestFixture]
-    internal class MapMathTests
+    internal sealed class MapMathTests
     {
         #region World To Cell
 
@@ -79,6 +79,19 @@ namespace CosmosCasino.Tests.Game.Map
             var origin = MapMath.CellToWorldOrigin(new MapCoord(cellX, cellY));
 
             Assert.That(origin, Is.EqualTo(new WorldCoord(expectedX, expectedY)));
+        }
+
+        [TestCase(0, 0f)]
+        [TestCase(1, WorldGridMetrics.VerticalGridUnitSize)]
+        [TestCase(-1, -WorldGridMetrics.VerticalGridUnitSize)]
+        [TestCase(41, 20.5f)]
+        [TestCase(100_000, 50_000f)]
+        [TestCase(-100_000, -50_000f)]
+        public void CellYToWorldCenter_UsesUnboundedVerticalGridMetric(int cellY, float expectedWorldY)
+        {
+            float worldY = MapMath.CellYToWorldCenter(cellY);
+
+            Assert.That(worldY, Is.EqualTo(expectedWorldY));
         }
 
         #endregion

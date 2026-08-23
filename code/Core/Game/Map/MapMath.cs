@@ -85,6 +85,16 @@ namespace CosmosCasino.Core.Game.Map
             );
         }
 
+        /// <summary>
+        /// Returns the world-space vertical center for a global logical map-cell Y coordinate.
+        /// </summary>
+        /// <param name="cellY">The global logical vertical map-cell coordinate.</param>
+        /// <returns>The world-space vertical center for <paramref name="cellY"/>.</returns>
+        public static float CellYToWorldCenter(int cellY)
+        {
+            return cellY * WorldGridMetrics.VerticalGridUnitSize;
+        }
+
         #endregion
 
         #region Cell To Chunk

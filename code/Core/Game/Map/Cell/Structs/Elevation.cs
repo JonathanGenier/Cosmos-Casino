@@ -20,7 +20,7 @@ namespace CosmosCasino.Core.Game.Map
         /// <summary>
         /// Gets the physical world-space size of one discrete elevation step.
         /// </summary>
-        internal const float StepSize = 0.5f;
+        internal const float StepSize = WorldGridMetrics.VerticalGridUnitSize;
 
         #endregion
 

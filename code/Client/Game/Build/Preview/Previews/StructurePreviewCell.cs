@@ -85,7 +85,7 @@ public sealed partial class StructurePreviewCell : Node3D
             {
                 Size = new Vector3(
                     WorldGridMetrics.GridUnitSize,
-                    WorldGridMetrics.GridUnitSize,
+                    WorldGridMetrics.VerticalGridUnitSize,
                     WorldGridMetrics.GridUnitSize)
             },
             MaterialOverride = material

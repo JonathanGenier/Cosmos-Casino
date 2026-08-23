@@ -15,7 +15,9 @@ public static class MapCellGodotExtensions
     /// <returns>The Godot world-space center for <paramref name="cell"/>.</returns>
     public static Vector3 ToGodotCenter(this MapCellCoord cell)
     {
-        return MapMath.CellToWorldCenter(cell.ToMapCoord()).ToGodotVector3(cell.ToElevation());
+        var horizontalCenter = MapMath.CellToWorldCenter(cell.ToMapCoord());
+
+        return horizontalCenter.ToGodotVector3(MapMath.CellYToWorldCenter(cell.Y));
     }
 
     #endregion
