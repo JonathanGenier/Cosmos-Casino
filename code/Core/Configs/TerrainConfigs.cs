@@ -10,8 +10,8 @@ namespace CosmosCasino.Core.Configs
     public static class TerrainConfigs
     {
         /// <summary>
-        /// Current legacy terrain-render/storage chunk dimension.
-        /// Terrain chunks use their existing centered coordinate partition until terrain ownership is migrated in CC-88.
+        /// Current legacy terrain-render chunk dimension.
+        /// Terrain render chunks use their existing centered coordinate partition independently from MapChunk storage.
         /// </summary>
         public const int ChunkSize = 15;
 

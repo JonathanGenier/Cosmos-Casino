@@ -1,8 +1,6 @@
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Systems;
-using CosmosCasino.Core.Game.Map.Terrain;
-using CosmosCasino.Core.Game.Map.Terrain.Tile;
 using NUnit.Framework;
 
 namespace CosmosCasino.Tests.Game.Map.Systems
@@ -10,8 +8,6 @@ namespace CosmosCasino.Tests.Game.Map.Systems
     [TestFixture]
     internal sealed class CellSystemTests
     {
-
-
         #region Initialization
 
         [Test]
@@ -29,25 +25,25 @@ namespace CosmosCasino.Tests.Game.Map.Systems
 
         #endregion
 
-        #region Base Elevation Compatibility
+        #region Explicit Elevation Compatibility
 
         [Test]
-        public void CoordinateApis_TargetTerrainBaseElevation()
+        public void ExplicitElevationApis_TargetProvidedElevation()
         {
             var system = new CellSystem();
             var coord = Coord();
-            var terrainTile = new TerrainTile(3f, 4f, 3f, 4f);
-            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), terrainTile);
+            var elevation = new Elevation(3f);
+            system.CreateCell(coord);
 
-            var result = system.TryPlace(BuildKind.Floor, coord);
+            var result = system.TryPlace(BuildKind.Floor, coord, elevation);
 
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
             Assert.That(system.TryGetCell(coord, out var cell), Is.True);
-            Assert.That(cell!.HasFloorAt(terrainTile.BaseElevation), Is.True);
+            Assert.That(cell!.HasFloorAt(elevation), Is.True);
             Assert.That(
-                cell.HasFloorAt(new Elevation(terrainTile.BaseElevation.Value + Elevation.StepSize)),
+                cell.HasFloorAt(new Elevation(elevation.Value + Elevation.StepSize)),
                 Is.False);
-            Assert.That(system.Has(BuildKind.Floor, coord), Is.True);
+            Assert.That(system.Has(BuildKind.Floor, coord, elevation), Is.True);
         }
 
         [Test]
@@ -55,45 +51,45 @@ namespace CosmosCasino.Tests.Game.Map.Systems
         {
             var system = new CellSystem();
             var coord = Coord();
-            var terrainTile = FlatTile(2f);
-            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), terrainTile);
+            var elevation = new Elevation(2f);
+            system.CreateCell(coord);
 
-            var result = system.CanPlace(BuildKind.Floor, coord);
+            var result = system.CanPlace(BuildKind.Floor, coord, elevation);
 
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
             Assert.That(system.TryGetCell(coord, out var cell), Is.True);
-            Assert.That(cell!.HasFloorAt(terrainTile.BaseElevation), Is.False);
-            Assert.That(cell.ValidatePlaceFloor(terrainTile.BaseElevation).Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(cell!.HasFloorAt(elevation), Is.False);
+            Assert.That(cell.ValidatePlaceFloor(elevation).Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
         }
 
         #endregion
 
-        #region ITerrainTileSink
+        #region CreateCell
 
         [Test]
-        public void ReceiveTerrainTile_CreatesCell()
+        public void CreateCell_CreatesCell()
         {
             // Arrange
             var system = new CellSystem();
             var coord = Coord();
 
             // Act
-            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
+            system.CreateCell(coord);
 
             // Assert
             Assert.That(system.CellCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void ReceiveTerrainTile_DuplicateCoord_DoesNotCreateDuplicate()
+        public void CreateCell_DuplicateCoord_DoesNotCreateDuplicate()
         {
             // Arrange
             var system = new CellSystem();
             var coord = Coord();
 
             // Act
-            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
-            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
+            system.CreateCell(coord);
+            system.CreateCell(coord);
 
             // Assert
             Assert.That(system.CellCount, Is.EqualTo(1));
@@ -109,8 +105,8 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Arrange
             var system = new CellSystem();
 
-            ((ITerrainTileSink)system).ReceiveTerrainTile(new TerrainTileWorldCoord(0, 0), FlatTile());
-            ((ITerrainTileSink)system).ReceiveTerrainTile(new TerrainTileWorldCoord(1, 0), FlatTile());
+            system.CreateCell(new MapCoord(0, 0));
+            system.CreateCell(new MapCoord(1, 0));
 
             // Act
             var coords = system.EnumerateAllCoords();
@@ -130,7 +126,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var system = new CellSystem();
             var coord = Coord();
 
-            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
+            system.CreateCell(coord);
 
             // Act
             var result = system.TryGetCell(coord, out var cell);
@@ -163,10 +159,11 @@ namespace CosmosCasino.Tests.Game.Map.Systems
         {
             // Arrange
             var system = new CellSystem();
+            var elevation = new Elevation(1f);
 
             // Act
-            var hasFloor = system.Has(BuildKind.Floor, Coord());
-            var hasWall = system.Has(BuildKind.Wall, Coord());
+            var hasFloor = system.Has(BuildKind.Floor, Coord(), elevation);
+            var hasWall = system.Has(BuildKind.Wall, Coord(), elevation);
 
             // Assert
             Assert.That(hasFloor, Is.False);
@@ -179,12 +176,13 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Arrange
             var system = new CellSystem();
             var coord = Coord();
+            var elevation = new Elevation(1f);
 
-            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
+            system.CreateCell(coord);
 
             // Act
-            system.TryPlace(BuildKind.Floor, coord);
-            var result = system.Has(BuildKind.Floor, coord);
+            system.TryPlace(BuildKind.Floor, coord, elevation);
+            var result = system.Has(BuildKind.Floor, coord, elevation);
 
             // Assert
             Assert.That(result, Is.True);
@@ -196,12 +194,13 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Arrange
             var system = new CellSystem();
             var coord = Coord();
-            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
-            system.TryPlace(BuildKind.Floor, coord);
+            var elevation = new Elevation(1f);
+            system.CreateCell(coord);
+            system.TryPlace(BuildKind.Floor, coord, elevation);
 
             // Act
-            var placeResult = system.TryPlace(BuildKind.Wall, coord);
-            var result = system.Has(BuildKind.Wall, coord);
+            var placeResult = system.TryPlace(BuildKind.Wall, coord, elevation);
+            var result = system.Has(BuildKind.Wall, coord, elevation);
 
             // Assert
             Assert.That(placeResult.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
@@ -210,7 +209,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
 
         #endregion
 
-        #region CanPlace / CanRemove – No Cell
+        #region CanPlace / CanRemove - No Cell
 
         [Test]
         public void CanPlace_WhenNoCell_ReturnsNoCellFailure()
@@ -220,7 +219,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var coord = Coord();
 
             // Act
-            var result = system.CanPlace(BuildKind.Floor, coord);
+            var result = system.CanPlace(BuildKind.Floor, coord, new Elevation(1f));
 
             // Assert
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
@@ -234,7 +233,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var system = new CellSystem();
 
             // Act
-            var result = system.CanRemove(BuildKind.Wall, Coord());
+            var result = system.CanRemove(BuildKind.Wall, Coord(), new Elevation(1f));
 
             // Assert
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
@@ -243,7 +242,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
 
         #endregion
 
-        #region TryPlace / TryRemove – No Cell
+        #region TryPlace / TryRemove - No Cell
 
         [Test]
         public void TryPlace_WhenNoCell_ReturnsNoCellFailure()
@@ -252,7 +251,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var system = new CellSystem();
 
             // Act
-            var result = system.TryPlace(BuildKind.Floor, Coord());
+            var result = system.TryPlace(BuildKind.Floor, Coord(), new Elevation(1f));
 
             // Assert
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
@@ -266,7 +265,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             var system = new CellSystem();
 
             // Act
-            var result = system.TryRemove(BuildKind.Wall, Coord());
+            var result = system.TryRemove(BuildKind.Wall, Coord(), new Elevation(1f));
 
             // Assert
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
@@ -285,7 +284,7 @@ namespace CosmosCasino.Tests.Game.Map.Systems
 
             // Act / Assert
             Assert.Throws<InvalidOperationException>(() =>
-                system.Has((BuildKind)999, Coord()));
+                system.Has((BuildKind)999, Coord(), new Elevation(1f)));
         }
 
         [Test]
@@ -294,10 +293,11 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Arrange
             var system = new CellSystem();
             var coord = Coord();
-            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
+            system.CreateCell(coord);
 
             // Act / Assert
-            Assert.Throws<InvalidOperationException>(() => system.CanPlace((BuildKind)999, coord));
+            Assert.Throws<InvalidOperationException>(() =>
+                system.CanPlace((BuildKind)999, coord, new Elevation(1f)));
         }
 
         [Test]
@@ -306,30 +306,20 @@ namespace CosmosCasino.Tests.Game.Map.Systems
             // Arrange
             var system = new CellSystem();
             var coord = Coord();
-            ((ITerrainTileSink)system).ReceiveTerrainTile(TerrainCoord(coord), FlatTile());
+            system.CreateCell(coord);
 
             // Act / Assert
-            Assert.Throws<InvalidOperationException>(() => system.TryPlace((BuildKind)999, coord));
+            Assert.Throws<InvalidOperationException>(() =>
+                system.TryPlace((BuildKind)999, coord, new Elevation(1f)));
         }
 
         #endregion
 
         #region Helpers
 
-        private static TerrainTile FlatTile(float height = 1f)
-        {
-            return new TerrainTile(height, height, height, height);
-        }
-
-
         private static MapCoord Coord(int x = 0, int y = 0)
         {
             return new MapCoord(x, y);
-        }
-
-        private static TerrainTileWorldCoord TerrainCoord(MapCoord coord)
-        {
-            return new TerrainTileWorldCoord(coord.X, coord.Y);
         }
 
         #endregion
