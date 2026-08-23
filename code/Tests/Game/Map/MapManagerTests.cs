@@ -120,17 +120,20 @@ namespace CosmosCasino.Tests.Game.Map
         {
             var manager = new MapManager();
             var coord = new MapCoord(4, -3);
-            var elevation = new Elevation(2.5f);
+            manager.GenerateMap(seed: 0, mapSize: 11);
+            Assert.That(manager.TryGetTerrain(coord, out _), Is.True);
+            Assert.That(manager.TryGetTerrainBaseElevation(coord, out var baseElevation), Is.True);
+            float offset = baseElevation.Value < Elevation.MaxValue ? Elevation.StepSize : -Elevation.StepSize;
+            var elevation = new Elevation(baseElevation.Value + offset);
             var cellCoord = ToMapCellCoord(coord, elevation);
 
             var result = manager.TryPlace(BuildKind.Floor, coord, elevation);
 
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(manager.CellCount, Is.EqualTo(1));
             Assert.That(manager.TryGetCell(cellCoord, out var cell), Is.True);
             Assert.That(cell!.Coord, Is.EqualTo(cellCoord));
             Assert.That(cell.HasFloorAt(elevation), Is.True);
-            Assert.That(manager.TryGetCell(coord, out _), Is.False);
+            Assert.That(manager.TryGetCell(ToMapCellCoord(coord, baseElevation), out _), Is.False);
         }
 
         [Test]
@@ -139,13 +142,15 @@ namespace CosmosCasino.Tests.Game.Map
             var manager = new MapManager();
             var coord = new MapCoord(0, 0);
             var elevation = new Elevation(0);
+            manager.GenerateMap(seed: 0, mapSize: 5);
+            int chunkCount = manager.ChunkCount;
 
             var result = manager.TryPlace(BuildKind.Wall, coord, elevation);
 
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
             Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoFloor));
             Assert.That(manager.CellCount, Is.EqualTo(0));
-            Assert.That(manager.ChunkCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(chunkCount));
             Assert.That(manager.TryGetCell(ToMapCellCoord(coord, elevation), out _), Is.False);
         }
 
@@ -155,12 +160,14 @@ namespace CosmosCasino.Tests.Game.Map
             var manager = new MapManager();
             var coord = new MapCoord(0, 0);
             var elevation = new Elevation(0);
+            manager.GenerateMap(seed: 0, mapSize: 5);
+            int chunkCount = manager.ChunkCount;
 
             var result = manager.TryRemove(BuildKind.Floor, coord, elevation);
 
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
             Assert.That(manager.CellCount, Is.EqualTo(0));
-            Assert.That(manager.ChunkCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(chunkCount));
             Assert.That(manager.TryGetCell(ToMapCellCoord(coord, elevation), out _), Is.False);
         }
 
@@ -170,6 +177,8 @@ namespace CosmosCasino.Tests.Game.Map
             var manager = new MapManager();
             var coord = new MapCoord(0, 0);
             var elevation = new Elevation(1.5f);
+            manager.GenerateMap(seed: 0, mapSize: 5);
+            int chunkCount = manager.ChunkCount;
 
             var canPlaceFloor = manager.CanPlace(BuildKind.Floor, coord, elevation);
             var canPlaceWall = manager.CanPlace(BuildKind.Wall, coord, elevation);
@@ -182,7 +191,86 @@ namespace CosmosCasino.Tests.Game.Map
             Assert.That(canRemoveFloor.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
             Assert.That(hasFloor, Is.False);
             Assert.That(manager.CellCount, Is.EqualTo(0));
-            Assert.That(manager.ChunkCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(chunkCount));
+        }
+
+        [Test]
+        public void ExplicitElevationCanPlace_OutsideTerrain_ReturnsNoCellWithoutAllocating()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(3, 0);
+            var elevation = new Elevation(2f);
+            manager.GenerateMap(seed: 0, mapSize: 5);
+            int chunkCount = manager.ChunkCount;
+
+            var result = manager.CanPlace(BuildKind.Floor, coord, elevation);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
+            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoCell));
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(chunkCount));
+            Assert.That(manager.TryGetCell(ToMapCellCoord(coord, elevation), out _), Is.False);
+        }
+
+        [Test]
+        public void ExplicitElevationTryPlace_OutsideTerrain_ReturnsNoCellWithoutAllocating()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(MapChunkMetrics.ChunkSize * 3, MapChunkMetrics.ChunkSize * 3);
+            var elevation = new Elevation(2f);
+            var cellCoord = ToMapCellCoord(coord, elevation);
+            manager.GenerateMap(seed: 0, mapSize: 5);
+            int chunkCount = manager.ChunkCount;
+
+            var result = manager.TryPlace(BuildKind.Floor, coord, elevation);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
+            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoCell));
+            Assert.That(manager.TryGetCell(cellCoord, out _), Is.False);
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(chunkCount));
+        }
+
+        [Test]
+        public void ExplicitElevationRemovalAndHas_OutsideTerrain_DoNotAllocateStorage()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(3, 0);
+            var elevation = new Elevation(2f);
+            manager.GenerateMap(seed: 0, mapSize: 5);
+            int chunkCount = manager.ChunkCount;
+
+            bool hasFloor = manager.Has(BuildKind.Floor, coord, elevation);
+            var canRemove = manager.CanRemove(BuildKind.Floor, coord, elevation);
+            var remove = manager.TryRemove(BuildKind.Floor, coord, elevation);
+
+            Assert.That(hasFloor, Is.False);
+            Assert.That(canRemove.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
+            Assert.That(canRemove.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoCell));
+            Assert.That(remove.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
+            Assert.That(remove.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoCell));
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(chunkCount));
+        }
+
+        [Test]
+        public void ExplicitElevationTryPlace_InsideTerrainUsesRequestedElevationInsteadOfBaseElevation()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(0, 0);
+            manager.GenerateMap(seed: 0, mapSize: 5);
+            Assert.That(manager.TryGetTerrainBaseElevation(coord, out var baseElevation), Is.True);
+            float offset = baseElevation.Value < Elevation.MaxValue ? Elevation.StepSize : -Elevation.StepSize;
+            var explicitElevation = new Elevation(baseElevation.Value + offset);
+            var explicitCellCoord = ToMapCellCoord(coord, explicitElevation);
+            var baseCellCoord = ToMapCellCoord(coord, baseElevation);
+
+            var result = manager.TryPlace(BuildKind.Floor, coord, explicitElevation);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(manager.TryGetCell(explicitCellCoord, out var cell), Is.True);
+            Assert.That(cell!.HasFloorAt(explicitElevation), Is.True);
+            Assert.That(manager.TryGetCell(baseCellCoord, out _), Is.False);
         }
 
         [Test]
@@ -222,6 +310,7 @@ namespace CosmosCasino.Tests.Game.Map
             var lower = new Elevation(-1f);
             var origin = new Elevation(0f);
             var upper = new Elevation(1.5f);
+            manager.StoreGeneratedTerrain(new TerrainTileWorldCoord(coord.X, coord.Y), FlatTile(0f));
 
             manager.TryPlace(BuildKind.Floor, coord, lower);
             manager.TryPlace(BuildKind.Floor, coord, origin);
@@ -311,6 +400,8 @@ namespace CosmosCasino.Tests.Game.Map
             var westCoord = new MapCoord(size - 1, 0);
             var eastCoord = new MapCoord(size, 0);
             var elevation = new Elevation(0);
+            manager.StoreGeneratedTerrain(new TerrainTileWorldCoord(westCoord.X, westCoord.Y), FlatTile(0f));
+            manager.StoreGeneratedTerrain(new TerrainTileWorldCoord(eastCoord.X, eastCoord.Y), FlatTile(0f));
 
             manager.TryPlace(BuildKind.Floor, westCoord, elevation);
             manager.TryPlace(BuildKind.Floor, eastCoord, elevation);
@@ -330,6 +421,7 @@ namespace CosmosCasino.Tests.Game.Map
             var coord = new MapCoord(-2, 3);
             var elevation = new Elevation(1);
             var cellCoord = ToMapCellCoord(coord, elevation);
+            manager.StoreGeneratedTerrain(new TerrainTileWorldCoord(coord.X, coord.Y), FlatTile(0f));
             manager.TryPlace(BuildKind.Floor, coord, elevation);
             Assert.That(manager.TryGetCell(cellCoord, out _), Is.True);
 
@@ -347,6 +439,7 @@ namespace CosmosCasino.Tests.Game.Map
             var coord = new MapCoord(-2, 3);
             var elevation = new Elevation(1);
             var cellCoord = ToMapCellCoord(coord, elevation);
+            manager.StoreGeneratedTerrain(new TerrainTileWorldCoord(coord.X, coord.Y), FlatTile(0f));
             manager.TryPlace(BuildKind.Floor, coord, elevation);
             manager.TryPlace(BuildKind.Wall, coord, elevation);
 

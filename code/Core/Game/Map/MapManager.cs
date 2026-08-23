@@ -320,7 +320,11 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns><c>true</c> if the build element exists; otherwise <c>false</c>.</returns>
         internal bool Has(BuildKind buildKind, MapCoord coord, Elevation elevation)
         {
-            TryGetCell(ToMapCellCoord(coord, elevation), out var cell);
+            if (!TryResolveBuildCell(coord, elevation, out _, out var cell))
+            {
+                return false;
+            }
+
             return _cellSystem.Has(buildKind, cell);
         }
 
@@ -349,7 +353,11 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the placement validation.</returns>
         internal BuildOperationResult CanPlace(BuildKind buildKind, MapCoord coord, Elevation elevation)
         {
-            TryGetCell(ToMapCellCoord(coord, elevation), out var cell);
+            if (!TryResolveBuildCell(coord, elevation, out _, out var cell))
+            {
+                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
+            }
+
             return _cellSystem.CanPlace(buildKind, coord, cell);
         }
 
@@ -378,7 +386,11 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the removal validation.</returns>
         internal BuildOperationResult CanRemove(BuildKind buildKind, MapCoord coord, Elevation elevation)
         {
-            TryGetCell(ToMapCellCoord(coord, elevation), out var cell);
+            if (!TryResolveBuildCell(coord, elevation, out _, out var cell))
+            {
+                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
+            }
+
             return _cellSystem.CanRemove(buildKind, coord, cell);
         }
 
@@ -407,8 +419,10 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the placement operation.</returns>
         internal BuildOperationResult TryPlace(BuildKind buildKind, MapCoord coord, Elevation elevation)
         {
-            MapCellCoord cellCoord = ToMapCellCoord(coord, elevation);
-            TryGetCell(cellCoord, out var cell);
+            if (!TryResolveBuildCell(coord, elevation, out var cellCoord, out var cell))
+            {
+                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
+            }
 
             return _cellSystem.TryPlace(
                 buildKind,
@@ -442,8 +456,10 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the removal operation.</returns>
         internal BuildOperationResult TryRemove(BuildKind buildKind, MapCoord coord, Elevation elevation)
         {
-            MapCellCoord cellCoord = ToMapCellCoord(coord, elevation);
-            TryGetCell(cellCoord, out var cell);
+            if (!TryResolveBuildCell(coord, elevation, out var cellCoord, out var cell))
+            {
+                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
+            }
 
             BuildOperationResult result = _cellSystem.TryRemove(buildKind, coord, cell);
 
@@ -492,6 +508,24 @@ namespace CosmosCasino.Core.Game.Map
                     yield return new TerrainTileWorldCoord((int)x, (int)y);
                 }
             }
+        }
+
+        private bool TryResolveBuildCell(
+            MapCoord coord,
+            Elevation elevation,
+            out MapCellCoord cellCoord,
+            out Cell? cell)
+        {
+            if (!TryGetTerrain(coord, out _))
+            {
+                cellCoord = default;
+                cell = null;
+                return false;
+            }
+
+            cellCoord = ToMapCellCoord(coord, elevation);
+            TryGetCell(cellCoord, out cell);
+            return true;
         }
 
         private IEnumerable<TerrainTileWorldCoord> EnumerateTerrainCoords()
