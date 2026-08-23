@@ -10,6 +10,7 @@ namespace CosmosCasino.Core.Game.Map
     {
         #region Fields
 
+        private readonly Dictionary<MapChunkCellKey, Cell> _cells = new();
         private readonly TerrainTile?[] _terrainTiles;
 
         #endregion
@@ -41,6 +42,11 @@ namespace CosmosCasino.Core.Game.Map
         internal int ChunkSize => MapChunkMetrics.ChunkSize;
 
         /// <summary>
+        /// Gets the number of sparse map cells currently stored in this chunk.
+        /// </summary>
+        internal int CellCount => _cells.Count;
+
+        /// <summary>
         /// Gets the number of occupied terrain slots in this chunk.
         /// </summary>
         internal int TerrainTileCount { get; private set; }
@@ -57,6 +63,57 @@ namespace CosmosCasino.Core.Game.Map
         internal bool Contains(MapCellCoord cellCoord)
         {
             return MapMath.CellToChunk(cellCoord) == Coord;
+        }
+
+        #endregion
+
+        #region Cell Storage
+
+        /// <summary>
+        /// Attempts to retrieve a sparse map cell from this chunk.
+        /// </summary>
+        /// <param name="local">The zero-based X/Z coordinate inside this map chunk.</param>
+        /// <param name="y">The global vertical Y coordinate of the cell.</param>
+        /// <param name="cell">The stored cell if one exists.</param>
+        /// <returns><c>true</c> when a cell exists at the local X/Z and global Y coordinate; otherwise, <c>false</c>.</returns>
+        internal bool TryGetCell(
+            MapChunkLocalCoord local,
+            int y,
+            [NotNullWhen(true)] out Cell? cell)
+        {
+            return _cells.TryGetValue(new MapChunkCellKey(local, y), out cell);
+        }
+
+        /// <summary>
+        /// Retrieves an existing sparse map cell or creates it when authoritative state needs storage.
+        /// </summary>
+        /// <param name="local">The zero-based X/Z coordinate inside this map chunk.</param>
+        /// <param name="y">The global vertical Y coordinate of the cell.</param>
+        /// <returns>The existing or newly created sparse map cell.</returns>
+        internal Cell GetOrCreateCell(MapChunkLocalCoord local, int y)
+        {
+            var key = new MapChunkCellKey(local, y);
+
+            if (_cells.TryGetValue(key, out var cell))
+            {
+                return cell;
+            }
+
+            cell = new Cell(MapMath.ChunkLocalToCell(Coord, local, y));
+            _cells.Add(key, cell);
+
+            return cell;
+        }
+
+        /// <summary>
+        /// Removes the sparse map cell at the specified local X/Z and global Y coordinate.
+        /// </summary>
+        /// <param name="local">The zero-based X/Z coordinate inside this map chunk.</param>
+        /// <param name="y">The global vertical Y coordinate of the cell.</param>
+        /// <returns><c>true</c> when a cell was removed; otherwise, <c>false</c>.</returns>
+        internal bool TryRemoveCell(MapChunkLocalCoord local, int y)
+        {
+            return _cells.Remove(new MapChunkCellKey(local, y));
         }
 
         #endregion
@@ -148,6 +205,53 @@ namespace CosmosCasino.Core.Game.Map
         private static int ToTerrainIndex(MapChunkLocalCoord local)
         {
             return (local.Z * MapChunkMetrics.ChunkSize) + local.X;
+        }
+
+        #endregion
+
+        #region Cell Key
+
+        private readonly struct MapChunkCellKey : IEquatable<MapChunkCellKey>
+        {
+            #region Initialization
+
+            internal MapChunkCellKey(MapChunkLocalCoord local, int y)
+            {
+                LocalX = local.X;
+                Y = y;
+                LocalZ = local.Z;
+            }
+
+            #endregion
+
+            #region Properties
+
+            private int LocalX { get; }
+
+            private int Y { get; }
+
+            private int LocalZ { get; }
+
+            #endregion
+
+            #region Equality
+
+            public bool Equals(MapChunkCellKey other)
+            {
+                return LocalX == other.LocalX && Y == other.Y && LocalZ == other.LocalZ;
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return obj is MapChunkCellKey other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(LocalX, Y, LocalZ);
+            }
+
+            #endregion
         }
 
         #endregion

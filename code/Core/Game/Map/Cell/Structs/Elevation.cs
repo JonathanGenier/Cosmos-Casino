@@ -30,6 +30,15 @@ namespace CosmosCasino.Core.Game.Map
 
         #endregion
 
+        #region Properties
+
+        /// <summary>
+        /// Gets the vertical <see cref="MapCellCoord.Y"/> coordinate represented by this elevation.
+        /// </summary>
+        internal int MapCellY => _halfStepIndex;
+
+        #endregion
+
         #region Factories
 
         /// <summary>

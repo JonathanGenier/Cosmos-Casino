@@ -40,9 +40,22 @@ namespace CosmosCasino.Core.Game.Map
         #region Properties
 
         /// <summary>
-        /// Gets the total number of cells currently managed by the map.
+        /// Gets the total number of physically stored sparse cells currently managed by the map.
         /// </summary>
-        internal int CellCount => _cellSystem.CellCount;
+        internal int CellCount
+        {
+            get
+            {
+                int count = 0;
+
+                foreach (var chunk in _chunks.Values)
+                {
+                    count += chunk.CellCount;
+                }
+
+                return count;
+            }
+        }
 
         /// <summary>
         /// Gets the number of map chunk identities currently resolved by the map manager.
@@ -117,7 +130,6 @@ namespace CosmosCasino.Core.Game.Map
             MapChunk chunk = GetOrCreateChunk(chunkCoord);
 
             chunk.StoreGeneratedTerrain(localCoord, terrainTile);
-            _cellSystem.CreateCell(ToMapCoord(coord));
         }
 
         /// <summary>
@@ -215,14 +227,71 @@ namespace CosmosCasino.Core.Game.Map
         #region Cell Operations
 
         /// <summary>
-        /// Attempts to retrieve the cell at the specified map coordinate.
+        /// Attempts to retrieve the sparse cell at the terrain base elevation of the specified legacy map coordinate.
         /// </summary>
         /// <param name="coord">The map coordinate to query.</param>
         /// <param name="cell">The cell at the coordinate if found.</param>
         /// <returns><c>true</c> if the cell exists; otherwise <c>false</c>.</returns>
         internal bool TryGetCell(MapCoord coord, [NotNullWhen(true)] out Cell? cell)
         {
-            return _cellSystem.TryGetCell(coord, out cell);
+            if (!TryGetTerrainBaseElevation(coord, out var elevation))
+            {
+                cell = null;
+                return false;
+            }
+
+            return TryGetCell(ToMapCellCoord(coord, elevation), out cell);
+        }
+
+        /// <summary>
+        /// Attempts to retrieve the sparse cell at the specified global X/Y/Z coordinate.
+        /// </summary>
+        /// <param name="coord">The global logical cell coordinate to query.</param>
+        /// <param name="cell">The sparse cell at the coordinate if one is stored.</param>
+        /// <returns><c>true</c> if the cell exists; otherwise <c>false</c>.</returns>
+        internal bool TryGetCell(MapCellCoord coord, [NotNullWhen(true)] out Cell? cell)
+        {
+            MapChunkCoord chunkCoord = ResolveChunkCoord(coord);
+
+            if (!TryGetChunk(chunkCoord, out var chunk))
+            {
+                cell = null;
+                return false;
+            }
+
+            MapChunkLocalCoord localCoord = ResolveChunkLocalCoord(coord);
+            return chunk.TryGetCell(localCoord, coord.Y, out cell);
+        }
+
+        /// <summary>
+        /// Retrieves an existing sparse cell or creates it when a mutating operation commits state.
+        /// </summary>
+        /// <param name="coord">The global logical cell coordinate to retrieve or create.</param>
+        /// <returns>The existing or newly created sparse cell.</returns>
+        internal Cell GetOrCreateCell(MapCellCoord coord)
+        {
+            MapChunk chunk = GetOrCreateChunk(coord);
+            MapChunkLocalCoord localCoord = ResolveChunkLocalCoord(coord);
+
+            return chunk.GetOrCreateCell(localCoord, coord.Y);
+        }
+
+        /// <summary>
+        /// Attempts to remove the sparse cell at the specified global X/Y/Z coordinate.
+        /// </summary>
+        /// <param name="coord">The global logical cell coordinate to remove.</param>
+        /// <returns><c>true</c> when a sparse cell was removed; otherwise, <c>false</c>.</returns>
+        internal bool TryRemoveCell(MapCellCoord coord)
+        {
+            MapChunkCoord chunkCoord = ResolveChunkCoord(coord);
+
+            if (!TryGetChunk(chunkCoord, out var chunk))
+            {
+                return false;
+            }
+
+            MapChunkLocalCoord localCoord = ResolveChunkLocalCoord(coord);
+            return chunk.TryRemoveCell(localCoord, coord.Y);
         }
 
         /// <summary>
@@ -239,7 +308,7 @@ namespace CosmosCasino.Core.Game.Map
             }
 
             return TryGetTerrainBaseElevation(coord, out var elevation)
-                && _cellSystem.Has(buildKind, coord, elevation);
+                && Has(buildKind, coord, elevation);
         }
 
         /// <summary>
@@ -251,7 +320,8 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns><c>true</c> if the build element exists; otherwise <c>false</c>.</returns>
         internal bool Has(BuildKind buildKind, MapCoord coord, Elevation elevation)
         {
-            return _cellSystem.Has(buildKind, coord, elevation);
+            TryGetCell(ToMapCellCoord(coord, elevation), out var cell);
+            return _cellSystem.Has(buildKind, cell);
         }
 
         /// <summary>
@@ -267,7 +337,7 @@ namespace CosmosCasino.Core.Game.Map
                 return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
             }
 
-            return _cellSystem.CanPlace(buildKind, coord, elevation);
+            return CanPlace(buildKind, coord, elevation);
         }
 
         /// <summary>
@@ -279,7 +349,8 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the placement validation.</returns>
         internal BuildOperationResult CanPlace(BuildKind buildKind, MapCoord coord, Elevation elevation)
         {
-            return _cellSystem.CanPlace(buildKind, coord, elevation);
+            TryGetCell(ToMapCellCoord(coord, elevation), out var cell);
+            return _cellSystem.CanPlace(buildKind, coord, cell);
         }
 
         /// <summary>
@@ -295,7 +366,7 @@ namespace CosmosCasino.Core.Game.Map
                 return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
             }
 
-            return _cellSystem.CanRemove(buildKind, coord, elevation);
+            return CanRemove(buildKind, coord, elevation);
         }
 
         /// <summary>
@@ -307,7 +378,8 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the removal validation.</returns>
         internal BuildOperationResult CanRemove(BuildKind buildKind, MapCoord coord, Elevation elevation)
         {
-            return _cellSystem.CanRemove(buildKind, coord, elevation);
+            TryGetCell(ToMapCellCoord(coord, elevation), out var cell);
+            return _cellSystem.CanRemove(buildKind, coord, cell);
         }
 
         /// <summary>
@@ -323,7 +395,7 @@ namespace CosmosCasino.Core.Game.Map
                 return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
             }
 
-            return _cellSystem.TryPlace(buildKind, coord, elevation);
+            return TryPlace(buildKind, coord, elevation);
         }
 
         /// <summary>
@@ -335,7 +407,14 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the placement operation.</returns>
         internal BuildOperationResult TryPlace(BuildKind buildKind, MapCoord coord, Elevation elevation)
         {
-            return _cellSystem.TryPlace(buildKind, coord, elevation);
+            MapCellCoord cellCoord = ToMapCellCoord(coord, elevation);
+            TryGetCell(cellCoord, out var cell);
+
+            return _cellSystem.TryPlace(
+                buildKind,
+                coord,
+                cell,
+                () => GetOrCreateCell(cellCoord));
         }
 
         /// <summary>
@@ -351,7 +430,7 @@ namespace CosmosCasino.Core.Game.Map
                 return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
             }
 
-            return _cellSystem.TryRemove(buildKind, coord, elevation);
+            return TryRemove(buildKind, coord, elevation);
         }
 
         /// <summary>
@@ -363,16 +442,26 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The result of the removal operation.</returns>
         internal BuildOperationResult TryRemove(BuildKind buildKind, MapCoord coord, Elevation elevation)
         {
-            return _cellSystem.TryRemove(buildKind, coord, elevation);
+            MapCellCoord cellCoord = ToMapCellCoord(coord, elevation);
+            TryGetCell(cellCoord, out var cell);
+
+            BuildOperationResult result = _cellSystem.TryRemove(buildKind, coord, cell);
+
+            if (result.Outcome == BuildOperationOutcome.Valid && cell?.IsEmpty == true)
+            {
+                TryRemoveCell(cellCoord);
+            }
+
+            return result;
         }
 
         #endregion
 
         #region Helpers
 
-        private static MapCoord ToMapCoord(TerrainTileWorldCoord coord)
+        private static MapCellCoord ToMapCellCoord(MapCoord coord, Elevation elevation)
         {
-            return new MapCoord(coord.X, coord.Y);
+            return new MapCellCoord(coord.X, elevation.MapCellY, coord.Y);
         }
 
         private static MapChunkCoord ResolveTerrainChunkCoord(TerrainTileWorldCoord coord)

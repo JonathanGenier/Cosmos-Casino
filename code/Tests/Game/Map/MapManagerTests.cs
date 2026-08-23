@@ -15,20 +15,23 @@ namespace CosmosCasino.Tests.Game.Map
         #region Generation Bounds
 
         [Test]
-        public void GenerateMap_OddMapSize_CreatesSymmetricBoundsAroundZero()
+        public void GenerateMap_OddMapSize_CreatesSymmetricTerrainBoundsAroundZeroWithoutCells()
         {
             var manager = new MapManager();
 
             manager.GenerateMap(seed: 0, mapSize: 5);
 
-            Assert.That(manager.CellCount, Is.EqualTo(25));
-            Assert.That(manager.TryGetCell(new MapCoord(-2, -2), out _), Is.True);
-            Assert.That(manager.TryGetCell(new MapCoord(0, 0), out _), Is.True);
-            Assert.That(manager.TryGetCell(new MapCoord(2, 2), out _), Is.True);
-            Assert.That(manager.TryGetCell(new MapCoord(-3, 0), out _), Is.False);
-            Assert.That(manager.TryGetCell(new MapCoord(3, 0), out _), Is.False);
-            Assert.That(manager.TryGetCell(new MapCoord(0, -3), out _), Is.False);
-            Assert.That(manager.TryGetCell(new MapCoord(0, 3), out _), Is.False);
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.TryGetTerrain(new MapCoord(-2, -2), out _), Is.True);
+            Assert.That(manager.TryGetTerrain(new MapCoord(0, 0), out _), Is.True);
+            Assert.That(manager.TryGetTerrain(new MapCoord(2, 2), out _), Is.True);
+            Assert.That(manager.TryGetTerrain(new MapCoord(-3, 0), out _), Is.False);
+            Assert.That(manager.TryGetTerrain(new MapCoord(3, 0), out _), Is.False);
+            Assert.That(manager.TryGetTerrain(new MapCoord(0, -3), out _), Is.False);
+            Assert.That(manager.TryGetTerrain(new MapCoord(0, 3), out _), Is.False);
+            Assert.That(manager.TryGetCell(new MapCoord(-2, -2), out _), Is.False);
+            Assert.That(manager.TryGetCell(new MapCoord(0, 0), out _), Is.False);
+            Assert.That(manager.TryGetCell(new MapCoord(2, 2), out _), Is.False);
         }
 
         [Test]
@@ -71,13 +74,307 @@ namespace CosmosCasino.Tests.Game.Map
             var manager = new MapManager();
             var coord = new MapCoord(-1, 1);
             manager.GenerateMap(seed: 0, mapSize: 5);
-            Assert.That(manager.TryGetCell(coord, out var cell), Is.True);
             Assert.That(manager.TryGetTerrainBaseElevation(coord, out var baseElevation), Is.True);
+            Assert.That(manager.TryGetCell(coord, out _), Is.False);
 
             var result = manager.TryPlace(BuildKind.Floor, coord);
 
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(manager.TryGetCell(ToMapCellCoord(coord, baseElevation), out var cell), Is.True);
             Assert.That(cell!.HasFloorAt(baseElevation), Is.True);
+        }
+
+        #endregion
+
+        #region Sparse Cell Storage
+
+        [Test]
+        public void TryGetCell_GlobalEmptyWorld_DoesNotCreateChunksOrCells()
+        {
+            var manager = new MapManager();
+            var coord = new MapCellCoord(999, 42, -999);
+
+            bool found = manager.TryGetCell(coord, out var cell);
+
+            Assert.That(found, Is.False);
+            Assert.That(cell, Is.Null);
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void GenerateMap_DoesNotCreateSparseCells()
+        {
+            var manager = new MapManager();
+
+            manager.GenerateMap(seed: 0, mapSize: 5);
+
+            Assert.That(manager.ChunkCount, Is.GreaterThan(0));
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.TryGetTerrain(new MapCoord(0, 0), out _), Is.True);
+            Assert.That(manager.TryGetCell(new MapCoord(0, 0), out _), Is.False);
+        }
+
+        [Test]
+        public void TryPlaceFloor_ExplicitElevation_CreatesSparseCellAtGlobalCellCoordinate()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(4, -3);
+            var elevation = new Elevation(2.5f);
+            var cellCoord = ToMapCellCoord(coord, elevation);
+
+            var result = manager.TryPlace(BuildKind.Floor, coord, elevation);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(manager.CellCount, Is.EqualTo(1));
+            Assert.That(manager.TryGetCell(cellCoord, out var cell), Is.True);
+            Assert.That(cell!.Coord, Is.EqualTo(cellCoord));
+            Assert.That(cell.HasFloorAt(elevation), Is.True);
+            Assert.That(manager.TryGetCell(coord, out _), Is.False);
+        }
+
+        [Test]
+        public void TryPlaceWall_MissingSparseCell_DoesNotAllocateStorage()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(0, 0);
+            var elevation = new Elevation(0);
+
+            var result = manager.TryPlace(BuildKind.Wall, coord, elevation);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
+            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoFloor));
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(0));
+            Assert.That(manager.TryGetCell(ToMapCellCoord(coord, elevation), out _), Is.False);
+        }
+
+        [Test]
+        public void TryRemoveMissingSparseCell_DoesNotAllocateStorage()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(0, 0);
+            var elevation = new Elevation(0);
+
+            var result = manager.TryRemove(BuildKind.Floor, coord, elevation);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(0));
+            Assert.That(manager.TryGetCell(ToMapCellCoord(coord, elevation), out _), Is.False);
+        }
+
+        [Test]
+        public void ExplicitElevationValidationAndHas_DoNotAllocateSparseStorage()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(0, 0);
+            var elevation = new Elevation(1.5f);
+
+            var canPlaceFloor = manager.CanPlace(BuildKind.Floor, coord, elevation);
+            var canPlaceWall = manager.CanPlace(BuildKind.Wall, coord, elevation);
+            var canRemoveFloor = manager.CanRemove(BuildKind.Floor, coord, elevation);
+            bool hasFloor = manager.Has(BuildKind.Floor, coord, elevation);
+
+            Assert.That(canPlaceFloor.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(canPlaceWall.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
+            Assert.That(canPlaceWall.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoFloor));
+            Assert.That(canRemoveFloor.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
+            Assert.That(hasFloor, Is.False);
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void CoordinateOnlyValidation_WithTerrain_DoesNotCreateSparseCells()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(0, 0);
+            manager.GenerateMap(seed: 0, mapSize: 5);
+            int chunkCount = manager.ChunkCount;
+
+            var result = manager.CanPlace(BuildKind.Floor, coord);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(chunkCount));
+            Assert.That(manager.TryGetCell(coord, out _), Is.False);
+        }
+
+        [Test]
+        public void CoordinateOnlyValidation_WithoutTerrain_ReturnsNoCellWithoutAllocating()
+        {
+            var manager = new MapManager();
+
+            var result = manager.CanPlace(BuildKind.Floor, new MapCoord(99, 0));
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
+            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoCell));
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.ChunkCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void TryPlaceFloor_SameHorizontalCoordAtDifferentElevations_CreatesDistinctCellsInSameChunk()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(2, -3);
+            var lower = new Elevation(-1f);
+            var origin = new Elevation(0f);
+            var upper = new Elevation(1.5f);
+
+            manager.TryPlace(BuildKind.Floor, coord, lower);
+            manager.TryPlace(BuildKind.Floor, coord, origin);
+            manager.TryPlace(BuildKind.Floor, coord, upper);
+
+            Assert.That(manager.ChunkCount, Is.EqualTo(1));
+            Assert.That(manager.CellCount, Is.EqualTo(3));
+            Assert.That(manager.TryGetCell(ToMapCellCoord(coord, lower), out var lowerCell), Is.True);
+            Assert.That(manager.TryGetCell(ToMapCellCoord(coord, origin), out var originCell), Is.True);
+            Assert.That(manager.TryGetCell(ToMapCellCoord(coord, upper), out var upperCell), Is.True);
+            Assert.That(lowerCell, Is.Not.SameAs(originCell));
+            Assert.That(originCell, Is.Not.SameAs(upperCell));
+            Assert.That(lowerCell!.Coord.Y, Is.EqualTo(lower.MapCellY));
+            Assert.That(originCell!.Coord.Y, Is.EqualTo(origin.MapCellY));
+            Assert.That(upperCell!.Coord.Y, Is.EqualTo(upper.MapCellY));
+        }
+
+        [Test]
+        public void ResolveChunkCoord_DifferentGlobalY_ReturnsSameHorizontalChunkAndLocalCoord()
+        {
+            var manager = new MapManager();
+            var lower = new MapCellCoord(-1, -100, 15);
+            var upper = new MapCellCoord(-1, 100, 15);
+
+            Assert.That(manager.ResolveChunkCoord(lower), Is.EqualTo(manager.ResolveChunkCoord(upper)));
+            Assert.That(manager.ResolveChunkLocalCoord(lower), Is.EqualTo(manager.ResolveChunkLocalCoord(upper)));
+        }
+
+        [Test]
+        public void GetOrCreateCell_RoutesSparseCellsAcrossPositiveNegativeBoundariesAndCorners()
+        {
+            int size = MapChunkMetrics.ChunkSize;
+            var manager = new MapManager();
+
+            AssertSparseCellRoutesToChunk(
+                manager,
+                new MapCellCoord(size - 1, 0, 0),
+                new MapChunkCoord(0, 0),
+                new MapChunkLocalCoord(size - 1, 0));
+            AssertSparseCellRoutesToChunk(
+                manager,
+                new MapCellCoord(size, 0, 0),
+                new MapChunkCoord(1, 0),
+                new MapChunkLocalCoord(0, 0));
+            AssertSparseCellRoutesToChunk(
+                manager,
+                new MapCellCoord(0, 0, size),
+                new MapChunkCoord(0, 1),
+                new MapChunkLocalCoord(0, 0));
+            AssertSparseCellRoutesToChunk(
+                manager,
+                new MapCellCoord(size, 0, size),
+                new MapChunkCoord(1, 1),
+                new MapChunkLocalCoord(0, 0));
+            AssertSparseCellRoutesToChunk(
+                manager,
+                new MapCellCoord(-1, 0, 0),
+                new MapChunkCoord(-1, 0),
+                new MapChunkLocalCoord(size - 1, 0));
+            AssertSparseCellRoutesToChunk(
+                manager,
+                new MapCellCoord(-size, 0, 0),
+                new MapChunkCoord(-1, 0),
+                new MapChunkLocalCoord(0, 0));
+            AssertSparseCellRoutesToChunk(
+                manager,
+                new MapCellCoord(-size - 1, 0, 0),
+                new MapChunkCoord(-2, 0),
+                new MapChunkLocalCoord(size - 1, 0));
+            AssertSparseCellRoutesToChunk(
+                manager,
+                new MapCellCoord(0, 0, -1),
+                new MapChunkCoord(0, -1),
+                new MapChunkLocalCoord(0, size - 1));
+            AssertSparseCellRoutesToChunk(
+                manager,
+                new MapCellCoord(-1, 0, -1),
+                new MapChunkCoord(-1, -1),
+                new MapChunkLocalCoord(size - 1, size - 1));
+        }
+
+        [Test]
+        public void TryGetCell_AdjacentSparseCellsAcrossChunkBoundary_RetrievesBoth()
+        {
+            int size = MapChunkMetrics.ChunkSize;
+            var manager = new MapManager();
+            var westCoord = new MapCoord(size - 1, 0);
+            var eastCoord = new MapCoord(size, 0);
+            var elevation = new Elevation(0);
+
+            manager.TryPlace(BuildKind.Floor, westCoord, elevation);
+            manager.TryPlace(BuildKind.Floor, eastCoord, elevation);
+
+            Assert.That(manager.CellCount, Is.EqualTo(2));
+            Assert.That(manager.ChunkCount, Is.EqualTo(2));
+            Assert.That(manager.TryGetCell(ToMapCellCoord(westCoord, elevation), out var westCell), Is.True);
+            Assert.That(manager.TryGetCell(ToMapCellCoord(eastCoord, elevation), out var eastCell), Is.True);
+            Assert.That(westCell!.HasFloor(), Is.True);
+            Assert.That(eastCell!.HasFloor(), Is.True);
+        }
+
+        [Test]
+        public void TryRemoveFloor_LastBuildable_RemovesSparseCell()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(-2, 3);
+            var elevation = new Elevation(1);
+            var cellCoord = ToMapCellCoord(coord, elevation);
+            manager.TryPlace(BuildKind.Floor, coord, elevation);
+            Assert.That(manager.TryGetCell(cellCoord, out _), Is.True);
+
+            var result = manager.TryRemove(BuildKind.Floor, coord, elevation);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.TryGetCell(cellCoord, out _), Is.False);
+        }
+
+        [Test]
+        public void TryRemoveWall_CellStillContainingFloor_RemainsStored()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(-2, 3);
+            var elevation = new Elevation(1);
+            var cellCoord = ToMapCellCoord(coord, elevation);
+            manager.TryPlace(BuildKind.Floor, coord, elevation);
+            manager.TryPlace(BuildKind.Wall, coord, elevation);
+
+            var result = manager.TryRemove(BuildKind.Wall, coord, elevation);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(manager.CellCount, Is.EqualTo(1));
+            Assert.That(manager.TryGetCell(cellCoord, out var cell), Is.True);
+            Assert.That(cell!.HasFloor(), Is.True);
+            Assert.That(cell.HasWall(), Is.False);
+        }
+
+        [Test]
+        public void TryRemoveFloor_AfterCoordinateOnlyBuild_RemovesSparseCellAndKeepsTerrain()
+        {
+            var manager = new MapManager();
+            var coord = new MapCoord(0, 0);
+            manager.GenerateMap(seed: 0, mapSize: 5);
+            Assert.That(manager.TryGetTerrainBaseElevation(coord, out var baseElevation), Is.True);
+            manager.TryPlace(BuildKind.Floor, coord);
+
+            var result = manager.TryRemove(BuildKind.Floor, coord);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(manager.CellCount, Is.EqualTo(0));
+            Assert.That(manager.TryGetCell(ToMapCellCoord(coord, baseElevation), out _), Is.False);
+            Assert.That(manager.TryGetCell(coord, out _), Is.False);
+            Assert.That(manager.TryGetTerrain(coord, out _), Is.True);
         }
 
         #endregion
@@ -391,6 +688,28 @@ namespace CosmosCasino.Tests.Game.Map
         #endregion
 
         #region Helpers
+
+        private static MapCellCoord ToMapCellCoord(MapCoord coord, Elevation elevation)
+        {
+            return new MapCellCoord(coord.X, elevation.MapCellY, coord.Y);
+        }
+
+        private static void AssertSparseCellRoutesToChunk(
+            MapManager manager,
+            MapCellCoord cellCoord,
+            MapChunkCoord expectedChunkCoord,
+            MapChunkLocalCoord expectedLocalCoord)
+        {
+            var cell = manager.GetOrCreateCell(cellCoord);
+
+            Assert.That(cell.Coord, Is.EqualTo(cellCoord));
+            Assert.That(manager.ResolveChunkCoord(cellCoord), Is.EqualTo(expectedChunkCoord));
+            Assert.That(manager.ResolveChunkLocalCoord(cellCoord), Is.EqualTo(expectedLocalCoord));
+            Assert.That(manager.TryGetCell(cellCoord, out var storedCell), Is.True);
+            Assert.That(storedCell, Is.SameAs(cell));
+            Assert.That(manager.TryGetChunk(expectedChunkCoord, out var chunk), Is.True);
+            Assert.That(chunk!.Contains(cellCoord), Is.True);
+        }
 
         private static TerrainTile FlatTile(float height)
         {

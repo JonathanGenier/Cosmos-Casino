@@ -1,102 +1,38 @@
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Buildables;
-using System.Diagnostics.CodeAnalysis;
 
 namespace CosmosCasino.Core.Game.Map.Systems
 {
     /// <summary>
-    /// Manages map cells and mediates build validation and operations by delegating
-    /// to individual cells, acting as the authoritative cell-level build system.
+    /// Mediates build validation and operations against sparse map cells without owning world storage.
     /// </summary>
     internal sealed class CellSystem
     {
-        #region Fields
-
-        private readonly Grid _grid;
-
-        #endregion
-
-        #region Initialization
-
-        /// <summary>
-        /// Initializes a new cell system with an empty backing grid.
-        /// </summary>
-        internal CellSystem()
-        {
-            _grid = new Grid();
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the number of cells currently managed by the system.
-        /// </summary>
-        internal int CellCount => _grid.CellCount;
-
-        #endregion
-
-        #region Cell API
-
-        /// <summary>
-        /// Creates a compatibility cell at the specified coordinate if one does not already exist.
-        /// </summary>
-        /// <param name="coord">The map coordinate at which to create the cell.</param>
-        internal void CreateCell(MapCoord coord)
-        {
-            _grid.CreateCell(coord);
-        }
-
-        /// <summary>
-        /// Enumerates all map coordinates currently associated with cells.
-        /// </summary>
-        /// <returns>An enumerable of all existing cell coordinates.</returns>
-        internal IEnumerable<MapCoord> EnumerateAllCoords()
-        {
-            return _grid.AllCoords;
-        }
-
-        /// <summary>
-        /// Attempts to retrieve the cell at the specified map coordinate.
-        /// </summary>
-        /// <param name="coord">The map coordinate to query.</param>
-        /// <param name="cell">The cell at the coordinate if found.</param>
-        /// <returns><c>true</c> if the cell exists; otherwise <c>false</c>.</returns>
-        internal bool TryGetCell(MapCoord coord, [NotNullWhen(true)] out Cell? cell)
-        {
-            cell = _grid.GetCell(coord);
-            return cell != null;
-        }
-
-        #endregion
-
         #region Has API
 
         /// <summary>
-        /// Determines whether the specified build kind exists at the given coordinate and elevation.
+        /// Determines whether the specified build kind exists in the given sparse cell state.
         /// </summary>
         /// <param name="buildKind">The type of build element to check.</param>
-        /// <param name="coord">The map coordinate to query.</param>
-        /// <param name="elevation">The elevation to query.</param>
+        /// <param name="cell">The existing sparse cell, or <c>null</c> for implicit empty state.</param>
         /// <returns><c>true</c> if the build element exists; otherwise <c>false</c>.</returns>
         /// <exception cref="InvalidOperationException">Thrown for unsupported build kinds.</exception>
-        internal bool Has(BuildKind buildKind, MapCoord coord, Elevation elevation)
+        internal bool Has(BuildKind buildKind, Cell? cell)
         {
             if (buildKind is not BuildKind.Floor and not BuildKind.Wall)
             {
                 throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported.");
             }
 
-            if (!TryGetCell(coord, out var cell))
+            if (cell is null)
             {
                 return false;
             }
 
             return buildKind switch
             {
-                BuildKind.Floor => cell.HasFloorAt(elevation),
-                BuildKind.Wall => cell.HasWallAt(elevation),
+                BuildKind.Floor => cell.HasFloor(),
+                BuildKind.Wall => cell.HasWall(),
                 _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
             };
         }
@@ -106,49 +42,43 @@ namespace CosmosCasino.Core.Game.Map.Systems
         #region Validation API
 
         /// <summary>
-        /// Validates whether the specified build kind can be placed at the given coordinate and elevation.
+        /// Validates whether the specified build kind can be placed in the current sparse cell state.
         /// </summary>
         /// <param name="buildKind">The type of build element to place.</param>
-        /// <param name="coord">The map coordinate to validate.</param>
-        /// <param name="elevation">The elevation to validate.</param>
+        /// <param name="coord">The legacy map coordinate associated with the build operation.</param>
+        /// <param name="cell">The existing sparse cell, or <c>null</c> for implicit empty state.</param>
         /// <returns>The result of the placement validation.</returns>
         /// <exception cref="InvalidOperationException">Thrown for unsupported build kinds.</exception>
-        internal BuildOperationResult CanPlace(BuildKind buildKind, MapCoord coord, Elevation elevation)
+        internal BuildOperationResult CanPlace(BuildKind buildKind, MapCoord coord, Cell? cell)
         {
-            if (!TryGetCell(coord, out var cell))
+            CellValidationResult validationResult = buildKind switch
             {
-                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
-            }
-
-            return buildKind switch
-            {
-                BuildKind.Floor => CanPlaceFloor(cell, elevation),
-                BuildKind.Wall => CanPlaceWall(cell, elevation),
+                BuildKind.Floor => cell?.ValidatePlaceFloor() ?? CellValidationResult.Valid(),
+                BuildKind.Wall => cell?.ValidatePlaceWall() ?? CellValidationResult.Invalid(BuildOperationFailureReason.NoFloor),
                 _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
             };
+
+            return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
         }
 
         /// <summary>
-        /// Validates whether the specified build kind can be removed from the given coordinate and elevation.
+        /// Validates whether the specified build kind can be removed from the current sparse cell state.
         /// </summary>
         /// <param name="buildKind">The type of build element to remove.</param>
-        /// <param name="coord">The map coordinate to validate.</param>
-        /// <param name="elevation">The elevation to validate.</param>
+        /// <param name="coord">The legacy map coordinate associated with the build operation.</param>
+        /// <param name="cell">The existing sparse cell, or <c>null</c> for implicit empty state.</param>
         /// <returns>The result of the removal validation.</returns>
         /// <exception cref="InvalidOperationException">Thrown for unsupported build kinds.</exception>
-        internal BuildOperationResult CanRemove(BuildKind buildKind, MapCoord coord, Elevation elevation)
+        internal BuildOperationResult CanRemove(BuildKind buildKind, MapCoord coord, Cell? cell)
         {
-            if (!TryGetCell(coord, out var cell))
+            CellValidationResult validationResult = buildKind switch
             {
-                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
-            }
-
-            return buildKind switch
-            {
-                BuildKind.Floor => CanRemoveFloor(cell, elevation),
-                BuildKind.Wall => CanRemoveWall(cell, elevation),
+                BuildKind.Floor => cell?.ValidateRemoveFloor() ?? CellValidationResult.NoOp(),
+                BuildKind.Wall => cell?.ValidateRemoveWall() ?? CellValidationResult.NoOp(),
                 _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
             };
+
+            return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
         }
 
         #endregion
@@ -156,185 +86,103 @@ namespace CosmosCasino.Core.Game.Map.Systems
         #region Operations API
 
         /// <summary>
-        /// Attempts to place the specified build kind at the given coordinate and elevation.
+        /// Attempts to place the specified build kind, creating sparse cell storage only if state commits.
         /// </summary>
         /// <param name="buildKind">The type of build element to place.</param>
-        /// <param name="coord">The map coordinate at which to place.</param>
-        /// <param name="elevation">The elevation at which to place.</param>
+        /// <param name="coord">The legacy map coordinate associated with the build operation.</param>
+        /// <param name="cell">The existing sparse cell, or <c>null</c> for implicit empty state.</param>
+        /// <param name="getOrCreateCell">Creates sparse storage only after validation succeeds.</param>
         /// <returns>The result of the placement operation.</returns>
         /// <exception cref="InvalidOperationException">Thrown for unsupported build kinds.</exception>
-        internal BuildOperationResult TryPlace(BuildKind buildKind, MapCoord coord, Elevation elevation)
+        internal BuildOperationResult TryPlace(
+            BuildKind buildKind,
+            MapCoord coord,
+            Cell? cell,
+            Func<Cell> getOrCreateCell)
         {
-            if (!TryGetCell(coord, out var cell))
-            {
-                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
-            }
+            ArgumentNullException.ThrowIfNull(getOrCreateCell);
 
             return buildKind switch
             {
-                BuildKind.Floor => TryPlaceFloor(cell, elevation),
-                BuildKind.Wall => TryPlaceWall(cell, elevation),
+                BuildKind.Floor => TryPlaceFloor(coord, cell, getOrCreateCell),
+                BuildKind.Wall => TryPlaceWall(coord, cell),
                 _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
             };
         }
 
         /// <summary>
-        /// Attempts to remove the specified build kind from the given coordinate and elevation.
+        /// Attempts to remove the specified build kind from the current sparse cell state.
         /// </summary>
         /// <param name="buildKind">The type of build element to remove.</param>
-        /// <param name="coord">The map coordinate from which to remove.</param>
-        /// <param name="elevation">The elevation from which to remove.</param>
+        /// <param name="coord">The legacy map coordinate associated with the build operation.</param>
+        /// <param name="cell">The existing sparse cell, or <c>null</c> for implicit empty state.</param>
         /// <returns>The result of the removal operation.</returns>
         /// <exception cref="InvalidOperationException">Thrown for unsupported build kinds.</exception>
-        internal BuildOperationResult TryRemove(BuildKind buildKind, MapCoord coord, Elevation elevation)
+        internal BuildOperationResult TryRemove(BuildKind buildKind, MapCoord coord, Cell? cell)
         {
-            if (!TryGetCell(coord, out var cell))
-            {
-                return BuildOperationResult.Invalid(coord, BuildOperationFailureReason.NoCell);
-            }
-
             return buildKind switch
             {
-                BuildKind.Floor => TryRemoveFloor(cell, elevation),
-                BuildKind.Wall => TryRemoveWall(cell, elevation),
+                BuildKind.Floor => TryRemoveFloor(coord, cell),
+                BuildKind.Wall => TryRemoveWall(coord, cell),
                 _ => throw new InvalidOperationException($"{nameof(BuildKind)} is not yet supported."),
             };
         }
 
         #endregion
 
-        #region Floor Validation Methods
+        #region Floor Methods
 
-        /// <summary>
-        /// Validates whether a floor can be placed in the specified cell.
-        /// </summary>
-        /// <param name="cell">The cell to validate.</param>
-        /// <param name="elevation">The elevation at which to validate floor placement.</param>
-        /// <returns>The result of the floor placement validation.</returns>
-        private static BuildOperationResult CanPlaceFloor(Cell cell, Elevation elevation)
+        private static BuildOperationResult TryPlaceFloor(MapCoord coord, Cell? cell, Func<Cell> getOrCreateCell)
         {
-            var validationResult = cell.ValidatePlaceFloor(elevation);
-            return BuildOperationResult.FromMapCellValidationResult(validationResult, cell.Coord);
+            CellValidationResult validationResult = cell?.ValidatePlaceFloor() ?? CellValidationResult.Valid();
+
+            if (validationResult.Outcome == BuildOperationOutcome.Valid)
+            {
+                Cell targetCell = cell ?? getOrCreateCell();
+                targetCell.PlaceFloor(validationResult, new Floor());
+            }
+
+            return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
         }
 
-        /// <summary>
-        /// Validates whether a floor can be removed from the specified cell.
-        /// </summary>
-        /// <param name="cell">The cell to validate.</param>
-        /// <param name="elevation">The elevation from which to validate floor removal.</param>
-        /// <returns>The result of the floor removal validation.</returns>
-        private static BuildOperationResult CanRemoveFloor(Cell cell, Elevation elevation)
+        private static BuildOperationResult TryRemoveFloor(MapCoord coord, Cell? cell)
         {
-            var validationResult = cell.ValidateRemoveFloor(elevation);
-            return BuildOperationResult.FromMapCellValidationResult(validationResult, cell.Coord);
+            CellValidationResult validationResult = cell?.ValidateRemoveFloor() ?? CellValidationResult.NoOp();
+
+            if (validationResult.Outcome == BuildOperationOutcome.Valid)
+            {
+                cell!.RemoveFloor(validationResult);
+            }
+
+            return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
         }
 
         #endregion
 
-        #region Floor Operation Methods
+        #region Wall Methods
 
-        /// <summary>
-        /// Attempts to place a floor in the specified cell.
-        /// </summary>
-        /// <param name="cell">The target cell.</param>
-        /// <param name="elevation">The elevation at which to place the floor.</param>
-        /// <returns>The result of the floor placement operation.</returns>
-        private static BuildOperationResult TryPlaceFloor(Cell cell, Elevation elevation)
+        private static BuildOperationResult TryPlaceWall(MapCoord coord, Cell? cell)
         {
-            var validationResult = cell.ValidatePlaceFloor(elevation);
+            CellValidationResult validationResult = cell?.ValidatePlaceWall() ?? CellValidationResult.Invalid(BuildOperationFailureReason.NoFloor);
 
             if (validationResult.Outcome == BuildOperationOutcome.Valid)
             {
-                cell.PlaceFloor(validationResult, new Floor(), elevation);
+                cell!.PlaceWall(validationResult, new Wall());
             }
 
-            return BuildOperationResult.FromMapCellValidationResult(validationResult, cell.Coord);
+            return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
         }
 
-        /// <summary>
-        /// Attempts to remove a floor from the specified cell.
-        /// </summary>
-        /// <param name="cell">The target cell.</param>
-        /// <param name="elevation">The elevation from which to remove the floor.</param>
-        /// <returns>The result of the floor removal operation.</returns>
-        private static BuildOperationResult TryRemoveFloor(Cell cell, Elevation elevation)
+        private static BuildOperationResult TryRemoveWall(MapCoord coord, Cell? cell)
         {
-            var validationResult = cell.ValidateRemoveFloor(elevation);
+            CellValidationResult validationResult = cell?.ValidateRemoveWall() ?? CellValidationResult.NoOp();
 
             if (validationResult.Outcome == BuildOperationOutcome.Valid)
             {
-                cell.RemoveFloor(validationResult, elevation);
+                cell!.RemoveWall(validationResult);
             }
 
-            return BuildOperationResult.FromMapCellValidationResult(validationResult, cell.Coord);
-        }
-
-        #endregion
-
-        #region Wall Validation Methods
-
-        /// <summary>
-        /// Validates whether a wall can be placed in the specified cell.
-        /// </summary>
-        /// <param name="cell">The cell to validate.</param>
-        /// <param name="elevation">The elevation at which to validate wall placement.</param>
-        /// <returns>The result of the wall placement validation.</returns>
-        private static BuildOperationResult CanPlaceWall(Cell cell, Elevation elevation)
-        {
-            var validationResult = cell.ValidatePlaceWall(elevation);
-            return BuildOperationResult.FromMapCellValidationResult(validationResult, cell.Coord);
-        }
-
-        /// <summary>
-        /// Validates whether a wall can be removed from the specified cell.
-        /// </summary>
-        /// <param name="cell">The cell to validate.</param>
-        /// <param name="elevation">The elevation from which to validate wall removal.</param>
-        /// <returns>The result of the wall removal validation.</returns>
-        private static BuildOperationResult CanRemoveWall(Cell cell, Elevation elevation)
-        {
-            var validationResult = cell.ValidateRemoveWall(elevation);
-            return BuildOperationResult.FromMapCellValidationResult(validationResult, cell.Coord);
-        }
-
-        #endregion
-
-        #region Wall Operation Methods
-
-        /// <summary>
-        /// Attempts to place a wall in the specified cell.
-        /// </summary>
-        /// <param name="cell">The target cell.</param>
-        /// <param name="elevation">The elevation at which to place the wall.</param>
-        /// <returns>The result of the wall placement operation.</returns>
-        private static BuildOperationResult TryPlaceWall(Cell cell, Elevation elevation)
-        {
-            var validationResult = cell.ValidatePlaceWall(elevation);
-
-            if (validationResult.Outcome == BuildOperationOutcome.Valid)
-            {
-                cell.PlaceWall(validationResult, new Wall(), elevation);
-            }
-
-            return BuildOperationResult.FromMapCellValidationResult(validationResult, cell.Coord);
-        }
-
-        /// <summary>
-        /// Attempts to remove a wall from the specified cell.
-        /// </summary>
-        /// <param name="cell">The target cell.</param>
-        /// <param name="elevation">The elevation from which to remove the wall.</param>
-        /// <returns>The result of the wall removal operation.</returns>
-        private static BuildOperationResult TryRemoveWall(Cell cell, Elevation elevation)
-        {
-            var validationResult = cell.ValidateRemoveWall(elevation);
-
-            if (validationResult.Outcome == BuildOperationOutcome.Valid)
-            {
-                cell.RemoveWall(validationResult, elevation);
-            }
-
-            return BuildOperationResult.FromMapCellValidationResult(validationResult, cell.Coord);
+            return BuildOperationResult.FromMapCellValidationResult(validationResult, coord);
         }
 
         #endregion

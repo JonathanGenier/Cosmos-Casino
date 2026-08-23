@@ -8,18 +8,32 @@ namespace CosmosCasino.Tests.Game.Map
     [TestFixture]
     internal sealed class CellTests
     {
-        #region FIELDS
+        #region Fields
 
         private Cell _cell = null!;
 
         #endregion
 
-        #region SETUP & TEARDOWN
+        #region Setup
 
         [SetUp]
         public void Setup()
         {
-            _cell = new Cell(new MapCoord(0, 0));
+            _cell = CellAt(new Elevation(0));
+        }
+
+        #endregion
+
+        #region Identity
+
+        [Test]
+        public void Constructor_AssignsGlobalCoordinateIdentity()
+        {
+            var coord = new MapCellCoord(-3, 7, 4);
+            var cell = new Cell(coord);
+
+            Assert.That(cell.Coord, Is.EqualTo(coord));
+            Assert.That(cell.IsEmpty, Is.True);
         }
 
         #endregion
@@ -27,65 +41,57 @@ namespace CosmosCasino.Tests.Game.Map
         #region Floor Placement
 
         [Test]
-        public void ValidatePlaceFloor_MissingLayer_ReturnsValidWithoutMutation()
+        public void ValidatePlaceFloor_MissingFloor_ReturnsValidWithoutMutation()
         {
-            var elevation = new Elevation(0);
-
-            var first = _cell.ValidatePlaceFloor(elevation);
-            var second = _cell.ValidatePlaceFloor(elevation);
+            var first = _cell.ValidatePlaceFloor();
+            var second = _cell.ValidatePlaceFloor();
 
             Assert.That(first.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
             Assert.That(second.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_cell.HasFloorAt(elevation), Is.False);
+            Assert.That(_cell.HasFloor(), Is.False);
+            Assert.That(_cell.IsEmpty, Is.True);
         }
 
         [Test]
-        public void PlaceFloor_ValidResult_PlacesFloorAtRequestedElevation()
+        public void PlaceFloor_ValidResult_PlacesFloorInCell()
         {
-            var elevation = new Elevation(4);
+            PlaceFloor(_cell);
 
-            PlaceFloor(elevation);
-
-            Assert.That(_cell.HasFloorAt(elevation), Is.True);
-            Assert.That(_cell.HasFloorAt(new Elevation(0)), Is.False);
+            Assert.That(_cell.HasFloor(), Is.True);
+            Assert.That(_cell.IsEmpty, Is.False);
         }
 
         [Test]
-        public void ValidatePlaceFloor_DuplicateAtSameElevation_ReturnsNoOp()
+        public void HasFloorAt_NonMatchingElevation_ReturnsFalse()
         {
-            var elevation = new Elevation(2);
-            PlaceFloor(elevation);
+            var elevation = new Elevation(2.5f);
+            var cell = CellAt(elevation);
+            PlaceFloor(cell);
 
-            var result = _cell.ValidatePlaceFloor(elevation);
+            Assert.That(cell.HasFloorAt(elevation), Is.True);
+            Assert.That(cell.HasFloorAt(new Elevation(3f)), Is.False);
+        }
+
+        [Test]
+        public void ValidatePlaceFloor_Duplicate_ReturnsNoOp()
+        {
+            PlaceFloor(_cell);
+
+            var result = _cell.ValidatePlaceFloor();
 
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
             Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.None));
         }
 
         [Test]
-        public void PlaceFloor_AtDifferentElevations_CreatesIndependentContents()
-        {
-            var lower = new Elevation(2f);
-            var upper = new Elevation(2.5f);
-
-            PlaceFloor(lower);
-            PlaceFloor(upper);
-
-            Assert.That(_cell.HasFloorAt(lower), Is.True);
-            Assert.That(_cell.HasFloorAt(upper), Is.True);
-            Assert.That(_cell.HasFloorAt(new Elevation(3f)), Is.False);
-        }
-
-        [Test]
         public void PlaceFloor_NonValidResult_ThrowsWithoutChangingExistingFloor()
         {
-            var elevation = new Elevation(0);
-            PlaceFloor(elevation);
-            var noOp = _cell.ValidatePlaceFloor(elevation);
+            PlaceFloor(_cell);
+            var noOp = _cell.ValidatePlaceFloor();
 
             Assert.Throws<InvalidOperationException>(() =>
-                _cell.PlaceFloor(noOp, new Floor(), elevation));
-            Assert.That(_cell.HasFloorAt(elevation), Is.True);
+                _cell.PlaceFloor(noOp, new Floor()));
+            Assert.That(_cell.HasFloor(), Is.True);
         }
 
         #endregion
@@ -93,86 +99,52 @@ namespace CosmosCasino.Tests.Game.Map
         #region Floor Removal
 
         [Test]
-        public void ValidateRemoveFloor_MissingLayer_ReturnsNoOpWithoutMutation()
+        public void ValidateRemoveFloor_MissingFloor_ReturnsNoOpWithoutMutation()
         {
-            var elevation = new Elevation(0);
-
-            var first = _cell.ValidateRemoveFloor(elevation);
-            var second = _cell.ValidateRemoveFloor(elevation);
+            var first = _cell.ValidateRemoveFloor();
+            var second = _cell.ValidateRemoveFloor();
 
             Assert.That(first.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
             Assert.That(second.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
-            Assert.That(_cell.HasFloorAt(elevation), Is.False);
+            Assert.That(_cell.HasFloor(), Is.False);
+            Assert.That(_cell.IsEmpty, Is.True);
         }
 
         [Test]
-        public void RemoveFloor_ValidResult_RemovesOnlyRequestedElevation()
+        public void RemoveFloor_ValidResult_RemovesFloorAndEmptiesCell()
         {
-            var lower = new Elevation(0);
-            var upper = new Elevation(1);
-            PlaceFloor(lower);
-            PlaceFloor(upper);
+            PlaceFloor(_cell);
 
-            RemoveFloor(lower);
+            RemoveFloor(_cell);
 
-            Assert.That(_cell.HasFloorAt(lower), Is.False);
-            Assert.That(_cell.HasFloorAt(upper), Is.True);
+            Assert.That(_cell.HasFloor(), Is.False);
+            Assert.That(_cell.HasWall(), Is.False);
+            Assert.That(_cell.IsEmpty, Is.True);
+            Assert.That(_cell.ValidatePlaceFloor().Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(_cell.ValidatePlaceWall().FailureReason, Is.EqualTo(BuildOperationFailureReason.NoFloor));
         }
 
         [Test]
-        public void RemoveFloor_LastContent_ReturnsElevationToAbsentLayerBehavior()
+        public void ValidateRemoveFloor_WallInCell_ReturnsBlockedWithoutMutation()
         {
-            var elevation = new Elevation(-3);
-            PlaceFloor(elevation);
+            PlaceFloorAndWall(_cell);
 
-            RemoveFloor(elevation);
-
-            Assert.That(_cell.HasFloorAt(elevation), Is.False);
-            Assert.That(_cell.HasWallAt(elevation), Is.False);
-            Assert.That(_cell.ValidatePlaceFloor(elevation).Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_cell.ValidatePlaceWall(elevation).FailureReason, Is.EqualTo(BuildOperationFailureReason.NoFloor));
-        }
-
-        [Test]
-        public void ValidateRemoveFloor_WallAtSameElevation_ReturnsBlockedWithoutMutation()
-        {
-            var elevation = new Elevation(0);
-            PlaceFloorAndWall(elevation);
-
-            var result = _cell.ValidateRemoveFloor(elevation);
+            var result = _cell.ValidateRemoveFloor();
 
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
             Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.Blocked));
-            Assert.That(_cell.HasFloorAt(elevation), Is.True);
-            Assert.That(_cell.HasWallAt(elevation), Is.True);
-        }
-
-        [Test]
-        public void RemoveFloor_WallAtDifferentElevation_DoesNotBlockRemoval()
-        {
-            var lower = new Elevation(0);
-            var upper = new Elevation(1);
-            PlaceFloor(lower);
-            PlaceFloorAndWall(upper);
-
-            var validation = _cell.ValidateRemoveFloor(lower);
-            _cell.RemoveFloor(validation, lower);
-
-            Assert.That(validation.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_cell.HasFloorAt(lower), Is.False);
-            Assert.That(_cell.HasFloorAt(upper), Is.True);
-            Assert.That(_cell.HasWallAt(upper), Is.True);
+            Assert.That(_cell.HasFloor(), Is.True);
+            Assert.That(_cell.HasWall(), Is.True);
         }
 
         [Test]
         public void RemoveFloor_NonValidResult_ThrowsWithoutMutation()
         {
-            var elevation = new Elevation(0);
-            PlaceFloorAndWall(elevation);
-            var blocked = _cell.ValidateRemoveFloor(elevation);
+            PlaceFloorAndWall(_cell);
+            var blocked = _cell.ValidateRemoveFloor();
 
-            Assert.Throws<InvalidOperationException>(() => _cell.RemoveFloor(blocked, elevation));
-            Assert.That(_cell.HasFloorAt(elevation), Is.True);
+            Assert.Throws<InvalidOperationException>(() => _cell.RemoveFloor(blocked));
+            Assert.That(_cell.HasFloor(), Is.True);
         }
 
         #endregion
@@ -180,48 +152,44 @@ namespace CosmosCasino.Tests.Game.Map
         #region Wall Placement
 
         [Test]
-        public void ValidatePlaceWall_MissingFloorAtElevation_ReturnsInvalid()
+        public void ValidatePlaceWall_MissingFloor_ReturnsInvalid()
         {
-            var elevation = new Elevation(1);
-
-            var result = _cell.ValidatePlaceWall(elevation);
+            var result = _cell.ValidatePlaceWall();
 
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
             Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoFloor));
-            Assert.That(_cell.HasWallAt(elevation), Is.False);
+            Assert.That(_cell.HasWall(), Is.False);
         }
 
         [Test]
-        public void ValidatePlaceWall_FloorAtDifferentElevation_ReturnsInvalid()
+        public void PlaceWall_FloorInCell_PlacesWall()
         {
-            PlaceFloor(new Elevation(0));
+            PlaceFloor(_cell);
+            var validation = _cell.ValidatePlaceWall();
 
-            var result = _cell.ValidatePlaceWall(new Elevation(1));
-
-            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
-            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoFloor));
-        }
-
-        [Test]
-        public void PlaceWall_FloorAtSameElevation_PlacesWall()
-        {
-            var elevation = new Elevation(3);
-            PlaceFloor(elevation);
-            var validation = _cell.ValidatePlaceWall(elevation);
-
-            _cell.PlaceWall(validation, new Wall(), elevation);
+            _cell.PlaceWall(validation, new Wall());
 
             Assert.That(validation.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(_cell.HasWallAt(elevation), Is.True);
+            Assert.That(_cell.HasWall(), Is.True);
         }
 
         [Test]
-        public void ValidatePlaceWall_DuplicateAtSameElevation_ReturnsNoOp()
+        public void HasWallAt_NonMatchingElevation_ReturnsFalse()
         {
-            var elevation = new Elevation(0);
-            PlaceFloorAndWall(elevation);
+            var elevation = new Elevation(-1.5f);
+            var cell = CellAt(elevation);
+            PlaceFloorAndWall(cell);
 
-            var result = _cell.ValidatePlaceWall(elevation);
+            Assert.That(cell.HasWallAt(elevation), Is.True);
+            Assert.That(cell.HasWallAt(new Elevation(-1f)), Is.False);
+        }
+
+        [Test]
+        public void ValidatePlaceWall_Duplicate_ReturnsNoOp()
+        {
+            PlaceFloorAndWall(_cell);
+
+            var result = _cell.ValidatePlaceWall();
 
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
             Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.None));
@@ -230,12 +198,11 @@ namespace CosmosCasino.Tests.Game.Map
         [Test]
         public void PlaceWall_NonValidResult_ThrowsWithoutMutation()
         {
-            var elevation = new Elevation(0);
-            var invalid = _cell.ValidatePlaceWall(elevation);
+            var invalid = _cell.ValidatePlaceWall();
 
             Assert.Throws<InvalidOperationException>(() =>
-                _cell.PlaceWall(invalid, new Wall(), elevation));
-            Assert.That(_cell.HasWallAt(elevation), Is.False);
+                _cell.PlaceWall(invalid, new Wall()));
+            Assert.That(_cell.HasWall(), Is.False);
         }
 
         #endregion
@@ -245,71 +212,72 @@ namespace CosmosCasino.Tests.Game.Map
         [Test]
         public void ValidateRemoveWall_MissingWall_ReturnsNoOpWithoutMutation()
         {
-            var elevation = new Elevation(0);
-            PlaceFloor(elevation);
+            PlaceFloor(_cell);
 
-            var first = _cell.ValidateRemoveWall(elevation);
-            var second = _cell.ValidateRemoveWall(elevation);
+            var first = _cell.ValidateRemoveWall();
+            var second = _cell.ValidateRemoveWall();
 
             Assert.That(first.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
             Assert.That(second.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
-            Assert.That(_cell.HasWallAt(elevation), Is.False);
+            Assert.That(_cell.HasFloor(), Is.True);
+            Assert.That(_cell.HasWall(), Is.False);
         }
 
         [Test]
-        public void RemoveWall_ValidResult_RemovesOnlyRequestedElevation()
+        public void RemoveWall_ValidResult_RemovesWallAndLeavesFloor()
         {
-            var lower = new Elevation(0);
-            var upper = new Elevation(1);
-            PlaceFloorAndWall(lower);
-            PlaceFloorAndWall(upper);
+            PlaceFloorAndWall(_cell);
 
-            RemoveWall(lower);
+            RemoveWall(_cell);
 
-            Assert.That(_cell.HasWallAt(lower), Is.False);
-            Assert.That(_cell.HasFloorAt(lower), Is.True);
-            Assert.That(_cell.HasWallAt(upper), Is.True);
+            Assert.That(_cell.HasWall(), Is.False);
+            Assert.That(_cell.HasFloor(), Is.True);
+            Assert.That(_cell.IsEmpty, Is.False);
         }
 
         [Test]
         public void RemoveWall_NonValidResult_ThrowsWithoutMutation()
         {
-            var elevation = new Elevation(0);
-            PlaceFloor(elevation);
-            var noOp = _cell.ValidateRemoveWall(elevation);
+            PlaceFloor(_cell);
+            var noOp = _cell.ValidateRemoveWall();
 
-            Assert.Throws<InvalidOperationException>(() => _cell.RemoveWall(noOp, elevation));
-            Assert.That(_cell.HasFloorAt(elevation), Is.True);
-            Assert.That(_cell.HasWallAt(elevation), Is.False);
+            Assert.Throws<InvalidOperationException>(() => _cell.RemoveWall(noOp));
+            Assert.That(_cell.HasFloor(), Is.True);
+            Assert.That(_cell.HasWall(), Is.False);
         }
 
         #endregion
 
-        #region HELPERS
+        #region Helpers
 
-        private void PlaceFloor(Elevation elevation)
+        private static Cell CellAt(Elevation elevation)
         {
-            var validation = _cell.ValidatePlaceFloor(elevation);
-            _cell.PlaceFloor(validation, new Floor(), elevation);
+            return new Cell(new MapCellCoord(0, elevation.MapCellY, 0));
         }
 
-        private void PlaceFloorAndWall(Elevation elevation)
+        private static void PlaceFloor(Cell cell)
         {
-            PlaceFloor(elevation);
-            var validation = _cell.ValidatePlaceWall(elevation);
-            _cell.PlaceWall(validation, new Wall(), elevation);
+            var validation = cell.ValidatePlaceFloor();
+            cell.PlaceFloor(validation, new Floor());
         }
 
-        private void RemoveFloor(Elevation elevation)
+        private static void PlaceFloorAndWall(Cell cell)
         {
-            var validation = _cell.ValidateRemoveFloor(elevation);
-            _cell.RemoveFloor(validation, elevation);
+            PlaceFloor(cell);
+            var validation = cell.ValidatePlaceWall();
+            cell.PlaceWall(validation, new Wall());
         }
 
-        private void RemoveWall(Elevation elevation)
+        private static void RemoveFloor(Cell cell)
         {
-            var validation = _cell.ValidateRemoveWall(elevation);
-            _cell.RemoveWall(validation, elevation);
+            var validation = cell.ValidateRemoveFloor();
+            cell.RemoveFloor(validation);
+        }
+
+        private static void RemoveWall(Cell cell)
+        {
+            var validation = cell.ValidateRemoveWall();
+            cell.RemoveWall(validation);
         }
 
         #endregion
