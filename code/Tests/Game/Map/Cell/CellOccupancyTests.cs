@@ -123,18 +123,45 @@ namespace CosmosCasino.Tests.Game.Map
         }
 
         [Test]
-        public void ValidateReleaseStructure_MissingOrDifferentStructure_ReturnsNoOp()
+        public void ValidateReleaseStructure_MissingStructure_ReturnsNoOp()
         {
-            var emptyCell = CellAtOrigin();
-            var occupiedCell = CellAtOrigin();
-            ReserveStructure(occupiedCell, new StructureId(1));
+            var cell = CellAtOrigin();
 
-            var missing = emptyCell.ValidateReleaseStructure(new StructureId(1));
-            var different = occupiedCell.ValidateReleaseStructure(new StructureId(2));
+            var result = cell.ValidateReleaseStructure(new StructureId(1));
 
-            Assert.That(missing.Outcome, Is.EqualTo(CellOccupancyOutcome.NoOp));
-            Assert.That(different.Outcome, Is.EqualTo(CellOccupancyOutcome.NoOp));
-            Assert.That(occupiedCell.StructureId, Is.EqualTo(new StructureId(1)));
+            Assert.That(result.Outcome, Is.EqualTo(CellOccupancyOutcome.NoOp));
+            Assert.That(result.FailureReason, Is.EqualTo(CellOccupancyFailureReason.None));
+            Assert.That(cell.StructureId, Is.Null);
+        }
+
+        [Test]
+        public void ValidateReleaseStructure_MatchingStructure_ReturnsValid()
+        {
+            var cell = CellAtOrigin();
+            var structureId = new StructureId(1);
+            ReserveStructure(cell, structureId);
+
+            var result = cell.ValidateReleaseStructure(structureId);
+
+            Assert.That(result.Outcome, Is.EqualTo(CellOccupancyOutcome.Valid));
+            Assert.That(result.FailureReason, Is.EqualTo(CellOccupancyFailureReason.None));
+            Assert.That(cell.StructureId, Is.EqualTo(structureId));
+        }
+
+        [Test]
+        public void ValidateReleaseStructure_DifferentStructure_ReturnsInvalid()
+        {
+            var cell = CellAtOrigin();
+            var owner = new StructureId(1);
+            var other = new StructureId(2);
+            ReserveStructure(cell, owner);
+
+            var result = cell.ValidateReleaseStructure(other);
+
+            Assert.That(result.Outcome, Is.EqualTo(CellOccupancyOutcome.Invalid));
+            Assert.That(result.FailureReason, Is.EqualTo(CellOccupancyFailureReason.ReservationMismatch));
+            Assert.Throws<InvalidOperationException>(() => cell.ReleaseStructure(result, other));
+            Assert.That(cell.StructureId, Is.EqualTo(owner));
         }
 
         #endregion
@@ -250,6 +277,48 @@ namespace CosmosCasino.Tests.Game.Map
             Assert.That(cell.FurnitureId, Is.Null);
             Assert.That(cell.HasItem(itemId), Is.True);
             Assert.That(cell.IsEmpty, Is.False);
+        }
+
+        [Test]
+        public void ValidateReleaseFurniture_MissingFurniture_ReturnsNoOp()
+        {
+            var cell = CellAtOrigin();
+
+            var result = cell.ValidateReleaseFurniture(new FurnitureId(1));
+
+            Assert.That(result.Outcome, Is.EqualTo(CellOccupancyOutcome.NoOp));
+            Assert.That(result.FailureReason, Is.EqualTo(CellOccupancyFailureReason.None));
+            Assert.That(cell.FurnitureId, Is.Null);
+        }
+
+        [Test]
+        public void ValidateReleaseFurniture_MatchingFurniture_ReturnsValid()
+        {
+            var cell = CellAtOrigin();
+            var furnitureId = new FurnitureId(1);
+            ReserveFurniture(cell, furnitureId);
+
+            var result = cell.ValidateReleaseFurniture(furnitureId);
+
+            Assert.That(result.Outcome, Is.EqualTo(CellOccupancyOutcome.Valid));
+            Assert.That(result.FailureReason, Is.EqualTo(CellOccupancyFailureReason.None));
+            Assert.That(cell.FurnitureId, Is.EqualTo(furnitureId));
+        }
+
+        [Test]
+        public void ValidateReleaseFurniture_DifferentFurniture_ReturnsInvalid()
+        {
+            var cell = CellAtOrigin();
+            var owner = new FurnitureId(1);
+            var other = new FurnitureId(2);
+            ReserveFurniture(cell, owner);
+
+            var result = cell.ValidateReleaseFurniture(other);
+
+            Assert.That(result.Outcome, Is.EqualTo(CellOccupancyOutcome.Invalid));
+            Assert.That(result.FailureReason, Is.EqualTo(CellOccupancyFailureReason.ReservationMismatch));
+            Assert.Throws<InvalidOperationException>(() => cell.ReleaseFurniture(result, other));
+            Assert.That(cell.FurnitureId, Is.EqualTo(owner));
         }
 
         #endregion
@@ -435,11 +504,11 @@ namespace CosmosCasino.Tests.Game.Map
         {
             var cell = CellAtOrigin();
             ReserveFurniture(cell, new FurnitureId(1));
-            var noOpFurniture = cell.ValidateReleaseFurniture(new FurnitureId(2));
+            var invalidFurniture = cell.ValidateReleaseFurniture(new FurnitureId(2));
             var noOpItem = cell.ValidateReleaseItem(new ItemId(1));
 
             Assert.Throws<InvalidOperationException>(() =>
-                cell.ReleaseFurniture(noOpFurniture, new FurnitureId(2)));
+                cell.ReleaseFurniture(invalidFurniture, new FurnitureId(2)));
             Assert.Throws<InvalidOperationException>(() =>
                 cell.ReleaseItem(noOpItem, new ItemId(1)));
             Assert.That(cell.FurnitureId, Is.EqualTo(new FurnitureId(1)));

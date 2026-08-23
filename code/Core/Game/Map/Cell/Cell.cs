@@ -165,9 +165,17 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The local occupancy validation result.</returns>
         internal CellOccupancyValidationResult ValidateReleaseStructure(StructureId structureId)
         {
-            return StructureId.HasValue && StructureId.Value == structureId
-                ? CellOccupancyValidationResult.Valid()
-                : CellOccupancyValidationResult.NoOp();
+            if (!StructureId.HasValue)
+            {
+                return CellOccupancyValidationResult.NoOp();
+            }
+
+            if (StructureId.Value != structureId)
+            {
+                return CellOccupancyValidationResult.Invalid(CellOccupancyFailureReason.ReservationMismatch);
+            }
+
+            return CellOccupancyValidationResult.Valid();
         }
 
         /// <summary>
@@ -199,9 +207,17 @@ namespace CosmosCasino.Core.Game.Map
         /// <returns>The local occupancy validation result.</returns>
         internal CellOccupancyValidationResult ValidateReleaseFurniture(FurnitureId furnitureId)
         {
-            return FurnitureId.HasValue && FurnitureId.Value == furnitureId
-                ? CellOccupancyValidationResult.Valid()
-                : CellOccupancyValidationResult.NoOp();
+            if (!FurnitureId.HasValue)
+            {
+                return CellOccupancyValidationResult.NoOp();
+            }
+
+            if (FurnitureId.Value != furnitureId)
+            {
+                return CellOccupancyValidationResult.Invalid(CellOccupancyFailureReason.ReservationMismatch);
+            }
+
+            return CellOccupancyValidationResult.Valid();
         }
 
         /// <summary>

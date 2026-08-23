@@ -23,6 +23,11 @@ namespace CosmosCasino.Core.Game.Map
         /// <summary>
         /// One or more items already occupy the cell.
         /// </summary>
-        ItemsPresent
+        ItemsPresent,
+
+        /// <summary>
+        /// The requested release identity does not own the current reservation.
+        /// </summary>
+        ReservationMismatch
     }
 }
