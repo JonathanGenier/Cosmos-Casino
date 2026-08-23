@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Buildables;
 using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Systems;
 using NUnit.Framework;
@@ -8,164 +9,16 @@ namespace CosmosCasino.Tests.Game.Map.Systems
     [TestFixture]
     internal sealed class CellSystemTests
     {
-        #region Initialization
-
-        [Test]
-        public void NewCellSystem_StartsWithNoCells()
-        {
-            // Arrange
-            var system = new CellSystem();
-
-            // Act
-            var count = system.CellCount;
-
-            // Assert
-            Assert.That(count, Is.EqualTo(0));
-        }
-
-        #endregion
-
-        #region Explicit Elevation Compatibility
-
-        [Test]
-        public void ExplicitElevationApis_TargetProvidedElevation()
-        {
-            var system = new CellSystem();
-            var coord = Coord();
-            var elevation = new Elevation(3f);
-            system.CreateCell(coord);
-
-            var result = system.TryPlace(BuildKind.Floor, coord, elevation);
-
-            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(system.TryGetCell(coord, out var cell), Is.True);
-            Assert.That(cell!.HasFloorAt(elevation), Is.True);
-            Assert.That(
-                cell.HasFloorAt(new Elevation(elevation.Value + Elevation.StepSize)),
-                Is.False);
-            Assert.That(system.Has(BuildKind.Floor, coord, elevation), Is.True);
-        }
-
-        [Test]
-        public void CanPlaceFloor_DoesNotCreateBuildableState()
-        {
-            var system = new CellSystem();
-            var coord = Coord();
-            var elevation = new Elevation(2f);
-            system.CreateCell(coord);
-
-            var result = system.CanPlace(BuildKind.Floor, coord, elevation);
-
-            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-            Assert.That(system.TryGetCell(coord, out var cell), Is.True);
-            Assert.That(cell!.HasFloorAt(elevation), Is.False);
-            Assert.That(cell.ValidatePlaceFloor(elevation).Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
-        }
-
-        #endregion
-
-        #region CreateCell
-
-        [Test]
-        public void CreateCell_CreatesCell()
-        {
-            // Arrange
-            var system = new CellSystem();
-            var coord = Coord();
-
-            // Act
-            system.CreateCell(coord);
-
-            // Assert
-            Assert.That(system.CellCount, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void CreateCell_DuplicateCoord_DoesNotCreateDuplicate()
-        {
-            // Arrange
-            var system = new CellSystem();
-            var coord = Coord();
-
-            // Act
-            system.CreateCell(coord);
-            system.CreateCell(coord);
-
-            // Assert
-            Assert.That(system.CellCount, Is.EqualTo(1));
-        }
-
-        #endregion
-
-        #region EnumerateAllCoords
-
-        [Test]
-        public void EnumerateAllCoords_ReturnsAllExistingCoords()
-        {
-            // Arrange
-            var system = new CellSystem();
-
-            system.CreateCell(new MapCoord(0, 0));
-            system.CreateCell(new MapCoord(1, 0));
-
-            // Act
-            var coords = system.EnumerateAllCoords();
-
-            // Assert
-            Assert.That(coords, Has.Exactly(2).Items);
-        }
-
-        #endregion
-
-        #region TryGetCell
-
-        [Test]
-        public void TryGetCell_WhenCellExists_ReturnsTrue()
-        {
-            // Arrange
-            var system = new CellSystem();
-            var coord = Coord();
-
-            system.CreateCell(coord);
-
-            // Act
-            var result = system.TryGetCell(coord, out var cell);
-
-            // Assert
-            Assert.That(result, Is.True);
-            Assert.That(cell, Is.Not.Null);
-        }
-
-        [Test]
-        public void TryGetCell_WhenCellDoesNotExist_ReturnsFalse()
-        {
-            // Arrange
-            var system = new CellSystem();
-
-            // Act
-            var result = system.TryGetCell(Coord(), out var cell);
-
-            // Assert
-            Assert.That(result, Is.False);
-            Assert.That(cell, Is.Null);
-        }
-
-        #endregion
-
         #region Has API
 
         [Test]
         public void Has_WhenCellMissing_ReturnsFalse()
         {
-            // Arrange
             var system = new CellSystem();
-            var elevation = new Elevation(1f);
 
-            // Act
-            var hasFloor = system.Has(BuildKind.Floor, Coord(), elevation);
-            var hasWall = system.Has(BuildKind.Wall, Coord(), elevation);
+            var hasFloor = system.Has(BuildKind.Floor, null);
+            var hasWall = system.Has(BuildKind.Wall, null);
 
-            // Assert
             Assert.That(hasFloor, Is.False);
             Assert.That(hasWall, Is.False);
         }
@@ -173,103 +26,248 @@ namespace CosmosCasino.Tests.Game.Map.Systems
         [Test]
         public void Has_FloorAfterPlacement_ReturnsTrue()
         {
-            // Arrange
             var system = new CellSystem();
-            var coord = Coord();
-            var elevation = new Elevation(1f);
+            var cell = CellAt();
+            PlaceFloor(cell);
 
-            system.CreateCell(coord);
+            bool result = system.Has(BuildKind.Floor, cell);
 
-            // Act
-            system.TryPlace(BuildKind.Floor, coord, elevation);
-            var result = system.Has(BuildKind.Floor, coord, elevation);
-
-            // Assert
             Assert.That(result, Is.True);
         }
 
         [Test]
         public void Has_WallAfterPlacement_ReturnsTrue()
         {
-            // Arrange
             var system = new CellSystem();
-            var coord = Coord();
-            var elevation = new Elevation(1f);
-            system.CreateCell(coord);
-            system.TryPlace(BuildKind.Floor, coord, elevation);
+            var cell = CellAt();
+            PlaceFloorAndWall(cell);
 
-            // Act
-            var placeResult = system.TryPlace(BuildKind.Wall, coord, elevation);
-            var result = system.Has(BuildKind.Wall, coord, elevation);
+            bool result = system.Has(BuildKind.Wall, cell);
 
-            // Assert
-            Assert.That(placeResult.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
             Assert.That(result, Is.True);
         }
 
         #endregion
 
-        #region CanPlace / CanRemove - No Cell
+        #region CanPlace / CanRemove
 
         [Test]
-        public void CanPlace_WhenNoCell_ReturnsNoCellFailure()
+        public void CanPlaceFloor_MissingCell_ReturnsValidWithoutCreatingState()
         {
-            // Arrange
             var system = new CellSystem();
-            var coord = Coord();
 
-            // Act
-            var result = system.CanPlace(BuildKind.Floor, coord, new Elevation(1f));
+            var result = system.CanPlace(BuildKind.Floor, Coord(), null);
 
-            // Assert
-            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
-            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoCell));
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
         }
 
         [Test]
-        public void CanRemove_WhenNoCell_ReturnsNoCellFailure()
+        public void CanPlaceFloor_ExistingFloor_ReturnsNoOp()
         {
-            // Arrange
+            var system = new CellSystem();
+            var cell = CellAt();
+            PlaceFloor(cell);
+
+            var result = system.CanPlace(BuildKind.Floor, Coord(), cell);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
+        }
+
+        [Test]
+        public void CanPlaceWall_MissingCell_ReturnsNoFloorFailure()
+        {
             var system = new CellSystem();
 
-            // Act
-            var result = system.CanRemove(BuildKind.Wall, Coord(), new Elevation(1f));
+            var result = system.CanPlace(BuildKind.Wall, Coord(), null);
 
-            // Assert
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
-            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoCell));
+            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoFloor));
+        }
+
+        [Test]
+        public void CanPlaceWall_CellWithFloor_ReturnsValid()
+        {
+            var system = new CellSystem();
+            var cell = CellAt();
+            PlaceFloor(cell);
+
+            var result = system.CanPlace(BuildKind.Wall, Coord(), cell);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+        }
+
+        [Test]
+        public void CanRemoveFloor_MissingCell_ReturnsNoOp()
+        {
+            var system = new CellSystem();
+
+            var result = system.CanRemove(BuildKind.Floor, Coord(), null);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
+        }
+
+        [Test]
+        public void CanRemoveFloor_CellWithWall_ReturnsBlocked()
+        {
+            var system = new CellSystem();
+            var cell = CellAt();
+            PlaceFloorAndWall(cell);
+
+            var result = system.CanRemove(BuildKind.Floor, Coord(), cell);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
+            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.Blocked));
+        }
+
+        [Test]
+        public void CanRemoveWall_MissingCell_ReturnsNoOp()
+        {
+            var system = new CellSystem();
+
+            var result = system.CanRemove(BuildKind.Wall, Coord(), null);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
         }
 
         #endregion
 
-        #region TryPlace / TryRemove - No Cell
+        #region TryPlace / TryRemove
 
         [Test]
-        public void TryPlace_WhenNoCell_ReturnsNoCellFailure()
+        public void TryPlaceFloor_MissingCell_CreatesOnlyAfterValidationSucceeds()
         {
-            // Arrange
             var system = new CellSystem();
+            int createCalls = 0;
+            Cell? createdCell = null;
 
-            // Act
-            var result = system.TryPlace(BuildKind.Floor, Coord(), new Elevation(1f));
+            var result = system.TryPlace(
+                BuildKind.Floor,
+                Coord(),
+                null,
+                () =>
+                {
+                    createCalls++;
+                    createdCell = CellAt();
+                    return createdCell;
+                });
 
-            // Assert
-            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
-            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoCell));
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(createCalls, Is.EqualTo(1));
+            Assert.That(createdCell, Is.Not.Null);
+            Assert.That(createdCell!.HasFloor(), Is.True);
         }
 
         [Test]
-        public void TryRemove_WhenNoCell_ReturnsNoCellFailure()
+        public void TryPlaceFloor_ExistingCell_DoesNotInvokeCreateDelegate()
         {
-            // Arrange
+            var system = new CellSystem();
+            var cell = CellAt();
+
+            var result = system.TryPlace(
+                BuildKind.Floor,
+                Coord(),
+                cell,
+                ThrowingCreateCell);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(cell.HasFloor(), Is.True);
+        }
+
+        [Test]
+        public void TryPlaceFloor_ExistingFloor_ReturnsNoOpWithoutCreatingState()
+        {
+            var system = new CellSystem();
+            var cell = CellAt();
+            PlaceFloor(cell);
+
+            var result = system.TryPlace(
+                BuildKind.Floor,
+                Coord(),
+                cell,
+                ThrowingCreateCell);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
+            Assert.That(cell.HasFloor(), Is.True);
+        }
+
+        [Test]
+        public void TryPlaceWall_MissingCell_ReturnsNoFloorAndDoesNotCreateState()
+        {
             var system = new CellSystem();
 
-            // Act
-            var result = system.TryRemove(BuildKind.Wall, Coord(), new Elevation(1f));
+            var result = system.TryPlace(
+                BuildKind.Wall,
+                Coord(),
+                null,
+                ThrowingCreateCell);
 
-            // Assert
             Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Invalid));
-            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoCell));
+            Assert.That(result.FailureReason, Is.EqualTo(BuildOperationFailureReason.NoFloor));
+        }
+
+        [Test]
+        public void TryPlaceWall_CellWithFloor_PlacesWall()
+        {
+            var system = new CellSystem();
+            var cell = CellAt();
+            PlaceFloor(cell);
+
+            var result = system.TryPlace(
+                BuildKind.Wall,
+                Coord(),
+                cell,
+                ThrowingCreateCell);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(cell.HasWall(), Is.True);
+        }
+
+        [Test]
+        public void TryRemoveFloor_MissingCell_ReturnsNoOp()
+        {
+            var system = new CellSystem();
+
+            var result = system.TryRemove(BuildKind.Floor, Coord(), null);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
+        }
+
+        [Test]
+        public void TryRemoveFloor_ExistingFloor_RemovesFloor()
+        {
+            var system = new CellSystem();
+            var cell = CellAt();
+            PlaceFloor(cell);
+
+            var result = system.TryRemove(BuildKind.Floor, Coord(), cell);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(cell.HasFloor(), Is.False);
+            Assert.That(cell.IsEmpty, Is.True);
+        }
+
+        [Test]
+        public void TryRemoveWall_MissingCell_ReturnsNoOp()
+        {
+            var system = new CellSystem();
+
+            var result = system.TryRemove(BuildKind.Wall, Coord(), null);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.NoOp));
+        }
+
+        [Test]
+        public void TryRemoveWall_ExistingWall_RemovesWallAndLeavesFloor()
+        {
+            var system = new CellSystem();
+            var cell = CellAt();
+            PlaceFloorAndWall(cell);
+
+            var result = system.TryRemove(BuildKind.Wall, Coord(), cell);
+
+            Assert.That(result.Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(cell.HasWall(), Is.False);
+            Assert.That(cell.HasFloor(), Is.True);
         }
 
         #endregion
@@ -279,38 +277,46 @@ namespace CosmosCasino.Tests.Game.Map.Systems
         [Test]
         public void Has_UnsupportedBuildKind_Throws()
         {
-            // Arrange
             var system = new CellSystem();
 
-            // Act / Assert
             Assert.Throws<InvalidOperationException>(() =>
-                system.Has((BuildKind)999, Coord(), new Elevation(1f)));
+                system.Has((BuildKind)999, null));
         }
 
         [Test]
         public void CanPlace_UnsupportedBuildKind_Throws()
         {
-            // Arrange
             var system = new CellSystem();
-            var coord = Coord();
-            system.CreateCell(coord);
 
-            // Act / Assert
             Assert.Throws<InvalidOperationException>(() =>
-                system.CanPlace((BuildKind)999, coord, new Elevation(1f)));
+                system.CanPlace((BuildKind)999, Coord(), null));
         }
 
         [Test]
-        public void TryPlace_UnsupportedBuildKind_Throws()
+        public void CanRemove_UnsupportedBuildKind_Throws()
         {
-            // Arrange
             var system = new CellSystem();
-            var coord = Coord();
-            system.CreateCell(coord);
 
-            // Act / Assert
             Assert.Throws<InvalidOperationException>(() =>
-                system.TryPlace((BuildKind)999, coord, new Elevation(1f)));
+                system.CanRemove((BuildKind)999, Coord(), null));
+        }
+
+        [Test]
+        public void TryPlace_UnsupportedBuildKind_ThrowsWithoutCreatingState()
+        {
+            var system = new CellSystem();
+
+            Assert.Throws<InvalidOperationException>(() =>
+                system.TryPlace((BuildKind)999, Coord(), null, ThrowingCreateCell));
+        }
+
+        [Test]
+        public void TryRemove_UnsupportedBuildKind_Throws()
+        {
+            var system = new CellSystem();
+
+            Assert.Throws<InvalidOperationException>(() =>
+                system.TryRemove((BuildKind)999, Coord(), null));
         }
 
         #endregion
@@ -320,6 +326,29 @@ namespace CosmosCasino.Tests.Game.Map.Systems
         private static MapCoord Coord(int x = 0, int y = 0)
         {
             return new MapCoord(x, y);
+        }
+
+        private static Cell CellAt(int y = 0)
+        {
+            return new Cell(new MapCellCoord(0, y, 0));
+        }
+
+        private static void PlaceFloor(Cell cell)
+        {
+            var validation = cell.ValidatePlaceFloor();
+            cell.PlaceFloor(validation, new Floor());
+        }
+
+        private static void PlaceFloorAndWall(Cell cell)
+        {
+            PlaceFloor(cell);
+            var validation = cell.ValidatePlaceWall();
+            cell.PlaceWall(validation, new Wall());
+        }
+
+        private static Cell ThrowingCreateCell()
+        {
+            throw new InvalidOperationException("Cell creation was not expected.");
         }
 
         #endregion

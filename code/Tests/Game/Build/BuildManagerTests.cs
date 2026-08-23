@@ -186,17 +186,19 @@ namespace CosmosCasino.Tests.Game.Build
         public void Execute_PlaceFloor_TargetsIntentElevation()
         {
             var coord = new MapCoord(-1, 1);
-            Assert.That(_mapManager.TryGetCell(coord, out var cell), Is.True);
             Assert.That(_mapManager.TryGetTerrainBaseElevation(coord, out var baseElevation), Is.True);
+            Assert.That(_mapManager.TryGetCell(coord, out _), Is.False);
             float offset = baseElevation.Value < Elevation.MaxValue ? Elevation.StepSize : -Elevation.StepSize;
             var intentElevation = new Elevation(baseElevation.Value + offset);
+            var intentCellCoord = new MapCellCoord(coord.X, intentElevation.MapCellY, coord.Y);
             var intent = BuildIntent.PlaceFloor([coord], intentElevation);
 
             var result = _buildManager.Execute(intent);
 
             Assert.That(result.Results.Single().Outcome, Is.EqualTo(BuildOperationOutcome.Valid));
+            Assert.That(_mapManager.TryGetCell(intentCellCoord, out var cell), Is.True);
             Assert.That(cell!.HasFloorAt(intentElevation), Is.True);
-            Assert.That(cell.HasFloorAt(baseElevation), Is.False);
+            Assert.That(_mapManager.Has(BuildKind.Floor, coord, baseElevation), Is.False);
         }
 
         #endregion

@@ -21,6 +21,104 @@ namespace CosmosCasino.Tests.Game.Map
 
         #endregion
 
+        #region Cell Storage
+
+        [Test]
+        public void GetOrCreateCell_EmptyLocalCoordinate_CreatesSparseCellWithGlobalCoordinate()
+        {
+            var chunkCoord = new MapChunkCoord(-1, 2);
+            var chunk = new MapChunk(chunkCoord);
+            var local = new MapChunkLocalCoord(3, 4);
+            const int y = -7;
+            var expectedCoord = MapMath.ChunkLocalToCell(chunkCoord, local, y);
+
+            var cell = chunk.GetOrCreateCell(local, y);
+
+            Assert.That(cell.Coord, Is.EqualTo(expectedCoord));
+            Assert.That(chunk.CellCount, Is.EqualTo(1));
+            Assert.That(chunk.TryGetCell(local, y, out var storedCell), Is.True);
+            Assert.That(storedCell, Is.SameAs(cell));
+        }
+
+        [Test]
+        public void GetOrCreateCell_DuplicateLocalAndY_ReturnsExistingSparseCell()
+        {
+            var chunk = new MapChunk(new MapChunkCoord(0, 0));
+            var local = new MapChunkLocalCoord(2, 3);
+
+            var first = chunk.GetOrCreateCell(local, y: 5);
+            var second = chunk.GetOrCreateCell(local, y: 5);
+
+            Assert.That(second, Is.SameAs(first));
+            Assert.That(chunk.CellCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void GetOrCreateCell_SameLocalWithDifferentGlobalY_CreatesIndependentSparseCells()
+        {
+            var chunk = new MapChunk(new MapChunkCoord(0, 0));
+            var local = new MapChunkLocalCoord(2, 3);
+
+            var lower = chunk.GetOrCreateCell(local, y: -100);
+            var origin = chunk.GetOrCreateCell(local, y: 0);
+            var upper = chunk.GetOrCreateCell(local, y: 100);
+
+            Assert.That(lower, Is.Not.SameAs(origin));
+            Assert.That(origin, Is.Not.SameAs(upper));
+            Assert.That(lower.Coord.Y, Is.EqualTo(-100));
+            Assert.That(origin.Coord.Y, Is.EqualTo(0));
+            Assert.That(upper.Coord.Y, Is.EqualTo(100));
+            Assert.That(chunk.CellCount, Is.EqualTo(3));
+        }
+
+        [Test]
+        public void TryGetCell_EmptySparseCoordinate_ReturnsFalseWithoutCreatingCell()
+        {
+            var chunk = new MapChunk(new MapChunkCoord(0, 0));
+
+            bool found = chunk.TryGetCell(new MapChunkLocalCoord(2, 3), y: 5, out _);
+
+            Assert.That(found, Is.False);
+            Assert.That(chunk.CellCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void TryRemoveCell_RemovesOnlyMatchingLocalAndY()
+        {
+            var chunk = new MapChunk(new MapChunkCoord(0, 0));
+            var local = new MapChunkLocalCoord(2, 3);
+            chunk.GetOrCreateCell(local, y: 1);
+            var remaining = chunk.GetOrCreateCell(local, y: 2);
+
+            bool removed = chunk.TryRemoveCell(local, y: 1);
+
+            Assert.That(removed, Is.True);
+            Assert.That(chunk.TryGetCell(local, y: 1, out _), Is.False);
+            Assert.That(chunk.TryGetCell(local, y: 2, out var storedCell), Is.True);
+            Assert.That(storedCell, Is.SameAs(remaining));
+            Assert.That(chunk.CellCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void TryRemoveCell_DoesNotRemoveDenseTerrainAtSameLocalCoordinate()
+        {
+            var chunk = new MapChunk(new MapChunkCoord(0, 0));
+            var local = new MapChunkLocalCoord(2, 3);
+            var terrainTile = FlatTile(1f);
+            chunk.StoreGeneratedTerrain(local, terrainTile);
+            chunk.GetOrCreateCell(local, y: 0);
+
+            bool removed = chunk.TryRemoveCell(local, y: 0);
+
+            Assert.That(removed, Is.True);
+            Assert.That(chunk.CellCount, Is.EqualTo(0));
+            Assert.That(chunk.TryGetTerrain(local, out var storedTerrain), Is.True);
+            Assert.That(storedTerrain, Is.SameAs(terrainTile));
+            Assert.That(chunk.TerrainTileCount, Is.EqualTo(1));
+        }
+
+        #endregion
+
         #region Terrain Storage
 
         [Test]
