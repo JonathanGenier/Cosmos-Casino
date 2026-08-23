@@ -133,6 +133,10 @@ internal static class StructureRenderSectionMeshBuilder
 
     private readonly struct BlockFace
     {
+        internal const float HalfWidth = WorldGridMetrics.GridUnitSize * 0.5f;
+        internal const float HalfHeight = WorldGridMetrics.VerticalGridUnitSize * 0.5f;
+        internal const float HalfDepth = WorldGridMetrics.GridUnitSize * 0.5f;
+
         /// <summary>
         /// All six cube faces in deterministic top, bottom, north, south, east, west order.
         /// </summary>
@@ -145,10 +149,6 @@ internal static class StructureRenderSectionMeshBuilder
             East(),
             West()
         };
-
-        private static readonly float HalfWidth = WorldGridMetrics.GridUnitSize * 0.5f;
-        private static readonly float HalfHeight = WorldGridMetrics.VerticalGridUnitSize * 0.5f;
-        private static readonly float HalfDepth = WorldGridMetrics.GridUnitSize * 0.5f;
 
         private BlockFace(MapCellOffset neighborOffset, Vector3 normal, Vector3[] corners)
         {
