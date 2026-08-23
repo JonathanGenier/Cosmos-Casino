@@ -3,38 +3,20 @@ using CosmosCasino.Core.Game.Build.Domain;
 namespace CosmosCasino.Core.Game.Build
 {
     /// <summary>
-    /// Orchestrates the execution of a build intent by applying the
-    /// requested build operation to each target cell and aggregating
-    /// the per-cell outcomes into a single build result.
+    /// Orchestrates structure-oriented build intent evaluation and execution.
     /// </summary>
     public sealed partial class BuildManager
     {
         #region Preview Operation
 
         /// <summary>
-        /// Evaluates the specified build intent and returns the result of applying the requested operation to each
-        /// cell.
+        /// Evaluates the specified build intent without mutating authoritative map state.
         /// </summary>
-        /// <param name="intent">The build intent that specifies the operation to perform and the collection of target cells. Cannot be null.</param>
-        /// <returns>A BuildResult containing the outcome of the operation for each cell in the intent.</returns>
-        /// <exception cref="NotImplementedException">Thrown if the build kind specified in the intent is not supported.</exception>
+        /// <param name="intent">The build intent to evaluate.</param>
+        /// <returns>A structure-level build result produced by the shared planner.</returns>
         public BuildResult Evaluate(BuildIntent intent)
         {
-            var actionResults = new List<BuildOperationResult>(intent.Cells.Count);
-
-            foreach (var coord in intent.Cells)
-            {
-                var result = intent.Operation switch
-                {
-                    BuildOperation.Place => _mapManager.CanPlace(intent.Kind, coord, intent.Elevation),
-                    BuildOperation.Remove => _mapManager.CanRemove(intent.Kind, coord, intent.Elevation),
-                    _ => throw new NotImplementedException($"{nameof(BuildKind)} not implemented.")
-                };
-
-                actionResults.Add(result);
-            }
-
-            return BuildResult.Done(intent, actionResults);
+            return BuildResultFromPlan(intent, Plan(intent));
         }
 
         #endregion
@@ -42,44 +24,20 @@ namespace CosmosCasino.Core.Game.Build
         #region Commit Operation
 
         /// <summary>
-        /// Applies the specified build intent to all target cells,
-        /// delegating execution to the appropriate resolver based on
-        /// the build kind and operation.
-        /// <para>
-        /// Each cell is processed independently; failures on one cell
-        /// do not prevent operations on other cells.
-        /// </para>
+        /// Re-evaluates and applies the specified build intent against current authoritative map state.
         /// </summary>
-        /// <param name="intent">
-        /// The build intent describing the operation to perform and
-        /// the set of target cells.
-        /// </param>
-        /// <returns>
-        /// A <see cref="BuildResult"/> containing the original intent
-        /// and the per-cell outcomes produced during execution.
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// Thrown when the build kind specified by the intent is not
-        /// supported by the build manager.
-        /// </exception>
+        /// <param name="intent">The build intent to execute.</param>
+        /// <returns>A structure-level build result for the plan that was evaluated immediately before commit.</returns>
         public BuildResult Execute(BuildIntent intent)
         {
-            var actionResults = new List<BuildOperationResult>(intent.Cells.Count);
-            var buildOperation = intent.Operation;
+            BuildPlan plan = Plan(intent);
 
-            foreach (var coord in intent.Cells)
+            if (plan.Outcome == BuildOperationOutcome.Valid)
             {
-                var result = intent.Kind switch
-                {
-                    BuildKind.Floor => ExecuteOperationOnFloor(buildOperation, coord, intent.Elevation),
-                    BuildKind.Wall => ExecuteOperationOnWall(buildOperation, coord, intent.Elevation),
-                    _ => throw new NotImplementedException($"{nameof(BuildKind)} not implemented.")
-                };
-
-                actionResults.Add(result);
+                Commit(plan);
             }
 
-            return BuildResult.Done(intent, actionResults);
+            return BuildResultFromPlan(intent, plan);
         }
 
         #endregion

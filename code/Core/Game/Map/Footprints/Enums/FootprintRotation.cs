@@ -3,7 +3,7 @@ namespace CosmosCasino.Core.Game.Map
     /// <summary>
     /// Describes quarter-turn rotations for authoritative map-cell footprints around the vertical Y axis.
     /// </summary>
-    internal enum FootprintRotation
+    public enum FootprintRotation
     {
         /// <summary>
         /// Leaves footprint offsets unchanged.

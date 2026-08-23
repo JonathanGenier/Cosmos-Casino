@@ -42,30 +42,9 @@ public sealed class FloorBuildContext : BuildContextBase
         Elevation elevation,
         out BuildIntent intent)
     {
-        var cells = GetCells(startCell, endCell, buildOperation, buildInteractionMode);
-
-        if (cells.Count == 0)
-        {
-            intent = null!;
-            return false;
-        }
-
-        switch (buildOperation)
-        {
-            case BuildOperation.Place:
-                intent = BuildIntent.PlaceFloor(cells, elevation);
-                break;
-            case BuildOperation.Remove:
-                intent = BuildIntent.RemoveFloor(cells, elevation);
-                break;
-            case BuildOperation.None:
-                intent = null!;
-                break;
-            default:
-                throw new InvalidOperationException($"Unsupported build operation: {buildOperation}");
-        }
-
-        return true;
+        // Legacy floors still use CellLayer state and are not migrated into authoritative Structures.
+        intent = null!;
+        return false;
     }
 
     #endregion

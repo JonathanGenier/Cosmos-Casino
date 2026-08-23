@@ -69,7 +69,7 @@ public class BuildRequestFlow : IGameFlow, IDisposable
 
         if (buildIntent == null)
         {
-            throw new InvalidOperationException("Build intent should be available when build ends.");
+            return;
         }
 
         _clientBuildManager.ExecuteBuildIntent(buildIntent);

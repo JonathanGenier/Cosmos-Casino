@@ -11,6 +11,7 @@ namespace CosmosCasino.Core.Game.Map
         #region Fields
 
         private readonly Dictionary<StructureId, Structure> _structures = new();
+        private long _nextStructureIdValue = 1;
 
         #endregion
 
@@ -20,6 +21,56 @@ namespace CosmosCasino.Core.Game.Map
         /// Gets the number of authoritative structures currently stored in the map.
         /// </summary>
         internal int StructureCount => _structures.Count;
+
+        #endregion
+
+        #region Identity Allocation
+
+        /// <summary>
+        /// Attempts to preview the next deterministic structure identities without mutating allocator state.
+        /// </summary>
+        /// <param name="count">The number of identities needed.</param>
+        /// <param name="structureIds">The candidate identities in deterministic allocation order.</param>
+        /// <returns><c>true</c> when every requested identity can be represented; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
+        internal bool TryPreviewNextStructureIds(int count, out IReadOnlyList<StructureId> structureIds)
+        {
+            if (!TryCollectNextStructureIds(count, out StructureId[] ids, out _))
+            {
+                structureIds = Array.Empty<StructureId>();
+                return false;
+            }
+
+            structureIds = Array.AsReadOnly(ids);
+            return true;
+        }
+
+        /// <summary>
+        /// Advances the structure identity allocator after a valid build plan has been selected for execution.
+        /// </summary>
+        /// <param name="expectedIds">The exact identities produced by the current planning pass.</param>
+        /// <returns><c>true</c> when allocator state matched the plan and was advanced; otherwise, <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="expectedIds"/> is null.</exception>
+        internal bool TryConsumeNextStructureIds(IReadOnlyList<StructureId> expectedIds)
+        {
+            ArgumentNullException.ThrowIfNull(expectedIds);
+
+            if (!TryCollectNextStructureIds(expectedIds.Count, out StructureId[] ids, out long nextValue))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < expectedIds.Count; i++)
+            {
+                if (ids[i] != expectedIds[i])
+                {
+                    return false;
+                }
+            }
+
+            _nextStructureIdValue = nextValue;
+            return true;
+        }
 
         #endregion
 
@@ -156,6 +207,54 @@ namespace CosmosCasino.Core.Game.Map
             }
 
             return StructureOperationResult.Valid();
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private bool TryCollectNextStructureIds(
+            int count,
+            out StructureId[] structureIds,
+            out long nextValue)
+        {
+            if (count < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(count), count, "Structure identity count cannot be negative.");
+            }
+
+            structureIds = new StructureId[count];
+            long candidateValue = _nextStructureIdValue;
+
+            for (int i = 0; i < count; i++)
+            {
+                bool assigned = false;
+
+                while (candidateValue <= int.MaxValue)
+                {
+                    var candidate = new StructureId((int)candidateValue);
+                    candidateValue++;
+
+                    if (_structures.ContainsKey(candidate))
+                    {
+                        continue;
+                    }
+
+                    structureIds[i] = candidate;
+                    assigned = true;
+                    break;
+                }
+
+                if (!assigned)
+                {
+                    structureIds = Array.Empty<StructureId>();
+                    nextValue = _nextStructureIdValue;
+                    return false;
+                }
+            }
+
+            nextValue = candidateValue;
+            return true;
         }
 
         #endregion

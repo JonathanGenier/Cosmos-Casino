@@ -5,7 +5,7 @@ namespace CosmosCasino.Core.Game.Map
     /// <summary>
     /// Immutable reusable collection of map-cell offsets that defines a multi-cell footprint.
     /// </summary>
-    internal sealed class MapCellFootprint
+    public sealed class MapCellFootprint
     {
         #region Fields
 
@@ -23,7 +23,7 @@ namespace CosmosCasino.Core.Game.Map
         /// <exception cref="ArgumentException">
         /// Thrown when <paramref name="offsets"/> is empty or contains duplicate offsets.
         /// </exception>
-        internal MapCellFootprint(IEnumerable<MapCellOffset> offsets)
+        public MapCellFootprint(IEnumerable<MapCellOffset> offsets)
         {
             ArgumentNullException.ThrowIfNull(offsets);
 
@@ -56,7 +56,7 @@ namespace CosmosCasino.Core.Game.Map
         /// <summary>
         /// Gets the canonical offsets in deterministic X/Y/Z sort order.
         /// </summary>
-        internal IReadOnlyList<MapCellOffset> Offsets => _offsets;
+        public IReadOnlyList<MapCellOffset> Offsets => _offsets;
 
         #endregion
 
@@ -71,7 +71,7 @@ namespace CosmosCasino.Core.Game.Map
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when rotation or anchor addition would exceed the representable map-cell range.
         /// </exception>
-        internal IReadOnlyList<MapCellCoord> Resolve(MapCellCoord anchor, FootprintRotation rotation)
+        public IReadOnlyList<MapCellCoord> Resolve(MapCellCoord anchor, FootprintRotation rotation)
         {
             var resolved = new MapCellCoord[_offsets.Count];
 

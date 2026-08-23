@@ -231,13 +231,16 @@ public sealed class BuildContext
             return null;
         }
 
-        _activeContext.TryCreateBuildIntent(
+        if (!_activeContext.TryCreateBuildIntent(
             _startCell.Value,
             _currentCell.Value,
             _currentBuildOperation,
             _currentBuildInteractionMode,
             _startElevation.Value,
-            out var intent);
+            out var intent))
+        {
+            return null;
+        }
 
         return intent;
     }
@@ -256,13 +259,16 @@ public sealed class BuildContext
             return null;
         }
 
-        _activeContext.TryCreateBuildIntent(
+        if (!_activeContext.TryCreateBuildIntent(
             cursorContext.Target.Coord,
             cursorContext.Target.Coord,
             BuildOperation.Place,
             BuildInteractionMode.Default,
             cursorContext.Target.Elevation,
-            out var intent);
+            out var intent))
+        {
+            return null;
+        }
 
         return intent;
     }

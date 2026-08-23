@@ -1,142 +1,90 @@
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
+using CosmosCasino.Core.Game.Structures;
 
 namespace CosmosCasino.Core.Game.Build
 {
     /// <summary>
-    /// Immutable command describing a single build action to be applied
-    /// to one or more target cells.
+    /// Immutable command describing a structure placement or structure-removal request.
     /// </summary>
     public sealed partial class BuildIntent
     {
-        #region Constructor
-
-        /// <summary>
-        /// Initializes a new build intent with the specified parameters.
-        /// This constructor is private to enforce creation through
-        /// validated factory methods.
-        /// </summary>
-        /// <param name="cells">
-        /// Target cells affected by the build operation.
-        /// </param>
-        /// <param name="kind">
-        /// High-level category of build.
-        /// </param>
-        /// <param name="operation">
-        /// Operation to perform (place, replace, remove).
-        /// </param>
-        /// <param name="elevation">
-        /// Shared elevation targeted by every cell in the intent.
-        /// </param>
-        private BuildIntent(
-            IReadOnlyList<MapCoord> cells,
-            BuildKind kind,
-            BuildOperation operation,
-            Elevation elevation)
-        {
-            Cells = cells;
-            Kind = kind;
-            Operation = operation;
-            Elevation = elevation;
-        }
-
-        #endregion
-
         #region Properties
 
         /// <summary>
-        /// Gets the high-level category of build this intent represents.
-        /// </summary>
-        public BuildKind Kind { get; }
-
-        /// <summary>
-        /// Gets the specific operation to perform for this build intent.
+        /// Gets the requested aggregate build operation.
         /// </summary>
         public BuildOperation Operation { get; }
 
         /// <summary>
-        /// Gets the collection of target cells where the build operation
-        /// should be applied.
+        /// Gets the structure placement requests when this is a placement intent.
         /// </summary>
-        public IReadOnlyList<MapCoord> Cells { get; }
+        public IReadOnlyList<StructurePlacementRequest> PlacementRequests { get; }
 
         /// <summary>
-        /// Gets the shared elevation targeted by every cell in this intent.
+        /// Gets the structure removal target requests when this is a removal intent.
         /// </summary>
-        public Elevation Elevation { get; }
+        public IReadOnlyList<StructureRemovalRequest> RemovalRequests { get; }
 
         #endregion
 
         #region Factories
 
         /// <summary>
-        /// Creates a build intent to place a floor on the specified map cells.
+        /// Creates a build intent to place a batch of structures.
         /// </summary>
-        /// <param name="cells">A read-only list of map cell coordinates where the floor will be placed. Cannot be null or empty.</param>
-        /// <param name="elevation">The shared elevation targeted by every cell.</param>
-        /// <returns>A BuildIntent representing the operation to place a floor on the specified cells.</returns>
-        public static BuildIntent PlaceFloor(IReadOnlyList<MapCoord> cells, Elevation elevation)
+        /// <param name="placements">The structure placement requests to evaluate or execute.</param>
+        /// <returns>An immutable structure placement intent.</returns>
+        public static BuildIntent PlaceStructures(IReadOnlyList<StructurePlacementRequest> placements)
         {
-            ValidateCells(cells);
-
-            return new BuildIntent(
-                cells.ToArray(),
-                BuildKind.Floor,
-                BuildOperation.Place,
-                elevation);
+            return CreatePlacementIntent(placements);
         }
 
         /// <summary>
-        /// Creates a build intent that removes the floor from the specified map cells.
+        /// Creates a build intent to place one structure.
         /// </summary>
-        /// <param name="cells">A read-only list of map cell coordinates identifying the cells from which the floor should be removed.
-        /// Cannot be null or empty.</param>
-        /// <param name="elevation">The shared elevation targeted by every cell.</param>
-        /// <returns>A BuildIntent representing the removal of the floor from the specified cells.</returns>
-        public static BuildIntent RemoveFloor(IReadOnlyList<MapCoord> cells, Elevation elevation)
+        /// <param name="definition">The structure definition to place.</param>
+        /// <param name="anchor">The authoritative map-cell anchor.</param>
+        /// <param name="rotation">The footprint rotation.</param>
+        /// <returns>An immutable single-structure placement intent.</returns>
+        public static BuildIntent PlaceStructure(
+            StructureDefinition definition,
+            MapCellCoord anchor,
+            FootprintRotation rotation)
         {
-            ValidateCells(cells);
-
-            return new BuildIntent(
-                cells.ToArray(),
-                BuildKind.Floor,
-                BuildOperation.Remove,
-                elevation);
+            return PlaceStructures(new[]
+            {
+                new StructurePlacementRequest(definition, anchor, rotation)
+            });
         }
 
         /// <summary>
-        /// Creates a build intent to place a wall on the specified map cells.
+        /// Creates a build intent to remove the structures occupying the specified target cells.
         /// </summary>
-        /// <param name="cells">A read-only list of map cell coordinates where the wall will be placed. Cannot be null or empty.</param>
-        /// <param name="elevation">The shared elevation targeted by every cell.</param>
-        /// <returns>A BuildIntent representing the action to place a wall on the specified cells.</returns>
-        public static BuildIntent PlaceWall(IReadOnlyList<MapCoord> cells, Elevation elevation)
+        /// <param name="targetCells">The target cells Core should resolve to authoritative structures.</param>
+        /// <returns>An immutable structure-removal intent.</returns>
+        public static BuildIntent RemoveStructuresAt(IReadOnlyList<MapCellCoord> targetCells)
         {
-            ValidateCells(cells);
+            ArgumentNullException.ThrowIfNull(targetCells);
 
-            return new BuildIntent(
-                cells.ToArray(),
-                BuildKind.Wall,
-                BuildOperation.Place,
-                elevation);
+            var removals = new StructureRemovalRequest[targetCells.Count];
+
+            for (int i = 0; i < targetCells.Count; i++)
+            {
+                removals[i] = new StructureRemovalRequest(targetCells[i]);
+            }
+
+            return CreateRemovalIntent(Array.AsReadOnly(removals));
         }
 
         /// <summary>
-        /// Creates a build intent to remove wall structures from the specified map cells.
+        /// Creates a build intent to remove the structure occupying one target cell.
         /// </summary>
-        /// <param name="cells">A read-only list of map cell coordinates that identify the locations from which walls should be removed.
-        /// Cannot be null or empty.</param>
-        /// <param name="elevation">The shared elevation targeted by every cell.</param>
-        /// <returns>A BuildIntent representing the removal of walls from the specified cells.</returns>
-        public static BuildIntent RemoveWall(IReadOnlyList<MapCoord> cells, Elevation elevation)
+        /// <param name="targetCell">The target cell Core should resolve to an authoritative structure.</param>
+        /// <returns>An immutable single-target structure-removal intent.</returns>
+        public static BuildIntent RemoveStructureAt(MapCellCoord targetCell)
         {
-            ValidateCells(cells);
-
-            return new BuildIntent(
-                cells.ToArray(),
-                BuildKind.Wall,
-                BuildOperation.Remove,
-                elevation);
+            return RemoveStructuresAt(new[] { targetCell });
         }
 
         #endregion
@@ -152,7 +100,12 @@ namespace CosmosCasino.Core.Game.Build
         /// </returns>
         public override string ToString()
         {
-            return $"{Operation} {Kind} for {Cells.Count} cells at elevation {Elevation.Value}";
+            return Operation switch
+            {
+                BuildOperation.Place => $"Place {PlacementRequests.Count} structures",
+                BuildOperation.Remove => $"Remove structures from {RemovalRequests.Count} target cells",
+                _ => $"{Operation} structure intent"
+            };
         }
 
         #endregion
