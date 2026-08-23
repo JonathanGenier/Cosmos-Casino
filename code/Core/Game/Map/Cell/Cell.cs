@@ -11,6 +11,7 @@ namespace CosmosCasino.Core.Game.Map
         #region Fields
 
         private readonly CellLayer _contents = new();
+        private readonly HashSet<ItemId> _itemIds = new();
 
         #endregion
 
@@ -35,9 +36,44 @@ namespace CosmosCasino.Core.Game.Map
         internal MapCellCoord Coord { get; }
 
         /// <summary>
+        /// Gets the structure occupying this cell, or <see langword="null"/> when none exists.
+        /// </summary>
+        internal StructureId? StructureId { get; private set; }
+
+        /// <summary>
+        /// Gets the furniture occupying this cell, or <see langword="null"/> when none exists.
+        /// </summary>
+        internal FurnitureId? FurnitureId { get; private set; }
+
+        /// <summary>
+        /// Gets the items occupying this cell.
+        /// </summary>
+        internal IReadOnlyCollection<ItemId> ItemIds => _itemIds;
+
+        /// <summary>
         /// Gets a value indicating whether this cell contains no authoritative state.
         /// </summary>
-        internal bool IsEmpty => _contents.IsEmpty;
+        internal bool IsEmpty => _contents.IsEmpty && !HasOccupancy;
+
+        /// <summary>
+        /// Gets a value indicating whether this cell contains a structure reservation.
+        /// </summary>
+        internal bool HasStructure => StructureId.HasValue;
+
+        /// <summary>
+        /// Gets a value indicating whether this cell contains a furniture reservation.
+        /// </summary>
+        internal bool HasFurniture => FurnitureId.HasValue;
+
+        /// <summary>
+        /// Gets a value indicating whether this cell contains any item reservations.
+        /// </summary>
+        internal bool HasItems => _itemIds.Count > 0;
+
+        /// <summary>
+        /// Gets a value indicating whether this cell contains any local occupancy reservation.
+        /// </summary>
+        internal bool HasOccupancy => HasStructure || HasFurniture || HasItems;
 
         #endregion
 
@@ -79,6 +115,247 @@ namespace CosmosCasino.Core.Game.Map
         internal bool HasWallAt(Elevation elevation)
         {
             return Coord.Y == elevation.MapCellY && HasWall();
+        }
+
+        /// <summary>
+        /// Determines whether this cell contains the specified item reservation.
+        /// </summary>
+        /// <param name="itemId">The item identity to query.</param>
+        /// <returns><see langword="true"/> when the item is present; otherwise <see langword="false"/>.</returns>
+        internal bool HasItem(ItemId itemId)
+        {
+            return _itemIds.Contains(itemId);
+        }
+
+        #endregion
+
+        #region Occupancy Validation Methods
+
+        /// <summary>
+        /// Validates reserving this cell for the specified structure without mutating state.
+        /// </summary>
+        /// <param name="structureId">The structure identity to reserve.</param>
+        /// <returns>The local occupancy validation result.</returns>
+        internal CellOccupancyValidationResult ValidateReserveStructure(StructureId structureId)
+        {
+            if (StructureId.HasValue)
+            {
+                return StructureId.Value == structureId
+                    ? CellOccupancyValidationResult.NoOp()
+                    : CellOccupancyValidationResult.Invalid(CellOccupancyFailureReason.StructurePresent);
+            }
+
+            if (HasFurniture)
+            {
+                return CellOccupancyValidationResult.Invalid(CellOccupancyFailureReason.FurniturePresent);
+            }
+
+            if (HasItems)
+            {
+                return CellOccupancyValidationResult.Invalid(CellOccupancyFailureReason.ItemsPresent);
+            }
+
+            return CellOccupancyValidationResult.Valid();
+        }
+
+        /// <summary>
+        /// Validates releasing the specified structure reservation without mutating state.
+        /// </summary>
+        /// <param name="structureId">The structure identity to release.</param>
+        /// <returns>The local occupancy validation result.</returns>
+        internal CellOccupancyValidationResult ValidateReleaseStructure(StructureId structureId)
+        {
+            if (!StructureId.HasValue)
+            {
+                return CellOccupancyValidationResult.NoOp();
+            }
+
+            if (StructureId.Value != structureId)
+            {
+                return CellOccupancyValidationResult.Invalid(CellOccupancyFailureReason.ReservationMismatch);
+            }
+
+            return CellOccupancyValidationResult.Valid();
+        }
+
+        /// <summary>
+        /// Validates reserving this cell for the specified furniture without mutating state.
+        /// </summary>
+        /// <param name="furnitureId">The furniture identity to reserve.</param>
+        /// <returns>The local occupancy validation result.</returns>
+        internal CellOccupancyValidationResult ValidateReserveFurniture(FurnitureId furnitureId)
+        {
+            if (HasStructure)
+            {
+                return CellOccupancyValidationResult.Invalid(CellOccupancyFailureReason.StructurePresent);
+            }
+
+            if (FurnitureId.HasValue)
+            {
+                return FurnitureId.Value == furnitureId
+                    ? CellOccupancyValidationResult.NoOp()
+                    : CellOccupancyValidationResult.Invalid(CellOccupancyFailureReason.FurniturePresent);
+            }
+
+            return CellOccupancyValidationResult.Valid();
+        }
+
+        /// <summary>
+        /// Validates releasing the specified furniture reservation without mutating state.
+        /// </summary>
+        /// <param name="furnitureId">The furniture identity to release.</param>
+        /// <returns>The local occupancy validation result.</returns>
+        internal CellOccupancyValidationResult ValidateReleaseFurniture(FurnitureId furnitureId)
+        {
+            if (!FurnitureId.HasValue)
+            {
+                return CellOccupancyValidationResult.NoOp();
+            }
+
+            if (FurnitureId.Value != furnitureId)
+            {
+                return CellOccupancyValidationResult.Invalid(CellOccupancyFailureReason.ReservationMismatch);
+            }
+
+            return CellOccupancyValidationResult.Valid();
+        }
+
+        /// <summary>
+        /// Validates reserving this cell for the specified item without mutating state.
+        /// </summary>
+        /// <param name="itemId">The item identity to reserve.</param>
+        /// <returns>The local occupancy validation result.</returns>
+        internal CellOccupancyValidationResult ValidateReserveItem(ItemId itemId)
+        {
+            if (HasStructure)
+            {
+                return CellOccupancyValidationResult.Invalid(CellOccupancyFailureReason.StructurePresent);
+            }
+
+            if (_itemIds.Contains(itemId))
+            {
+                return CellOccupancyValidationResult.NoOp();
+            }
+
+            return CellOccupancyValidationResult.Valid();
+        }
+
+        /// <summary>
+        /// Validates releasing the specified item reservation without mutating state.
+        /// </summary>
+        /// <param name="itemId">The item identity to release.</param>
+        /// <returns>The local occupancy validation result.</returns>
+        internal CellOccupancyValidationResult ValidateReleaseItem(ItemId itemId)
+        {
+            return _itemIds.Contains(itemId)
+                ? CellOccupancyValidationResult.Valid()
+                : CellOccupancyValidationResult.NoOp();
+        }
+
+        #endregion
+
+        #region Occupancy Operation Methods
+
+        /// <summary>
+        /// Reserves this cell for the specified structure after successful validation.
+        /// </summary>
+        /// <param name="validation">The successful validation result authorizing the reservation.</param>
+        /// <param name="structureId">The structure identity to reserve.</param>
+        /// <exception cref="InvalidOperationException">Thrown when validation is not valid.</exception>
+        internal void ReserveStructure(CellOccupancyValidationResult validation, StructureId structureId)
+        {
+            if (validation.Outcome != CellOccupancyOutcome.Valid ||
+                ValidateReserveStructure(structureId).Outcome != CellOccupancyOutcome.Valid)
+            {
+                throw new InvalidOperationException("Cannot reserve structure: validation result is not valid.");
+            }
+
+            StructureId = structureId;
+        }
+
+        /// <summary>
+        /// Releases the specified structure reservation after successful validation.
+        /// </summary>
+        /// <param name="validation">The successful validation result authorizing the release.</param>
+        /// <param name="structureId">The structure identity to release.</param>
+        /// <exception cref="InvalidOperationException">Thrown when validation is not valid.</exception>
+        internal void ReleaseStructure(CellOccupancyValidationResult validation, StructureId structureId)
+        {
+            if (validation.Outcome != CellOccupancyOutcome.Valid ||
+                ValidateReleaseStructure(structureId).Outcome != CellOccupancyOutcome.Valid)
+            {
+                throw new InvalidOperationException("Cannot release structure: validation result is not valid.");
+            }
+
+            StructureId = null;
+        }
+
+        /// <summary>
+        /// Reserves this cell for the specified furniture after successful validation.
+        /// </summary>
+        /// <param name="validation">The successful validation result authorizing the reservation.</param>
+        /// <param name="furnitureId">The furniture identity to reserve.</param>
+        /// <exception cref="InvalidOperationException">Thrown when validation is not valid.</exception>
+        internal void ReserveFurniture(CellOccupancyValidationResult validation, FurnitureId furnitureId)
+        {
+            if (validation.Outcome != CellOccupancyOutcome.Valid ||
+                ValidateReserveFurniture(furnitureId).Outcome != CellOccupancyOutcome.Valid)
+            {
+                throw new InvalidOperationException("Cannot reserve furniture: validation result is not valid.");
+            }
+
+            FurnitureId = furnitureId;
+        }
+
+        /// <summary>
+        /// Releases the specified furniture reservation after successful validation.
+        /// </summary>
+        /// <param name="validation">The successful validation result authorizing the release.</param>
+        /// <param name="furnitureId">The furniture identity to release.</param>
+        /// <exception cref="InvalidOperationException">Thrown when validation is not valid.</exception>
+        internal void ReleaseFurniture(CellOccupancyValidationResult validation, FurnitureId furnitureId)
+        {
+            if (validation.Outcome != CellOccupancyOutcome.Valid ||
+                ValidateReleaseFurniture(furnitureId).Outcome != CellOccupancyOutcome.Valid)
+            {
+                throw new InvalidOperationException("Cannot release furniture: validation result is not valid.");
+            }
+
+            FurnitureId = null;
+        }
+
+        /// <summary>
+        /// Reserves this cell for the specified item after successful validation.
+        /// </summary>
+        /// <param name="validation">The successful validation result authorizing the reservation.</param>
+        /// <param name="itemId">The item identity to reserve.</param>
+        /// <exception cref="InvalidOperationException">Thrown when validation is not valid.</exception>
+        internal void ReserveItem(CellOccupancyValidationResult validation, ItemId itemId)
+        {
+            if (validation.Outcome != CellOccupancyOutcome.Valid ||
+                ValidateReserveItem(itemId).Outcome != CellOccupancyOutcome.Valid)
+            {
+                throw new InvalidOperationException("Cannot reserve item: validation result is not valid.");
+            }
+
+            _itemIds.Add(itemId);
+        }
+
+        /// <summary>
+        /// Releases the specified item reservation after successful validation.
+        /// </summary>
+        /// <param name="validation">The successful validation result authorizing the release.</param>
+        /// <param name="itemId">The item identity to release.</param>
+        /// <exception cref="InvalidOperationException">Thrown when validation is not valid.</exception>
+        internal void ReleaseItem(CellOccupancyValidationResult validation, ItemId itemId)
+        {
+            if (validation.Outcome != CellOccupancyOutcome.Valid ||
+                ValidateReleaseItem(itemId).Outcome != CellOccupancyOutcome.Valid)
+            {
+                throw new InvalidOperationException("Cannot release item: validation result is not valid.");
+            }
+
+            _itemIds.Remove(itemId);
         }
 
         #endregion
