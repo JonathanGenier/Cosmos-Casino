@@ -1,7 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
-using CosmosCasino.Core.Game.Structures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,60 +68,6 @@ public abstract class BuildContextBase
     /// <returns>A read-only list of <see cref="MapCoord"/> objects representing the cells between <paramref
     /// name="startCell"/> and <paramref name="endCell"/>. The list may be empty if no valid path exists.</returns>
     public abstract IReadOnlyList<MapCoord> GetCells(MapCoord startCell, MapCoord endCell, BuildOperation buildOperation, BuildInteractionMode buildInteractionMode);
-
-    #endregion
-
-    #region Structure Requests
-
-    /// <summary>
-    /// Creates one structure placement request for each selected legacy map coordinate.
-    /// </summary>
-    /// <param name="definition">The structure definition selected by the active build context.</param>
-    /// <param name="cells">The selected horizontal map cells.</param>
-    /// <param name="elevation">The logical elevation shared by the selected cells.</param>
-    /// <returns>Placement requests in the selected cell order.</returns>
-    protected static IReadOnlyList<StructurePlacementRequest> CreatePlacementRequests(
-        StructureDefinition definition,
-        IReadOnlyList<MapCoord> cells,
-        Elevation elevation)
-    {
-        ArgumentNullException.ThrowIfNull(definition);
-        ArgumentNullException.ThrowIfNull(cells);
-
-        var requests = new List<StructurePlacementRequest>(cells.Count);
-
-        foreach (MapCoord cell in cells)
-        {
-            requests.Add(new StructurePlacementRequest(
-                definition,
-                MapCellCoord.FromMapCoord(cell, elevation),
-                FootprintRotation.Deg0));
-        }
-
-        return requests;
-    }
-
-    /// <summary>
-    /// Converts selected legacy map coordinates into authoritative structure-removal target cells.
-    /// </summary>
-    /// <param name="cells">The selected horizontal map cells.</param>
-    /// <param name="elevation">The logical elevation shared by the selected cells.</param>
-    /// <returns>Removal target cells in the selected cell order.</returns>
-    protected static IReadOnlyList<MapCellCoord> CreateRemovalTargets(
-        IReadOnlyList<MapCoord> cells,
-        Elevation elevation)
-    {
-        ArgumentNullException.ThrowIfNull(cells);
-
-        var targets = new List<MapCellCoord>(cells.Count);
-
-        foreach (MapCoord cell in cells)
-        {
-            targets.Add(MapCellCoord.FromMapCoord(cell, elevation));
-        }
-
-        return targets;
-    }
 
     #endregion
 

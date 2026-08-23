@@ -590,27 +590,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
 
     private bool TryGetPreviewKind(BuildResult buildResult, out BuildKind kind)
     {
-        if (buildResult.Structures.Count > 0)
-        {
-            return BuildStructureDefinitions.TryGetBuildKind(
-                buildResult.Structures[0].DefinitionId,
-                out kind);
-        }
-
-        if (buildResult.FailedDefinitionId.HasValue)
-        {
-            return BuildStructureDefinitions.TryGetBuildKind(
-                buildResult.FailedDefinitionId.Value,
-                out kind);
-        }
-
-        if (buildResult.Intent.PlacementRequests.Count > 0)
-        {
-            return BuildStructureDefinitions.TryGetBuildKind(
-                buildResult.Intent.PlacementRequests[0].Definition.Id,
-                out kind);
-        }
-
+        // No legitimate definition-based Structure preview registry exists yet.
         kind = default;
         return false;
     }

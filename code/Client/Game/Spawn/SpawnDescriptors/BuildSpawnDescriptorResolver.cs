@@ -1,6 +1,4 @@
-using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Structures;
 using System;
 
 /// <summary>
@@ -12,18 +10,13 @@ using System;
 public static class BuildSpawnDescriptorResolver
 {
     /// <summary>
-    /// Resolves a structure definition identity to the existing floor or wall spawn descriptor.
+    /// Resolves a legacy build kind to the existing floor or wall spawn descriptor.
     /// </summary>
-    /// <param name="definitionId">The structure definition identity to resolve.</param>
-    /// <returns>A build spawn descriptor for the registered client visual.</returns>
-    /// <exception cref="NotSupportedException">Thrown if the definition is not supported for spawning.</exception>
-    public static BuildSpawnDescriptor Resolve(StructureDefinitionId definitionId)
+    /// <param name="kind">The legacy build kind to resolve.</param>
+    /// <returns>A build spawn descriptor for the requested legacy client visual.</returns>
+    /// <exception cref="NotSupportedException">Thrown if the build kind is not supported for spawning.</exception>
+    public static BuildSpawnDescriptor Resolve(BuildKind kind)
     {
-        if (!BuildStructureDefinitions.TryGetBuildKind(definitionId, out BuildKind kind))
-        {
-            throw new NotSupportedException($"Spawning not supported for structure definition {definitionId}.");
-        }
-
         return kind switch
         {
             BuildKind.Floor =>

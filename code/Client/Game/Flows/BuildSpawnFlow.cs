@@ -1,8 +1,5 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Map;
-using CosmosCasino.Core.Game.Structures;
-using Godot;
 using System;
 
 
@@ -18,8 +15,7 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
 {
     #region Fields
 
-    private BuildProcessManager _clientBuildManager;
-    private SpawnManager _spawnManager;
+    private readonly BuildProcessManager _clientBuildManager;
 
     #endregion
 
@@ -33,8 +29,10 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
     /// <param name="spawnManager">The spawn manager responsible for handling spawn operations. Cannot be null.</param>
     public BuildSpawnFlow(BuildProcessManager clientBuildManager, SpawnManager spawnManager)
     {
+        ArgumentNullException.ThrowIfNull(clientBuildManager);
+        ArgumentNullException.ThrowIfNull(spawnManager);
+
         _clientBuildManager = clientBuildManager;
-        _spawnManager = spawnManager;
 
         _clientBuildManager.BuildCompleted += OnBuildCompleted;
     }
@@ -141,43 +139,14 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
     /// <param name="result">The successful structure creation result.</param>
     private void SpawnBuild(BuildStructureResult result)
     {
-        BuildSpawnDescriptor descriptor = BuildSpawnDescriptorResolver.Resolve(result.DefinitionId);
-
-        foreach (MapCellCoord cell in result.AffectedCells)
-        {
-            CellSlotSpawnKey spawnKey = GetSpawnKey(cell, result.DefinitionId);
-            var worldCenter = MapMath.CellToWorldCenter(spawnKey.Coord);
-            Vector3 position = worldCenter.ToGodotVector3(spawnKey.Elevation);
-            Vector3 scale = new(WorldGridMetrics.GridUnitSize, 1f, WorldGridMetrics.GridUnitSize);
-            Transform3D transform = new(Basis.Identity.Scaled(scale), position);
-
-            _spawnManager.Spawn(
-                spawnKey,
-                descriptor.Variant,
-                transform,
-                descriptor.Layer);
-        }
+        // Structure visuals require a real definition-based renderer registration.
+        // Until that exists, successful Structure creation has no legacy Floor/Wall visual side effect.
     }
 
     private void RemoveBuild(BuildStructureResult result)
     {
-        foreach (MapCellCoord cell in result.AffectedCells)
-        {
-            CellSlotSpawnKey spawnKey = GetSpawnKey(cell, result.DefinitionId);
-            _spawnManager.Despawn(spawnKey);
-        }
-    }
-
-    #endregion
-
-    #region Spawn Key
-
-    private CellSlotSpawnKey GetSpawnKey(MapCellCoord cell, StructureDefinitionId definitionId)
-    {
-        return new CellSlotSpawnKey(
-            cell.ToMapCoord(),
-            cell.ToElevation(),
-            BuildStructureDefinitions.GetCellSlot(definitionId));
+        // Structure visuals require a real definition-based renderer registration.
+        // Until that exists, successful Structure removal has no legacy Floor/Wall visual side effect.
     }
 
     #endregion

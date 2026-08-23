@@ -42,35 +42,9 @@ public sealed class WallBuildContext : BuildContextBase
         Elevation elevation,
         out BuildIntent intent)
     {
-        var cells = GetCells(
-            startCell,
-            endCell,
-            buildOperation,
-            buildInteractionMode);
-
-        if (cells.Count == 0)
-        {
-            intent = null!;
-            return false;
-        }
-
-        switch (buildOperation)
-        {
-            case BuildOperation.Place:
-                intent = BuildIntent.PlaceStructures(
-                    CreatePlacementRequests(BuildStructureDefinitions.Wall, cells, elevation));
-                return true;
-            case BuildOperation.Remove:
-                intent = BuildIntent.RemoveStructuresAt(CreateRemovalTargets(cells, elevation));
-                return true;
-            case BuildOperation.None:
-                intent = null!;
-                break;
-            default:
-                throw new InvalidOperationException($"Unsupported build operation: {buildOperation}");
-        }
-
-        return true;
+        // Legacy walls still use CellLayer state and are not migrated into authoritative Structures.
+        intent = null!;
+        return false;
     }
 
     #endregion
