@@ -289,6 +289,43 @@ namespace CosmosCasino.Tests.Game.Map
         }
 
         [Test]
+        public void TryReplaceTerrain_FlatToSlopeAcrossMapChunkBoundary_UpdatesAdjacentFlatTileMask()
+        {
+            int size = MapChunkMetrics.ChunkSize;
+            var flatCoord = new TerrainTileWorldCoord(size - 1, 0);
+            var eastCoord = new TerrainTileWorldCoord(size, 0);
+            var flat = FlatTile(1f);
+            var manager = new MapManager();
+            manager.StoreGeneratedTerrain(flatCoord, flat);
+            manager.StoreGeneratedTerrain(eastCoord, FlatTile(1f));
+            Assert.That(flat.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.None));
+
+            bool replaced = manager.TryReplaceTerrain(eastCoord, SlopedTile());
+
+            Assert.That(replaced, Is.True);
+            Assert.That(flat.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.East));
+        }
+
+        [Test]
+        public void TryReplaceTerrain_SlopeToFlatAcrossMapChunkBoundary_RemovesAdjacentFlatTileMask()
+        {
+            int size = MapChunkMetrics.ChunkSize;
+            var flatCoord = new TerrainTileWorldCoord(size - 1, 0);
+            var eastCoord = new TerrainTileWorldCoord(size, 0);
+            var flat = FlatTile(1f);
+            var manager = new MapManager();
+            manager.StoreGeneratedTerrain(flatCoord, flat);
+            manager.StoreGeneratedTerrain(eastCoord, SlopedTile());
+            ResolveSlopeNeighbors(manager, flatCoord, eastCoord);
+            Assert.That(flat.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.East));
+
+            bool replaced = manager.TryReplaceTerrain(eastCoord, FlatTile(1f));
+
+            Assert.That(replaced, Is.True);
+            Assert.That(flat.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.None));
+        }
+
+        [Test]
         public void TryReplaceTerrain_MissingTerrain_ReturnsFalseWithoutCreatingTerrain()
         {
             var coord = new TerrainTileWorldCoord(99, 0);
@@ -301,6 +338,29 @@ namespace CosmosCasino.Tests.Game.Map
             Assert.That(manager.TryGetTerrain(coord, out _), Is.False);
         }
 
+        [Test]
+        public void TryReplaceTerrain_MissingTerrain_DoesNotRefreshOrCreateNeighboringState()
+        {
+            int size = MapChunkMetrics.ChunkSize;
+            var flatCoord = new TerrainTileWorldCoord(size - 1, 0);
+            var eastCoord = new TerrainTileWorldCoord(size, 0);
+            var missingCoord = new TerrainTileWorldCoord(size * 3, 0);
+            var flat = FlatTile(1f);
+            var manager = new MapManager();
+            manager.StoreGeneratedTerrain(flatCoord, flat);
+            manager.StoreGeneratedTerrain(eastCoord, SlopedTile());
+            ResolveSlopeNeighbors(manager, flatCoord, eastCoord);
+            Assert.That(flat.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.East));
+            int chunkCount = manager.ChunkCount;
+
+            bool replaced = manager.TryReplaceTerrain(missingCoord, FlatTile(1f));
+
+            Assert.That(replaced, Is.False);
+            Assert.That(flat.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.East));
+            Assert.That(manager.ChunkCount, Is.EqualTo(chunkCount));
+            Assert.That(manager.TryGetTerrain(missingCoord, out _), Is.False);
+        }
+
         #endregion
 
         #region Helpers
@@ -308,6 +368,20 @@ namespace CosmosCasino.Tests.Game.Map
         private static TerrainTile FlatTile(float height)
         {
             return new TerrainTile(height, height, height, height);
+        }
+
+        private static TerrainTile SlopedTile()
+        {
+            return new TerrainTile(1f, 2f, 1f, 1f);
+        }
+
+        private static void ResolveSlopeNeighbors(MapManager manager, params TerrainTileWorldCoord[] coords)
+        {
+            var terrainSystem = new TerrainSystem();
+
+            terrainSystem.ResolveSlopeNeighbors(
+                coords,
+                coord => manager.TryGetTerrain(coord, out var terrain) ? terrain : null);
         }
 
         private static void AssertTerrainEquivalent(TerrainTile actual, TerrainTile expected)

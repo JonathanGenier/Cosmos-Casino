@@ -140,7 +140,13 @@ namespace CosmosCasino.Core.Game.Map
             }
 
             MapChunkLocalCoord localCoord = ResolveTerrainChunkLocalCoord(coord);
-            return chunk.TryReplaceTerrain(localCoord, terrainTile);
+            if (!chunk.TryReplaceTerrain(localCoord, terrainTile))
+            {
+                return false;
+            }
+
+            RefreshSlopeNeighborsAround(coord);
+            return true;
         }
 
         #endregion
@@ -379,6 +385,17 @@ namespace CosmosCasino.Core.Game.Map
             return MapMath.GlobalToChunkLocal(coord.X, coord.Y);
         }
 
+        private static IEnumerable<TerrainTileWorldCoord> EnumerateAffectedSlopeNeighborCoords(TerrainTileWorldCoord coord)
+        {
+            for (int y = coord.Y - 1; y <= coord.Y + 1; y++)
+            {
+                for (int x = coord.X - 1; x <= coord.X + 1; x++)
+                {
+                    yield return new TerrainTileWorldCoord(x, y);
+                }
+            }
+        }
+
         private IEnumerable<TerrainTileWorldCoord> EnumerateTerrainCoords()
         {
             foreach (var chunk in _chunks.Values)
@@ -394,6 +411,13 @@ namespace CosmosCasino.Core.Game.Map
         private void ReceiveGeneratedTerrainTile(TerrainTileWorldCoord coord, TerrainTile terrainTile)
         {
             StoreGeneratedTerrain(coord, terrainTile);
+        }
+
+        private void RefreshSlopeNeighborsAround(TerrainTileWorldCoord coord)
+        {
+            _terrainSystem.ResolveSlopeNeighbors(
+                EnumerateAffectedSlopeNeighborCoords(coord),
+                lookupCoord => TryGetTerrain(lookupCoord, out var terrain) ? terrain : null);
         }
 
         #endregion
