@@ -32,9 +32,9 @@ public sealed partial class GameManager : NodeManager
     private CameraManager? _cameraManager;
     private BuildProcessManager? _buildProcessManager;
     private GameUiManager? _gameUiManager;
-    private SpawnManager? _spawnManager;
     private CursorManager? _cursorManager;
     private TerrainRenderManager? _terrainRenderManager;
+    private StructureRenderManager? _structureRenderManager;
 
     // ----------------------------------------------------
     // FLOWS
@@ -42,7 +42,7 @@ public sealed partial class GameManager : NodeManager
     private CameraInputFlow? _cameraInputFlow;
     private BuildContextFlow? _buildContextFlow;
     private BuildRequestFlow? _buildRequestFlow;
-    private BuildSpawnFlow? _buildSpawnFlow;
+    private StructureRenderFlow? _structureRenderFlow;
     private BuildPreviewFlow? _buildPreviewFlow;
     private BuildInputFlow? _buildInputFlow;
     private CursorPreviewFlow? _cursorPreviewFlow;
@@ -113,12 +113,6 @@ public sealed partial class GameManager : NodeManager
         set => _gameUiManager = value;
     }
 
-    private SpawnManager SpawnManager
-    {
-        get => _spawnManager ?? throw new InvalidOperationException($"{nameof(SpawnManager)} is not initialized.");
-        set => _spawnManager = value;
-    }
-
     private CursorManager CursorManager
     {
         get => _cursorManager ?? throw new InvalidOperationException($"{nameof(CursorManager)} is not initialized.");
@@ -129,6 +123,12 @@ public sealed partial class GameManager : NodeManager
     {
         get => _terrainRenderManager ?? throw new InvalidOperationException($"{nameof(TerrainRenderManager)} is not initialized.");
         set => _terrainRenderManager = value;
+    }
+
+    private StructureRenderManager StructureRenderManager
+    {
+        get => _structureRenderManager ?? throw new InvalidOperationException($"{nameof(StructureRenderManager)} is not initialized.");
+        set => _structureRenderManager = value;
     }
 
     // ----------------------------------------------------------------------------------------------------------------------------
@@ -152,10 +152,10 @@ public sealed partial class GameManager : NodeManager
         set => _buildRequestFlow = value;
     }
 
-    private BuildSpawnFlow BuildSpawnFlow
+    private StructureRenderFlow StructureRenderFlow
     {
-        get => _buildSpawnFlow ?? throw new InvalidOperationException($"{nameof(BuildSpawnFlow)} is not initialized.");
-        set => _buildSpawnFlow = value;
+        get => _structureRenderFlow ?? throw new InvalidOperationException($"{nameof(StructureRenderFlow)} is not initialized.");
+        set => _structureRenderFlow = value;
     }
 
     private BuildPreviewFlow BuildPreviewFlow
@@ -270,7 +270,7 @@ public sealed partial class GameManager : NodeManager
     {
         BuildContextFlow?.Dispose();
         BuildRequestFlow?.Dispose();
-        BuildSpawnFlow?.Dispose();
+        StructureRenderFlow?.Dispose();
         CameraInputFlow?.Dispose();
         BuildPreviewFlow?.Dispose();
         BuildInputFlow?.Dispose();
@@ -326,15 +326,15 @@ public sealed partial class GameManager : NodeManager
         BuildProcessManager = AddInitializableNode<BuildProcessManager>(
             cbm => cbm.Initialize(buildProcessServices));
 
-        SpawnManager = AddInitializableNode<SpawnManager>(
-            sm => sm.Initialize(ResourceAssembler.SpawnResources));
-
         CameraManager = CreateNode<CameraManager>();
         GameUiManager = CreateInitializableNode<GameUiManager>(
             gum => gum.Initialize());
 
         TerrainRenderManager = AddInitializableNode<TerrainRenderManager>(
             trm => trm.Initialize(GameSession.MapManager, ResourceAssembler.TerrainResources));
+
+        StructureRenderManager = AddInitializableNode<StructureRenderManager>(
+            srm => srm.Initialize(GameSession.MapManager));
 
 #if DEBUG
         CursorDebugVisualizer.Initialize(CursorManager);
@@ -356,7 +356,7 @@ public sealed partial class GameManager : NodeManager
 
         BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, BuildContext);
         BuildRequestFlow = new BuildRequestFlow(BuildProcessManager, BuildContext);
-        BuildSpawnFlow = new BuildSpawnFlow(BuildProcessManager, SpawnManager);
+        StructureRenderFlow = new StructureRenderFlow(BuildProcessManager, StructureRenderManager);
         BuildPreviewFlow = new BuildPreviewFlow(BuildContext, BuildProcessManager.BuildPreviewManager, BuildProcessManager);
         BuildInputFlow = new BuildInputFlow(AppServices.InputManager, CursorManager, BuildContext);
         CursorPreviewFlow = new CursorPreviewFlow(BuildContext, BuildProcessManager.BuildPreviewManager, CursorManager, BuildProcessManager);

@@ -241,6 +241,92 @@ namespace CosmosCasino.Tests.Game.Map
             Assert.That(structure, Is.Null);
         }
 
+        [Test]
+        public void GetStructureSnapshots_ReturnsAllStructuresInStructureIdOrder()
+        {
+            var manager = new MapManager();
+            StructureDefinition firstDefinition = IrregularDefinition();
+            StructureDefinition secondDefinition = SingleCellDefinition(2);
+            var firstAnchor = new MapCellCoord(-2, 1, 3);
+            var secondAnchor = new MapCellCoord(4, 0, -1);
+            StoreTerrainForStructure(manager, firstDefinition, firstAnchor, FootprintRotation.Deg90);
+            StoreTerrainForStructure(manager, secondDefinition, secondAnchor, FootprintRotation.Deg180);
+            manager.TryCreateStructure(new StructureId(2), secondDefinition, secondAnchor, FootprintRotation.Deg180);
+            manager.TryCreateStructure(new StructureId(1), firstDefinition, firstAnchor, FootprintRotation.Deg90);
+
+            IReadOnlyList<StructureSnapshot> snapshots = manager.GetStructureSnapshots();
+
+            Assert.That(snapshots, Has.Count.EqualTo(2));
+            Assert.That(snapshots[0].Id, Is.EqualTo(new StructureId(1)));
+            Assert.That(snapshots[0].Definition, Is.SameAs(firstDefinition));
+            Assert.That(snapshots[0].Anchor, Is.EqualTo(firstAnchor));
+            Assert.That(snapshots[0].Rotation, Is.EqualTo(FootprintRotation.Deg90));
+            Assert.That(snapshots[1].Id, Is.EqualTo(new StructureId(2)));
+            Assert.That(snapshots[1].Definition, Is.SameAs(secondDefinition));
+            Assert.That(snapshots[1].Anchor, Is.EqualTo(secondAnchor));
+            Assert.That(snapshots[1].Rotation, Is.EqualTo(FootprintRotation.Deg180));
+        }
+
+        [Test]
+        public void TryGetStructureSnapshotAt_EveryOccupiedCell_ReturnsSameStructureSnapshot()
+        {
+            var manager = new MapManager();
+            StructureDefinition definition = IrregularDefinition();
+            var id = new StructureId(1);
+            var anchor = new MapCellCoord(-2, 1, 3);
+            StoreTerrainForStructure(manager, definition, anchor, FootprintRotation.Deg270);
+            manager.TryCreateStructure(id, definition, anchor, FootprintRotation.Deg270);
+
+            foreach (MapCellCoord coord in definition.Footprint.Resolve(anchor, FootprintRotation.Deg270))
+            {
+                Assert.That(manager.TryGetStructureSnapshotAt(coord, out var snapshot), Is.True, coord.ToString());
+                Assert.That(snapshot.Id, Is.EqualTo(id), coord.ToString());
+                Assert.That(snapshot.Definition, Is.SameAs(definition), coord.ToString());
+                Assert.That(snapshot.Anchor, Is.EqualTo(anchor), coord.ToString());
+                Assert.That(snapshot.Rotation, Is.EqualTo(FootprintRotation.Deg270), coord.ToString());
+            }
+        }
+
+        [Test]
+        public void TryGetStructureSnapshotAt_MissingOrEmptyCell_ReturnsFalse()
+        {
+            var manager = new MapManager();
+            var emptyCoord = new MapCellCoord(0, 0, 0);
+            StoreTerrainForCoords(manager, new[] { emptyCoord });
+            manager.GetOrCreateCell(emptyCoord);
+
+            bool missingFound = manager.TryGetStructureSnapshotAt(new MapCellCoord(99, 0, 0), out var missingSnapshot);
+            bool emptyFound = manager.TryGetStructureSnapshotAt(emptyCoord, out var emptySnapshot);
+
+            Assert.That(missingFound, Is.False);
+            Assert.That(missingSnapshot, Is.EqualTo(default(StructureSnapshot)));
+            Assert.That(emptyFound, Is.False);
+            Assert.That(emptySnapshot, Is.EqualTo(default(StructureSnapshot)));
+        }
+
+        [Test]
+        public void StructureSnapshotQueries_DoNotMutateMapManager()
+        {
+            var manager = new MapManager();
+            StructureDefinition definition = TwoCellDefinition();
+            var id = new StructureId(1);
+            var anchor = new MapCellCoord(0, 0, 0);
+            StoreTerrainForStructure(manager, definition, anchor, FootprintRotation.Deg0);
+            manager.TryCreateStructure(id, definition, anchor, FootprintRotation.Deg0);
+            int structureCount = manager.StructureCount;
+            int cellCount = manager.CellCount;
+            int chunkCount = manager.ChunkCount;
+
+            IReadOnlyList<StructureSnapshot> snapshots = manager.GetStructureSnapshots();
+            bool found = manager.TryGetStructureSnapshotAt(anchor, out var snapshot);
+
+            Assert.That(found, Is.True);
+            Assert.That(snapshot, Is.EqualTo(snapshots.Single()));
+            Assert.That(manager.StructureCount, Is.EqualTo(structureCount));
+            Assert.That(manager.CellCount, Is.EqualTo(cellCount));
+            Assert.That(manager.ChunkCount, Is.EqualTo(chunkCount));
+        }
+
         #endregion
 
         #region Rotation
