@@ -62,9 +62,14 @@ public readonly struct CursorContext
     public bool IsValid { get; }
 
     /// <summary>
-    /// Gets the map cell coordinates of the current logical target.
+    /// Gets the authoritative cell directly targeted by the cursor.
     /// </summary>
-    public MapCoord CellPosition => Target.Coord;
+    public MapCellCoord TargetCell => Target.TargetCell;
+
+    /// <summary>
+    /// Gets the authoritative candidate cell used for new structure placement.
+    /// </summary>
+    public MapCellCoord PlacementCell => Target.PlacementCell;
 
     #endregion
 

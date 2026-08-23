@@ -1,10 +1,9 @@
-using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Structures;
 using Godot;
 using System;
 
 /// <summary>
-/// Manages the user interface for building actions, including floor selection and build cancellation, within the game
-/// scene.
+/// Manages the user interface for structure build selection and build cancellation within the game scene.
 /// </summary>
 /// <remarks>BuildUiManager coordinates the build UI lifecycle and exposes events for user intent, allowing other
 /// components to respond to build-related actions. It is responsible for initializing the build UI, handling user input
@@ -21,11 +20,10 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     #region Events
 
     /// <summary>
-    /// Occurs when a build kind is selected.
+    /// Occurs when a structure definition is selected.
     /// </summary>
-    /// <remarks>Subscribers are notified with the selected build kind when the event is raised. The event
-    /// argument provides the selected value, or null if no build kind is selected.</remarks>
-    public event Action<BuildKind>? BuildKindSelected;
+    /// <remarks>Subscribers are notified with the selected structure definition when the event is raised.</remarks>
+    public event Action<StructureDefinition>? StructureDefinitionSelected;
 
     /// <summary>
     /// Raised when the player cancels the current build selection.
@@ -67,9 +65,8 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     protected override void OnReady()
     {
         BuildUi = AddNode(GD.Load<PackedScene>(GameUiPaths.Build).Instantiate<BuildUi>());
-        BuildUi.BuildKindSelected += OnBuildKindSelected;
+        BuildUi.StructureDefinitionSelected += OnStructureDefinitionSelected;
         BuildUi.BuildCancelled += OnBuildCancelled;
-
     }
 
     /// <summary>
@@ -78,7 +75,7 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     /// </summary>
     protected override void OnExit()
     {
-        BuildUi.BuildKindSelected -= OnBuildKindSelected;
+        BuildUi.StructureDefinitionSelected -= OnStructureDefinitionSelected;
         BuildUi.BuildCancelled -= OnBuildCancelled;
     }
 
@@ -86,9 +83,9 @@ public sealed partial class BuildUiManager : InitializableNodeManager
 
     #region BuildUi Callbacks
 
-    private void OnBuildKindSelected(BuildKind buildKind)
+    private void OnStructureDefinitionSelected(StructureDefinition definition)
     {
-        BuildKindSelected?.Invoke(buildKind);
+        StructureDefinitionSelected?.Invoke(definition);
     }
 
     /// <summary>

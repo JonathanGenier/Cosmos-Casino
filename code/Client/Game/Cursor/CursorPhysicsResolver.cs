@@ -73,7 +73,11 @@ internal sealed class CursorPhysicsResolver
             return false;
         }
 
-        hit = new CursorPhysicsHit((Vector3)result["position"], collider);
+        hit = new CursorPhysicsHit(
+            ray.Origin,
+            (Vector3)result["position"],
+            (Vector3)result["normal"],
+            collider);
         return true;
     }
 

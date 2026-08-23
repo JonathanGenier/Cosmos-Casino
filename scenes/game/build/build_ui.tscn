@@ -4,7 +4,7 @@
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_dd774"]
 
-[node name="BuildUi" type="Control" node_paths=PackedStringArray("_cancelButton", "_floorButton", "_wallButton")]
+[node name="BuildUi" type="Control" node_paths=PackedStringArray("_cancelButton", "_blockButton")]
 layout_mode = 3
 anchors_preset = 2
 anchor_top = 1.0
@@ -12,8 +12,7 @@ anchor_bottom = 1.0
 grow_vertical = 0
 script = ExtResource("1_dd774")
 _cancelButton = NodePath("HBoxContainer/Cancel_Button")
-_floorButton = NodePath("HBoxContainer/VBoxContainer/Floor_Button")
-_wallButton = NodePath("HBoxContainer/VBoxContainer/Wall_Button")
+_blockButton = NodePath("HBoxContainer/VBoxContainer/Block_Button")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
@@ -33,16 +32,9 @@ text = "Cancel
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Floor_Button" type="Button" parent="HBoxContainer/VBoxContainer"]
+[node name="Block_Button" type="Button" parent="HBoxContainer/VBoxContainer"]
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_dd774")
-text = "Floor
-"
-
-[node name="Wall_Button" type="Button" parent="HBoxContainer/VBoxContainer"]
-layout_mode = 2
-toggle_mode = true
-button_group = SubResource("ButtonGroup_dd774")
-text = "Wall
+text = "Block
 "

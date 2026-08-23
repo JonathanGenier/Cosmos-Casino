@@ -7,30 +7,20 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// Manages the visual preview of build placement within the game world, including cursor and drag previews.
+/// Manages generic structure footprint previews within the game world.
 /// </summary>
-/// <remarks>Use this class to initialize and control the build preview system, which provides real-time feedback
-/// to users when placing objects. The manager must be initialized with required resources and context before use. The
-/// preview is automatically shown or hidden based on the current build context and cursor position. This class is not
-/// thread-safe and should be used on the main thread.</remarks>
+/// <remarks>The manager displays Client-only preview cells from Core build evaluation data. Placement validity comes
+/// from <see cref="BuildResult.Outcome"/>.</remarks>
 public sealed partial class BuildPreviewManager : InitializableNodeManager
 {
     #region Fields
 
-    private const int DefaultFloorPoolSize = 128;
-    private const int DefaultWallPoolSize = 64;
+    private const int DefaultStructurePreviewPoolSize = 128;
 
-    private readonly List<FloorPreview> _floorPreviews = new();
-    private readonly List<WallPreview> _wallPreviews = new();
+    private readonly List<StructurePreviewCell> _cursorPreviews = new();
+    private readonly List<StructurePreviewCell> _dragPreviews = new();
 
-    private ClientPool<FloorPreview>? _floorPool;
-    private ClientPool<WallPreview>? _wallPool;
-
-    private PackedScene? _floorPreviewScene;
-    private PackedScene? _wallPreviewScene;
-
-    private FloorPreview? _floorPreviewInstance;
-    private WallPreview? _wallPreviewInstance;
+    private ClientPool<StructurePreviewCell>? _structurePreviewPool;
 
     private BuildPreviewMode _currentMode;
 
@@ -43,40 +33,10 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// </summary>
     public BuildPreviewMode CurrentMode => _currentMode;
 
-    private PackedScene FloorPreviewScene
+    private ClientPool<StructurePreviewCell> StructurePreviewPool
     {
-        get => _floorPreviewScene ?? throw new InvalidOperationException($"{nameof(PackedScene)} not initialized.");
-        set => _floorPreviewScene = value;
-    }
-
-    private PackedScene WallPreviewScene
-    {
-        get => _wallPreviewScene ?? throw new InvalidOperationException($"{nameof(PackedScene)} not initialized.");
-        set => _wallPreviewScene = value;
-    }
-
-    private FloorPreview FloorPreviewInstance
-    {
-        get => _floorPreviewInstance ?? throw new InvalidOperationException($"{nameof(FloorPreview)} not initialized.");
-        set => _floorPreviewInstance = value;
-    }
-
-    private WallPreview WallPreviewInstance
-    {
-        get => _wallPreviewInstance ?? throw new InvalidOperationException($"{nameof(WallPreview)} not initialized.");
-        set => _wallPreviewInstance = value;
-    }
-
-    private ClientPool<FloorPreview> FloorPool
-    {
-        get => _floorPool ?? throw new InvalidOperationException($"{nameof(ClientPool<FloorPreview>)} not initialized.");
-        set => _floorPool = value;
-    }
-
-    private ClientPool<WallPreview> WallPool
-    {
-        get => _wallPool ?? throw new InvalidOperationException($"{nameof(ClientPool<WallPreview>)} not initialized.");
-        set => _wallPool = value;
+        get => _structurePreviewPool ?? throw new InvalidOperationException($"{nameof(ClientPool<StructurePreviewCell>)} not initialized.");
+        set => _structurePreviewPool = value;
     }
 
     #endregion
@@ -84,27 +44,17 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     #region Initialization
 
     /// <summary>
-    /// Initializes the component with the specified preview resources, build context, and cursor manager.
+    /// Initializes the component with the specified preview resources.
     /// </summary>
-    /// <param name="previewResources">The resources used for build previews. Cannot be null.</param>
+    /// <param name="previewResources">The preview resources supplied by the game scene.</param>
     public void Initialize(PreviewResources previewResources)
     {
         ArgumentNullException.ThrowIfNull(previewResources);
 
-        FloorPreviewScene = previewResources.FloorPreviewScene;
-        WallPreviewScene = previewResources.WallPreviewScene;
-
-        FloorPool = new ClientPool<FloorPreview>(
-            DefaultFloorPoolSize,
-            CreatePoolFloorPreview,
-            ResetPoolFloorPreview
-        );
-
-        WallPool = new ClientPool<WallPreview>(
-            DefaultWallPoolSize,
-            CreatePoolWallPreview,
-            ResetPoolWallPreview
-        );
+        StructurePreviewPool = new ClientPool<StructurePreviewCell>(
+            DefaultStructurePreviewPoolSize,
+            CreateStructurePreviewCell,
+            ResetStructurePreviewCell);
 
         _currentMode = BuildPreviewMode.Cursor;
         MarkInitialized();
@@ -115,7 +65,7 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     #region Public API
 
     /// <summary>
-    /// Enables drag mode for the build preview, allowing objects to be positioned interactively.
+    /// Enables drag mode for the build preview.
     /// </summary>
     public void EnterDragMode()
     {
@@ -129,10 +79,8 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     }
 
     /// <summary>
-    /// Exits drag mode and returns to cursor mode, clearing any active drag preview.
+    /// Exits drag mode and returns to cursor mode.
     /// </summary>
-    /// <remarks>Call this method to end a drag operation and reset the preview state. If the preview is
-    /// already in cursor mode, this method has no effect.</remarks>
     public void ExitDragMode()
     {
         if (_currentMode == BuildPreviewMode.Cursor)
@@ -147,11 +95,11 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// <summary>
     /// Displays a visual preview of the specified build result based on the current preview mode.
     /// </summary>
-    /// <remarks>The preview mode determines how the build result is displayed. For example, the preview may
-    /// follow the cursor or appear as a draggable element, depending on the current mode.</remarks>
-    /// <param name="buildResult">The build result to preview. Provides the data used to generate the visual representation.</param>
+    /// <param name="buildResult">The Core build result to preview.</param>
     public void ShowPreview(BuildResult buildResult)
     {
+        ArgumentNullException.ThrowIfNull(buildResult);
+
         switch (_currentMode)
         {
             case BuildPreviewMode.Cursor:
@@ -165,390 +113,117 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     }
 
     /// <summary>
-    /// Removes any active cursor preview from the user interface.
+    /// Removes any active cursor preview.
     /// </summary>
-    /// <remarks>Call this method to clear both floor and wall cursor previews, typically when the user
-    /// cancels a placement action or when the preview is no longer needed.</remarks>
     public void ClearCursorPreview()
     {
-        HideFloorCursorPreview();
-        HideWallCursorPreview();
+        ClearPreviewCells(_cursorPreviews);
     }
 
     /// <summary>
-    /// Clears any active drag preview, resetting the build preview to the default cursor mode.
+    /// Clears any active drag preview and resets the preview to cursor mode.
     /// </summary>
-    /// <remarks>Call this method to remove any visual indicators or previews shown during a drag operation.
-    /// After calling this method, no drag preview will be displayed until a new drag operation is initiated.</remarks>
     public void ClearDragPreview()
     {
-        ClearFloorDragPreview();
-        ClearWallDragPreview();
+        ClearPreviewCells(_dragPreviews);
         _currentMode = BuildPreviewMode.Cursor;
     }
 
     #endregion
 
-    #region Godot Lifecycle
+    #region Preview
 
-    /// <summary>
-    /// Initializes the node when it enters the scene tree, setting up cursor previews.
-    /// </summary>
-    /// <remarks>This method is called by the Godot engine as part of the node's lifecycle. It instantiates
-    /// and configures the cursor previews.
-    /// Override this method to perform setup tasks that require the node to be part of the scene tree.</remarks>
-    protected override void OnReady()
-    {
-        InitializeFloorCursorPreview();
-        InitializeWallCursorPreview();
-    }
-
-    #endregion
-
-    #region Dragging Preview
-
-    /// <summary>
-    /// Displays a visual preview of the drag operation based on the specified build result.
-    /// </summary>
-    /// <param name="buildResult">The structure build result used to determine preview type, cells, and validity.</param>
-    private void ShowDragPreview(BuildResult buildResult)
-    {
-        IReadOnlyList<MapCellCoord> cells = GetPreviewCells(buildResult);
-
-        if (cells.Count == 0 || !TryGetPreviewKind(buildResult, out BuildKind kind))
-        {
-            ClearFloorDragPreview();
-            ClearWallDragPreview();
-            return;
-        }
-
-        switch (kind)
-        {
-            case BuildKind.Floor:
-                ShowFloorDragPreview(cells, buildResult.Outcome);
-                break;
-
-            case BuildKind.Wall:
-                ShowWallDragPreview(cells, buildResult.Outcome);
-                break;
-        }
-    }
-
-    /// <summary>
-    /// Displays a visual preview for floor placement at the specified map cell coordinates, indicating the validity of
-    /// each placement based on the provided build results.
-    /// </summary>
-    /// <remarks>This method updates, creates, or removes floor preview visuals to match the specified cells.
-    /// Each preview reflects whether placement at the corresponding cell is valid, as determined by the associated
-    /// build operation result.</remarks>
-    /// <param name="cells">A read-only list of map cell coordinates where floor previews should be shown.</param>
-    /// <param name="outcome">The aggregate build outcome used by every preview in the atomic batch.</param>
-    private void ShowFloorDragPreview(
-        IReadOnlyList<MapCellCoord> cells,
-        BuildOperationOutcome outcome)
-    {
-        int i = 0;
-
-        // Reuse existing previews
-        for (; i < cells.Count && i < _floorPreviews.Count; i++)
-        {
-            var cell = cells[i];
-
-            _floorPreviews[i].SetWorldPosition(ToWorldPosition(cell));
-            _floorPreviews[i].SetValidity(outcome);
-            _floorPreviews[i].Show();
-        }
-
-        // Fetch new previews if needed
-        for (; i < cells.Count; i++)
-        {
-            var cell = cells[i];
-            var preview = FloorPool!.Fetch();
-
-            preview.SetWorldPosition(ToWorldPosition(cell));
-            preview.SetValidity(outcome);
-            preview.Show();
-            _floorPreviews.Add(preview);
-        }
-
-        // Return unused previews to pool
-        for (int j = cells.Count; j < _floorPreviews.Count; j++)
-        {
-            FloorPool.Return(_floorPreviews[j]);
-        }
-
-        // Trim the list
-        if (_floorPreviews.Count > cells.Count)
-        {
-            _floorPreviews.RemoveRange(cells.Count, _floorPreviews.Count - cells.Count);
-        }
-    }
-
-    /// <summary>
-    /// Displays a visual preview for wall placement at the specified map cell coordinates, indicating the validity of
-    /// each placement based on the provided build results.
-    /// </summary>
-    /// <remarks>This method updates, creates, or removes wall preview visuals to match the specified cells.
-    /// Each preview reflects whether placement at the corresponding cell is valid, as determined by the associated
-    /// build operation result.</remarks>
-    /// <param name="cells">A read-only list of map cell coordinates where wall previews should be shown.</param>
-    /// <param name="outcome">The aggregate build outcome used by every preview in the atomic batch.</param>
-    private void ShowWallDragPreview(
-        IReadOnlyList<MapCellCoord> cells,
-        BuildOperationOutcome outcome)
-    {
-        int i = 0;
-
-        // Reuse existing previews
-        for (; i < cells.Count && i < _wallPreviews.Count; i++)
-        {
-            var cell = cells[i];
-
-            _wallPreviews[i].SetWorldPosition(ToWorldPosition(cell));
-            _wallPreviews[i].SetValidity(outcome);
-            _wallPreviews[i].Show();
-        }
-
-        // Fetch new previews if needed
-        for (; i < cells.Count; i++)
-        {
-            var cell = cells[i];
-            var preview = WallPool!.Fetch();
-
-            preview.SetWorldPosition(ToWorldPosition(cell));
-            preview.SetValidity(outcome);
-            preview.Show();
-            _wallPreviews.Add(preview);
-        }
-
-        // Return unused previews to pool
-        for (int j = cells.Count; j < _wallPreviews.Count; j++)
-        {
-            WallPool.Return(_wallPreviews[j]);
-        }
-
-        // Trim the list
-        if (_wallPreviews.Count > cells.Count)
-        {
-            _wallPreviews.RemoveRange(cells.Count, _wallPreviews.Count - cells.Count);
-        }
-    }
-
-    /// <summary>
-    /// Removes all floor preview objects from the scene and returns them to the object pool.
-    /// </summary>
-    /// <remarks>This method should be called when floor previews are no longer needed, such as when resetting
-    /// or updating the scene. All returned objects are cleared from the internal collection and made available for
-    /// reuse.</remarks>
-    private void ClearFloorDragPreview()
-    {
-        foreach (var preview in _floorPreviews)
-        {
-            FloorPool!.Return(preview);
-        }
-
-        _floorPreviews.Clear();
-    }
-
-    /// <summary>
-    /// Removes all wall preview objects and returns them to the wall pool.
-    /// </summary>
-    /// <remarks>Call this method to clear the current set of wall previews and release their resources. This
-    /// is typically used when resetting or updating the wall preview state.</remarks>
-    private void ClearWallDragPreview()
-    {
-        foreach (var preview in _wallPreviews)
-        {
-            WallPool!.Return(preview);
-        }
-
-        _wallPreviews.Clear();
-    }
-
-    #endregion
-
-    #region Cursor Preview
-
-    /// <summary>
-    /// Displays a visual preview at the cursor's target cell based on the specified build result.
-    /// </summary>
-    /// <remarks>This method updates the cursor preview to reflect the type of build action (such as floor or
-    /// wall) at the specified location. It hides any irrelevant previews to ensure only the appropriate cursor is
-    /// shown.</remarks>
-    /// <param name="buildResult">The result of the build operation, containing the intended cell and build kind for which to show the cursor
-    /// preview.</param>
-    /// <exception cref="InvalidOperationException">Thrown if the build result does not specify exactly one target cell.</exception>
     private void ShowCursorPreview(BuildResult buildResult)
     {
+        ShowStructurePreview(buildResult, _cursorPreviews);
+    }
+
+    private void ShowDragPreview(BuildResult buildResult)
+    {
+        ShowStructurePreview(buildResult, _dragPreviews);
+    }
+
+    private void ShowStructurePreview(
+        BuildResult buildResult,
+        List<StructurePreviewCell> activePreviews)
+    {
         IReadOnlyList<MapCellCoord> cells = GetPreviewCells(buildResult);
 
-        if (cells.Count == 0 || !TryGetPreviewKind(buildResult, out BuildKind kind))
+        if (cells.Count == 0)
         {
-            HideFloorCursorPreview();
-            HideWallCursorPreview();
+            ClearPreviewCells(activePreviews);
             return;
         }
 
-        if (cells.Count != 1)
+        RenderPreviewCells(activePreviews, cells, buildResult.Outcome);
+    }
+
+    private void RenderPreviewCells(
+        List<StructurePreviewCell> activePreviews,
+        IReadOnlyList<MapCellCoord> cells,
+        BuildOperationOutcome outcome)
+    {
+        int i = 0;
+
+        for (; i < cells.Count && i < activePreviews.Count; i++)
         {
-            throw new InvalidOperationException("Cursor preview expects exactly one cell.");
+            ShowPreviewCell(activePreviews[i], cells[i], outcome);
         }
 
-        Vector3 worldPosition = ToWorldPosition(cells.First());
-        var outcome = buildResult.Outcome;
-
-        switch (kind)
+        for (; i < cells.Count; i++)
         {
-            case BuildKind.Floor:
-                ShowFloorCursorPreview(worldPosition, outcome);
-                HideWallCursorPreview();
-                break;
-            case BuildKind.Wall:
-                ShowWallCursorPreview(worldPosition, outcome);
-                HideFloorCursorPreview();
-                break;
-            default:
-                HideFloorCursorPreview();
-                HideWallCursorPreview();
-                break;
+            StructurePreviewCell preview = StructurePreviewPool.Fetch();
+            ShowPreviewCell(preview, cells[i], outcome);
+            activePreviews.Add(preview);
+        }
+
+        for (int j = cells.Count; j < activePreviews.Count; j++)
+        {
+            StructurePreviewPool.Return(activePreviews[j]);
+        }
+
+        if (activePreviews.Count > cells.Count)
+        {
+            activePreviews.RemoveRange(cells.Count, activePreviews.Count - cells.Count);
         }
     }
 
-    /// <summary>
-    /// Displays a visual preview of the floor cursor at the specified world position, updating its appearance based on
-    /// the provided build operation outcome.
-    /// </summary>
-    /// <param name="worldPosition">The position in world coordinates where the floor cursor preview should be displayed.</param>
-    /// <param name="outcome">The result of the build operation that determines the validity and appearance of the floor cursor preview.</param>
-    private void ShowFloorCursorPreview(Vector3 worldPosition, BuildOperationOutcome outcome)
+    private void ShowPreviewCell(
+        StructurePreviewCell preview,
+        MapCellCoord cell,
+        BuildOperationOutcome outcome)
     {
-        if (!FloorPreviewInstance.IsInsideTree())
+        preview.SetWorldPosition(cell.ToGodotCenter());
+        preview.SetValidity(outcome);
+        preview.Show();
+    }
+
+    private void ClearPreviewCells(List<StructurePreviewCell> activePreviews)
+    {
+        foreach (StructurePreviewCell preview in activePreviews)
         {
-            return;
+            StructurePreviewPool.Return(preview);
         }
 
-        FloorPreviewInstance.SetValidity(outcome);
-        FloorPreviewInstance.SetWorldPosition(worldPosition);
-        FloorPreviewInstance.Show();
-    }
-
-    /// <summary>
-    /// Displays a preview of the wall cursor at the specified world position, updating its validity state based on the
-    /// provided build outcome.
-    /// </summary>
-    /// <param name="worldPosition">The position in world coordinates where the wall cursor preview should be displayed.</param>
-    /// <param name="outcome">The result of the build operation that determines the validity state of the wall cursor preview.</param>
-    private void ShowWallCursorPreview(Vector3 worldPosition, BuildOperationOutcome outcome)
-    {
-        if (!WallPreviewInstance.IsInsideTree())
-        {
-            return;
-        }
-
-        WallPreviewInstance.SetValidity(outcome);
-        WallPreviewInstance.SetWorldPosition(worldPosition);
-        WallPreviewInstance.Show();
-    }
-
-    /// <summary>
-    /// Hides the currently displayed floor preview, if one is visible.
-    /// </summary>
-    private void HideFloorCursorPreview()
-    {
-        FloorPreviewInstance.Hide();
-    }
-
-    /// <summary>
-    /// Hides the currently displayed wall preview, if visible.
-    /// </summary>
-    private void HideWallCursorPreview()
-    {
-        WallPreviewInstance.Hide();
-    }
-
-    #endregion
-
-    #region Cursor Preview Initialization
-
-    /// <summary>
-    /// Initializes the floor preview by instantiating the preview scene and adding it as a child node. The preview is
-    /// hidden after initialization.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown if the root node of the instantiated scene does not have a FloorPreview script attached.</exception>
-    private void InitializeFloorCursorPreview()
-    {
-        var node = FloorPreviewScene.Instantiate();
-        FloorPreviewInstance = node as FloorPreview ?? throw new InvalidOperationException($"{nameof(PackedScene)} root node must have {nameof(FloorPreview)} script attached.");
-        AddChild(FloorPreviewInstance);
-        FloorPreviewInstance.Hide();
-    }
-
-    /// <summary>
-    /// Initializes the wall preview instance by instantiating the associated scene and adding it as a child node.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown if the root node of the instantiated scene does not have the WallPreview script attached.</exception>
-    private void InitializeWallCursorPreview()
-    {
-        var node = WallPreviewScene.Instantiate();
-        WallPreviewInstance = node as WallPreview ?? throw new InvalidOperationException($"{nameof(PackedScene)} root node must have {nameof(WallPreview)} script attached.");
-        AddChild(WallPreviewInstance);
-        WallPreviewInstance.Hide();
+        activePreviews.Clear();
     }
 
     #endregion
 
     #region Pooling
 
-    /// <summary>
-    /// Creates and adds a hidden pool floor preview to the scene.
-    /// </summary>
-    /// <remarks>The returned preview is initially hidden and must be shown explicitly if needed.</remarks>
-    /// <returns>A new instance of <see cref="FloorPreview"/> representing the pool floor preview.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the root node of <c>FloorPreviewScene</c> is not of type <see cref="FloorPreview"/>.</exception>
-    private FloorPreview CreatePoolFloorPreview()
+    private StructurePreviewCell CreateStructurePreviewCell()
     {
-        var node = FloorPreviewScene.Instantiate();
-        var preview = node as FloorPreview ?? throw new InvalidOperationException("FloorPreviewScene root must be FloorPreview");
-
+        var preview = new StructurePreviewCell();
+        preview.Initialize();
         AddChild(preview);
         preview.Hide();
         return preview;
     }
 
-    /// <summary>
-    /// Resets the specified pool floor preview by hiding it.
-    /// </summary>
-    /// <param name="preview">The floor preview instance to be reset. Cannot be null.</param>
-    private void ResetPoolFloorPreview(FloorPreview preview)
+    private void ResetStructurePreviewCell(StructurePreviewCell preview)
     {
         preview.Reset();
-        preview.Hide();
-    }
-
-    /// <summary>
-    /// Creates and adds a hidden pool wall preview to the current scene.
-    /// </summary>
-    /// <remarks>The returned preview is hidden by default and must be shown explicitly before use.</remarks>
-    /// <returns>A new instance of <see cref="WallPreview"/> that has been added as a child and is initially hidden.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the root node of <c>WallPreviewScene</c> is not of type <see cref="WallPreview"/>.</exception>
-    private WallPreview CreatePoolWallPreview()
-    {
-        var node = WallPreviewScene.Instantiate();
-        var preview = node as WallPreview ?? throw new InvalidOperationException("WallPreviewScene root must be WallPreview");
-
-        AddChild(preview);
-        preview.Hide();
-        return preview;
-    }
-
-    /// <summary>
-    /// Resets the specified pool wall preview by hiding it.
-    /// </summary>
-    /// <param name="preview">The wall preview instance to be reset. Cannot be null.</param>
-    private void ResetPoolWallPreview(WallPreview preview)
-    {
-        preview.Reset();
-        preview.Hide();
     }
 
     #endregion
@@ -586,18 +261,6 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
         {
             return new[] { request.Anchor };
         }
-    }
-
-    private bool TryGetPreviewKind(BuildResult buildResult, out BuildKind kind)
-    {
-        // No legitimate definition-based Structure preview registry exists yet.
-        kind = default;
-        return false;
-    }
-
-    private Vector3 ToWorldPosition(MapCellCoord cell)
-    {
-        return MapMath.CellToWorldCenter(cell.ToMapCoord()).ToGodotVector3(cell.ToElevation());
     }
 
     #endregion
