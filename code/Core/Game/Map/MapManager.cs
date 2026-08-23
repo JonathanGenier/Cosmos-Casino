@@ -387,11 +387,20 @@ namespace CosmosCasino.Core.Game.Map
 
         private static IEnumerable<TerrainTileWorldCoord> EnumerateAffectedSlopeNeighborCoords(TerrainTileWorldCoord coord)
         {
-            for (int y = coord.Y - 1; y <= coord.Y + 1; y++)
+            for (int dy = -1; dy <= 1; dy++)
             {
-                for (int x = coord.X - 1; x <= coord.X + 1; x++)
+                for (int dx = -1; dx <= 1; dx++)
                 {
-                    yield return new TerrainTileWorldCoord(x, y);
+                    long x = (long)coord.X + dx;
+                    long y = (long)coord.Y + dy;
+
+                    if (x < int.MinValue || x > int.MaxValue ||
+                        y < int.MinValue || y > int.MaxValue)
+                    {
+                        continue;
+                    }
+
+                    yield return new TerrainTileWorldCoord((int)x, (int)y);
                 }
             }
         }

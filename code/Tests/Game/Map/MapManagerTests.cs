@@ -325,6 +325,33 @@ namespace CosmosCasino.Tests.Game.Map
             Assert.That(flat.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.None));
         }
 
+        [TestCase(int.MaxValue, 0, int.MaxValue - 1, 0, SlopeNeighborMask.East)]
+        [TestCase(int.MinValue, 0, int.MinValue + 1, 0, SlopeNeighborMask.West)]
+        [TestCase(0, int.MaxValue, 0, int.MaxValue - 1, SlopeNeighborMask.South)]
+        [TestCase(0, int.MinValue, 0, int.MinValue + 1, SlopeNeighborMask.North)]
+        public void TryReplaceTerrain_IntBoundaryCoordinate_RefreshesRepresentableNeighborWithoutCreatingChunks(
+            int changedX,
+            int changedY,
+            int flatX,
+            int flatY,
+            SlopeNeighborMask expectedMask)
+        {
+            var changedCoord = new TerrainTileWorldCoord(changedX, changedY);
+            var flatCoord = new TerrainTileWorldCoord(flatX, flatY);
+            var flat = FlatTile(1f);
+            var manager = new MapManager();
+            manager.StoreGeneratedTerrain(flatCoord, flat);
+            manager.StoreGeneratedTerrain(changedCoord, FlatTile(1f));
+            int chunkCount = manager.ChunkCount;
+            Assert.That(flat.SlopeNeighborMask, Is.EqualTo(SlopeNeighborMask.None));
+
+            bool replaced = manager.TryReplaceTerrain(changedCoord, SlopedTile());
+
+            Assert.That(replaced, Is.True);
+            Assert.That(flat.SlopeNeighborMask, Is.EqualTo(expectedMask));
+            Assert.That(manager.ChunkCount, Is.EqualTo(chunkCount));
+        }
+
         [Test]
         public void TryReplaceTerrain_MissingTerrain_ReturnsFalseWithoutCreatingTerrain()
         {
