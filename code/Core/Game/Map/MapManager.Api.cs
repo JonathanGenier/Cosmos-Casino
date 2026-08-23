@@ -1,3 +1,5 @@
+using CosmosCasino.Core.Game.Structures;
+
 namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
@@ -38,6 +40,46 @@ namespace CosmosCasino.Core.Game.Map
             }
 
             structureId = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Gets immutable domain snapshots for all authoritative structures in deterministic identity order.
+        /// </summary>
+        /// <returns>The current authoritative structure snapshots.</returns>
+        public IReadOnlyList<StructureSnapshot> GetStructureSnapshots()
+        {
+            StructureSnapshot[] snapshots = _structures.Values
+                .OrderBy(static structure => structure.Id.Value)
+                .Select(static structure => new StructureSnapshot(
+                    structure.Id,
+                    structure.Definition,
+                    structure.Anchor,
+                    structure.Rotation))
+                .ToArray();
+
+            return Array.AsReadOnly(snapshots);
+        }
+
+        /// <summary>
+        /// Attempts to resolve an immutable domain snapshot for the structure occupying the specified global map cell.
+        /// </summary>
+        /// <param name="coord">The global logical cell coordinate to query.</param>
+        /// <param name="snapshot">The authoritative structure snapshot when the cell is occupied by a structure.</param>
+        /// <returns><c>true</c> when the cell references an existing structure; otherwise, <c>false</c>.</returns>
+        public bool TryGetStructureSnapshotAt(MapCellCoord coord, out StructureSnapshot snapshot)
+        {
+            if (TryGetStructureAt(coord, out var structure))
+            {
+                snapshot = new StructureSnapshot(
+                    structure.Id,
+                    structure.Definition,
+                    structure.Anchor,
+                    structure.Rotation);
+                return true;
+            }
+
+            snapshot = default;
             return false;
         }
     }
