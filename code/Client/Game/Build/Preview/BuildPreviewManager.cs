@@ -210,21 +210,26 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// <summary>
     /// Displays a visual preview of the drag operation based on the specified build result.
     /// </summary>
-    /// <param name="buildResult">The build result containing the intent and associated cell data used to determine the type and placement of the
-    /// drag preview. Cannot be null.</param>
+    /// <param name="buildResult">The structure build result used to determine preview type, cells, and validity.</param>
     private void ShowDragPreview(BuildResult buildResult)
     {
-        var cells = buildResult.Intent.Cells;
-        var results = buildResult.Results.ToDictionary(r => r.MapCoord);
+        IReadOnlyList<MapCellCoord> cells = GetPreviewCells(buildResult);
 
-        switch (buildResult.Intent.Kind)
+        if (cells.Count == 0 || !TryGetPreviewKind(buildResult, out BuildKind kind))
+        {
+            ClearFloorDragPreview();
+            ClearWallDragPreview();
+            return;
+        }
+
+        switch (kind)
         {
             case BuildKind.Floor:
-                ShowFloorDragPreview(cells, results, buildResult.Intent.Elevation);
+                ShowFloorDragPreview(cells, buildResult.Outcome);
                 break;
 
             case BuildKind.Wall:
-                ShowWallDragPreview(cells, results, buildResult.Intent.Elevation);
+                ShowWallDragPreview(cells, buildResult.Outcome);
                 break;
         }
     }
@@ -237,13 +242,10 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// Each preview reflects whether placement at the corresponding cell is valid, as determined by the associated
     /// build operation result.</remarks>
     /// <param name="cells">A read-only list of map cell coordinates where floor previews should be shown.</param>
-    /// <param name="results">A read-only dictionary mapping each map cell coordinate to its corresponding build operation result, used to
-    /// determine the validity of each preview.</param>
-    /// <param name="elevation">The shared logical build elevation used by every floor preview in the drag.</param>
+    /// <param name="outcome">The aggregate build outcome used by every preview in the atomic batch.</param>
     private void ShowFloorDragPreview(
-        IReadOnlyList<MapCoord> cells,
-        IReadOnlyDictionary<MapCoord, BuildOperationResult> results,
-        Elevation elevation)
+        IReadOnlyList<MapCellCoord> cells,
+        BuildOperationOutcome outcome)
     {
         int i = 0;
 
@@ -251,10 +253,9 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
         for (; i < cells.Count && i < _floorPreviews.Count; i++)
         {
             var cell = cells[i];
-            var result = GetResultOrThrow(results, cell);
 
-            _floorPreviews[i].SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3(elevation));
-            _floorPreviews[i].SetValidity(result.Outcome);
+            _floorPreviews[i].SetWorldPosition(ToWorldPosition(cell));
+            _floorPreviews[i].SetValidity(outcome);
             _floorPreviews[i].Show();
         }
 
@@ -262,11 +263,10 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
         for (; i < cells.Count; i++)
         {
             var cell = cells[i];
-            var result = GetResultOrThrow(results, cell);
             var preview = FloorPool!.Fetch();
 
-            preview.SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3(elevation));
-            preview.SetValidity(result.Outcome);
+            preview.SetWorldPosition(ToWorldPosition(cell));
+            preview.SetValidity(outcome);
             preview.Show();
             _floorPreviews.Add(preview);
         }
@@ -292,13 +292,10 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// Each preview reflects whether placement at the corresponding cell is valid, as determined by the associated
     /// build operation result.</remarks>
     /// <param name="cells">A read-only list of map cell coordinates where wall previews should be shown.</param>
-    /// <param name="results">A read-only dictionary mapping each map cell coordinate to its corresponding build operation result, used to
-    /// determine the validity of each preview.</param>
-    /// <param name="elevation">The shared logical build elevation used by every wall preview in the drag.</param>
+    /// <param name="outcome">The aggregate build outcome used by every preview in the atomic batch.</param>
     private void ShowWallDragPreview(
-        IReadOnlyList<MapCoord> cells,
-        IReadOnlyDictionary<MapCoord, BuildOperationResult> results,
-        Elevation elevation)
+        IReadOnlyList<MapCellCoord> cells,
+        BuildOperationOutcome outcome)
     {
         int i = 0;
 
@@ -306,10 +303,9 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
         for (; i < cells.Count && i < _wallPreviews.Count; i++)
         {
             var cell = cells[i];
-            var result = GetResultOrThrow(results, cell);
 
-            _wallPreviews[i].SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3(elevation));
-            _wallPreviews[i].SetValidity(result.Outcome);
+            _wallPreviews[i].SetWorldPosition(ToWorldPosition(cell));
+            _wallPreviews[i].SetValidity(outcome);
             _wallPreviews[i].Show();
         }
 
@@ -317,11 +313,10 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
         for (; i < cells.Count; i++)
         {
             var cell = cells[i];
-            var result = GetResultOrThrow(results, cell);
             var preview = WallPool!.Fetch();
 
-            preview.SetWorldPosition(MapMath.CellToWorldCenter(cells[i]).ToGodotVector3(elevation));
-            preview.SetValidity(result.Outcome);
+            preview.SetWorldPosition(ToWorldPosition(cell));
+            preview.SetValidity(outcome);
             preview.Show();
             _wallPreviews.Add(preview);
         }
@@ -385,23 +380,31 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     /// <exception cref="InvalidOperationException">Thrown if the build result does not specify exactly one target cell.</exception>
     private void ShowCursorPreview(BuildResult buildResult)
     {
-        if (buildResult.Intent.Cells.Count != 1)
+        IReadOnlyList<MapCellCoord> cells = GetPreviewCells(buildResult);
+
+        if (cells.Count == 0 || !TryGetPreviewKind(buildResult, out BuildKind kind))
+        {
+            HideFloorCursorPreview();
+            HideWallCursorPreview();
+            return;
+        }
+
+        if (cells.Count != 1)
         {
             throw new InvalidOperationException("Cursor preview expects exactly one cell.");
         }
 
-        var worldCenter = MapMath.CellToWorldCenter(buildResult.Intent.Cells.First());
-        var kind = buildResult.Intent.Kind;
-        var outcome = buildResult.Results.First().Outcome;
+        Vector3 worldPosition = ToWorldPosition(cells.First());
+        var outcome = buildResult.Outcome;
 
         switch (kind)
         {
             case BuildKind.Floor:
-                ShowFloorCursorPreview(worldCenter.ToGodotVector3(buildResult.Intent.Elevation), outcome);
+                ShowFloorCursorPreview(worldPosition, outcome);
                 HideWallCursorPreview();
                 break;
             case BuildKind.Wall:
-                ShowWallCursorPreview(worldCenter.ToGodotVector3(buildResult.Intent.Elevation), outcome);
+                ShowWallCursorPreview(worldPosition, outcome);
                 HideFloorCursorPreview();
                 break;
             default:
@@ -552,21 +555,69 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
 
     #region Helper Methods
 
-    /// <summary>
-    /// Retrieves the build operation result for the specified cell or throws an exception if the result is not found.
-    /// </summary>
-    /// <param name="results">A read-only dictionary that maps map cell coordinates to their corresponding build operation results.</param>
-    /// <param name="cell">The coordinate of the map cell for which to retrieve the build operation result.</param>
-    /// <returns>The build operation result associated with the specified cell.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the specified cell does not exist in the results dictionary.</exception>
-    private BuildOperationResult GetResultOrThrow(IReadOnlyDictionary<MapCoord, BuildOperationResult> results, MapCoord cell)
+    private IReadOnlyList<MapCellCoord> GetPreviewCells(BuildResult buildResult)
     {
-        if (!results.TryGetValue(cell, out var result))
+        if (buildResult.Structures.Count > 0)
         {
-            throw new InvalidOperationException($"Missing BuildOperationResult for cell {cell}.");
+            return buildResult.Structures
+                .SelectMany(structure => structure.AffectedCells)
+                .ToArray();
         }
 
-        return result;
+        return buildResult.Intent.Operation switch
+        {
+            BuildOperation.Place => buildResult.Intent.PlacementRequests
+                .SelectMany(GetPlacementPreviewCells)
+                .ToArray(),
+            BuildOperation.Remove => buildResult.Intent.RemovalRequests
+                .Select(request => request.TargetCell)
+                .ToArray(),
+            _ => Array.Empty<MapCellCoord>()
+        };
+    }
+
+    private IReadOnlyList<MapCellCoord> GetPlacementPreviewCells(StructurePlacementRequest request)
+    {
+        try
+        {
+            return request.Definition.Footprint.Resolve(request.Anchor, request.Rotation);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return new[] { request.Anchor };
+        }
+    }
+
+    private bool TryGetPreviewKind(BuildResult buildResult, out BuildKind kind)
+    {
+        if (buildResult.Structures.Count > 0)
+        {
+            return BuildStructureDefinitions.TryGetBuildKind(
+                buildResult.Structures[0].DefinitionId,
+                out kind);
+        }
+
+        if (buildResult.FailedDefinitionId.HasValue)
+        {
+            return BuildStructureDefinitions.TryGetBuildKind(
+                buildResult.FailedDefinitionId.Value,
+                out kind);
+        }
+
+        if (buildResult.Intent.PlacementRequests.Count > 0)
+        {
+            return BuildStructureDefinitions.TryGetBuildKind(
+                buildResult.Intent.PlacementRequests[0].Definition.Id,
+                out kind);
+        }
+
+        kind = default;
+        return false;
+    }
+
+    private Vector3 ToWorldPosition(MapCellCoord cell)
+    {
+        return MapMath.CellToWorldCenter(cell.ToMapCoord()).ToGodotVector3(cell.ToElevation());
     }
 
     #endregion

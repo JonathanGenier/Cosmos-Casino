@@ -1,5 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Structures;
 using System;
 
 /// <summary>
@@ -11,17 +12,19 @@ using System;
 public static class BuildSpawnDescriptorResolver
 {
     /// <summary>
-    /// Resolves the specified build intent to a corresponding spawn descriptor for floor or wall objects.
+    /// Resolves a structure definition identity to the existing floor or wall spawn descriptor.
     /// </summary>
-    /// <remarks>This method only supports intents with a kind of Floor or Wall. Other kinds will result in a
-    /// NotSupportedException.</remarks>
-    /// <param name="intent">The build intent to resolve. Specifies the type of object to spawn and its associated kind.</param>
-    /// <returns>A BuildSpawnDescriptor representing the spawn configuration for the specified intent. The descriptor will
-    /// correspond to either a floor or wall spawn, depending on the intent's kind.</returns>
-    /// <exception cref="NotSupportedException">Thrown if the intent's kind is not supported for spawning.</exception>
-    public static BuildSpawnDescriptor Resolve(BuildIntent intent)
+    /// <param name="definitionId">The structure definition identity to resolve.</param>
+    /// <returns>A build spawn descriptor for the registered client visual.</returns>
+    /// <exception cref="NotSupportedException">Thrown if the definition is not supported for spawning.</exception>
+    public static BuildSpawnDescriptor Resolve(StructureDefinitionId definitionId)
     {
-        return intent.Kind switch
+        if (!BuildStructureDefinitions.TryGetBuildKind(definitionId, out BuildKind kind))
+        {
+            throw new NotSupportedException($"Spawning not supported for structure definition {definitionId}.");
+        }
+
+        return kind switch
         {
             BuildKind.Floor =>
                 new BuildSpawnDescriptor(
@@ -34,7 +37,7 @@ public static class BuildSpawnDescriptorResolver
                     SpawnLayer.Walls),
 
             _ => throw new NotSupportedException(
-                $"Spawning not supported for {intent.Kind}")
+                $"Spawning not supported for {kind}")
         };
     }
 }

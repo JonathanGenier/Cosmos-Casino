@@ -57,10 +57,11 @@ public sealed class WallBuildContext : BuildContextBase
         switch (buildOperation)
         {
             case BuildOperation.Place:
-                intent = BuildIntent.PlaceWall(cells, elevation);
+                intent = BuildIntent.PlaceStructures(
+                    CreatePlacementRequests(BuildStructureDefinitions.Wall, cells, elevation));
                 return true;
             case BuildOperation.Remove:
-                intent = BuildIntent.RemoveWall(cells, elevation);
+                intent = BuildIntent.RemoveStructuresAt(CreateRemovalTargets(cells, elevation));
                 return true;
             case BuildOperation.None:
                 intent = null!;

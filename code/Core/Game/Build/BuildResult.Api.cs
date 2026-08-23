@@ -1,60 +1,45 @@
 using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Map;
+using CosmosCasino.Core.Game.Structures;
 
 namespace CosmosCasino.Core.Game.Build
 {
     /// <summary>
-    /// Immutable result representing the outcome of a build attempt
-    /// processed by the core build system.
-    /// All accepted operations have already been applied to the
-    /// authoritative game state. Individual operations may succeed
-    /// or fail independently.
+    /// Immutable result representing the aggregate outcome of a structure build attempt.
     /// </summary>
-    public sealed class BuildResult
+    public sealed partial class BuildResult
     {
-        #region Constructor
-
-        private BuildResult(BuildIntent intent, IReadOnlyList<BuildOperationResult> results)
-        {
-            Intent = intent;
-            Results = results;
-        }
-
-        #endregion
-
         #region Properties
 
         /// <summary>
-        /// The initial build intent that has been evaluated.
+        /// Gets the build intent that was evaluated or executed.
         /// </summary>
         public BuildIntent Intent { get; }
 
         /// <summary>
-        /// Per-cell outcomes produced by the build operation.
+        /// Gets the aggregate build outcome for the complete intent.
         /// </summary>
-        public IReadOnlyList<BuildOperationResult> Results { get; }
-
-        #endregion
-
-        #region Factories
+        public BuildOperationOutcome Outcome { get; }
 
         /// <summary>
-        /// Creates a completed build result from an evaluated build intent
-        /// and the per-cell operation results produced during execution.
+        /// Gets the aggregate build failure reason, if the intent was invalid.
         /// </summary>
-        /// <param name="intent">
-        /// The build intent that was processed by the build system.
-        /// </param>
-        /// <param name="results">
-        /// The collection of per-cell build operation results generated
-        /// while applying the intent.
-        /// </param>
-        /// <returns>
-        /// An immutable build result representing the outcome of the build attempt.
-        /// </returns>
-        internal static BuildResult Done(BuildIntent intent, IReadOnlyList<BuildOperationResult> results)
-        {
-            return new BuildResult(intent, results);
-        }
+        public BuildFailureReason FailureReason { get; }
+
+        /// <summary>
+        /// Gets the first failed target cell, when Core can identify one deterministically.
+        /// </summary>
+        public MapCellCoord? FailedCell { get; }
+
+        /// <summary>
+        /// Gets the first failed structure definition identity, when the failure is tied to a definition.
+        /// </summary>
+        public StructureDefinitionId? FailedDefinitionId { get; }
+
+        /// <summary>
+        /// Gets the structure-level effects produced by the build plan.
+        /// </summary>
+        public IReadOnlyList<BuildStructureResult> Structures { get; }
 
         #endregion
     }

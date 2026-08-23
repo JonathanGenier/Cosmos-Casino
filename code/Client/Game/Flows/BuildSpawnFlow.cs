@@ -1,6 +1,7 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
+using CosmosCasino.Core.Game.Structures;
 using Godot;
 using System;
 
@@ -65,27 +66,33 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
     /// <exception cref="InvalidOperationException">Thrown if an unrecognized build operation outcome is encountered in the results.</exception>
     private void OnBuildCompleted(BuildResult buildResult)
     {
-        BuildIntent buildIntent = buildResult.Intent;
-
-        foreach (BuildOperationResult result in buildResult.Results)
+        if (buildResult.Outcome == BuildOperationOutcome.Invalid)
         {
-            if (result.Outcome == BuildOperationOutcome.Invalid)
+            DisplayFailureMessage(buildResult.FailureReason);
+            return;
+        }
+
+        if (buildResult.Outcome == BuildOperationOutcome.NoOp)
+        {
+            return;
+        }
+
+        foreach (BuildStructureResult result in buildResult.Structures)
+        {
+            if (result.Outcome != BuildOperationOutcome.Valid)
             {
-                DisplayFailureMessage(result.FailureReason);
+                continue;
             }
 
-            if (result.Outcome == BuildOperationOutcome.Valid)
+            if (result.Kind == BuildStructureResultKind.Created)
             {
-                if (buildIntent.Operation == BuildOperation.Place)
-                {
-                    SpawnBuild(result, buildIntent);
-                    continue;
-                }
-                else if (buildIntent.Operation == BuildOperation.Remove)
-                {
-                    RemoveBuild(result, buildIntent);
-                    continue;
-                }
+                SpawnBuild(result);
+                continue;
+            }
+
+            if (result.Kind == BuildStructureResultKind.Removed)
+            {
+                RemoveBuild(result);
             }
         }
     }
@@ -101,21 +108,22 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
     /// reasons may be communicated to the user through the UI instead of logging.</remarks>
     /// <param name="failureReason">The reason the build operation failed. Specifies the type of failure encountered.</param>
     /// <exception cref="InvalidOperationException">Thrown if an unrecognized or unsupported failure reason is provided.</exception>
-    private void DisplayFailureMessage(BuildOperationFailureReason failureReason)
+    private void DisplayFailureMessage(BuildFailureReason failureReason)
     {
         // Intentionally logging all failure reasons during development.
         // This will be replaced with UI feedback later.
         switch (failureReason)
         {
-            case BuildOperationFailureReason.NoWall:
-            case BuildOperationFailureReason.NoFloor:
-            case BuildOperationFailureReason.Blocked:
-            case BuildOperationFailureReason.None:
+            case BuildFailureReason.None:
+            case BuildFailureReason.FootprintCoordinateOverflow:
+            case BuildFailureReason.OutsideGeneratedWorld:
+            case BuildFailureReason.OccupancyConflict:
+            case BuildFailureReason.InconsistentReservationState:
+            case BuildFailureReason.IntraBatchFootprintOverlap:
+            case BuildFailureReason.StructureIdAllocationExhausted:
+            case BuildFailureReason.StructureIdAlreadyExists:
+            case BuildFailureReason.StructureStateInconsistent:
                 ConsoleLog.Info(failureReason.ToString());
-                break;
-
-            case BuildOperationFailureReason.NoCell:
-                ConsoleLog.Error(failureReason.ToString());
                 break;
 
             default:
@@ -128,47 +136,48 @@ public class BuildSpawnFlow : IGameFlow, IDisposable
     #region Spawn/Despawn Methods
 
     /// <summary>
-    /// Spawns a successful build visual at the executed intent's logical build elevation.
+    /// Spawns successful structure build visuals at their affected cells.
     /// </summary>
-    /// <param name="result">The successful per-cell build result.</param>
-    /// <param name="buildIntent">The executed intent that owns the authoritative build elevation.</param>
-    private void SpawnBuild(BuildOperationResult result, BuildIntent buildIntent)
+    /// <param name="result">The successful structure creation result.</param>
+    private void SpawnBuild(BuildStructureResult result)
     {
-        CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildIntent);
-        var worldCenter = MapMath.CellToWorldCenter(spawnKey.Coord);
-        Vector3 position = worldCenter.ToGodotVector3(spawnKey.Elevation);
-        Vector3 scale = new(WorldGridMetrics.GridUnitSize, 1f, WorldGridMetrics.GridUnitSize);
-        Transform3D transform = new(Basis.Identity.Scaled(scale), position);
-        BuildSpawnDescriptor descriptor = BuildSpawnDescriptorResolver.Resolve(buildIntent);
+        BuildSpawnDescriptor descriptor = BuildSpawnDescriptorResolver.Resolve(result.DefinitionId);
 
-        _spawnManager.Spawn(
-            spawnKey,
-            descriptor.Variant,
-            transform,
-            descriptor.Layer);
+        foreach (MapCellCoord cell in result.AffectedCells)
+        {
+            CellSlotSpawnKey spawnKey = GetSpawnKey(cell, result.DefinitionId);
+            var worldCenter = MapMath.CellToWorldCenter(spawnKey.Coord);
+            Vector3 position = worldCenter.ToGodotVector3(spawnKey.Elevation);
+            Vector3 scale = new(WorldGridMetrics.GridUnitSize, 1f, WorldGridMetrics.GridUnitSize);
+            Transform3D transform = new(Basis.Identity.Scaled(scale), position);
+
+            _spawnManager.Spawn(
+                spawnKey,
+                descriptor.Variant,
+                transform,
+                descriptor.Layer);
+        }
     }
 
-    private void RemoveBuild(BuildOperationResult result, BuildIntent buildIntent)
+    private void RemoveBuild(BuildStructureResult result)
     {
-        CellSlotSpawnKey spawnKey = GetSpawnKey(result, buildIntent);
-        _spawnManager.Despawn(spawnKey);
+        foreach (MapCellCoord cell in result.AffectedCells)
+        {
+            CellSlotSpawnKey spawnKey = GetSpawnKey(cell, result.DefinitionId);
+            _spawnManager.Despawn(spawnKey);
+        }
     }
 
     #endregion
 
     #region Spawn Key
 
-    private CellSlotSpawnKey GetSpawnKey(BuildOperationResult result, BuildIntent buildIntent)
+    private CellSlotSpawnKey GetSpawnKey(MapCellCoord cell, StructureDefinitionId definitionId)
     {
-        MapCoord coord = result.MapCoord;
-        CellSlot slot = buildIntent.Kind switch
-        {
-            BuildKind.Floor => CellSlot.Floor,
-            BuildKind.Wall => CellSlot.Wall,
-            _ => throw new InvalidOperationException($"{nameof(BuildKind)} {buildIntent.Kind} not implemented"),
-        };
-
-        return new CellSlotSpawnKey(coord, buildIntent.Elevation, slot);
+        return new CellSlotSpawnKey(
+            cell.ToMapCoord(),
+            cell.ToElevation(),
+            BuildStructureDefinitions.GetCellSlot(definitionId));
     }
 
     #endregion

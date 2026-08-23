@@ -1,255 +1,230 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
+using CosmosCasino.Core.Game.Structures;
 using NUnit.Framework;
+using System.Reflection;
 
 namespace CosmosCasino.Tests.Game.Build
 {
     [TestFixture]
     internal sealed class BuildIntentTests
     {
-        private static readonly Elevation TestElevation = new(-4);
+        #region Fields
 
-        #region BuildFloor
-
-        [Test]
-        public void BuildFloor_NullCells_ThrowsArgumentNullException()
-        {
-            // Arrange / Act / Assert
-            Assert.Throws<ArgumentNullException>(() =>
-                BuildIntent.PlaceFloor(null!, TestElevation));
-        }
-
-        [Test]
-        public void BuildFloor_EmptyCells_ThrowsArgumentException()
-        {
-            // Arrange
-            var cells = new List<MapCoord>();
-
-            // Act / Assert
-            Assert.Throws<ArgumentException>(() =>
-                BuildIntent.PlaceFloor(cells, TestElevation));
-        }
-
-        [Test]
-        public void BuildFloor_ValidCells_CreatesCorrectIntent()
-        {
-            // Arrange
-            var elevation = new Elevation(-3.5f);
-            var cells = new[]
+        private static readonly StructureDefinition TestDefinition = new(
+            new StructureDefinitionId(10),
+            new MapCellFootprint(new[]
             {
-                new MapCoord(1, 2)
-            };
+                new MapCellOffset(0, 0, 0)
+            }));
 
-            // Act
-            var intent = BuildIntent.PlaceFloor(cells, elevation);
+        #endregion
 
-            // Assert
-            Assert.That(intent.Kind, Is.EqualTo(BuildKind.Floor));
+        #region Placement
+
+        [Test]
+        public void PlaceStructures_NullPlacements_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => BuildIntent.PlaceStructures(null!));
+        }
+
+        [Test]
+        public void PlaceStructures_EmptyPlacements_ThrowsArgumentException()
+        {
+            Assert.Throws<ArgumentException>(() => BuildIntent.PlaceStructures(Array.Empty<StructurePlacementRequest>()));
+        }
+
+        [Test]
+        public void PlaceStructures_NullPlacementEntry_ThrowsArgumentException()
+        {
+            var placements = new StructurePlacementRequest?[] { null };
+
+            Assert.Throws<ArgumentException>(() => BuildIntent.PlaceStructures(placements!));
+        }
+
+        [Test]
+        public void PlaceStructures_ValidPlacements_CreatesStructureIntent()
+        {
+            var request = new StructurePlacementRequest(
+                TestDefinition,
+                new MapCellCoord(1, 2, 3),
+                FootprintRotation.Deg90);
+
+            BuildIntent intent = BuildIntent.PlaceStructures(new[] { request });
+
             Assert.That(intent.Operation, Is.EqualTo(BuildOperation.Place));
-            Assert.That(intent.Cells, Has.Count.EqualTo(1));
-            Assert.That(intent.Cells[0], Is.EqualTo(cells[0]));
-            Assert.That(intent.Elevation, Is.EqualTo(elevation));
+            Assert.That(intent.PlacementRequests, Has.Count.EqualTo(1));
+            Assert.That(intent.PlacementRequests[0], Is.SameAs(request));
+            Assert.That(intent.RemovalRequests, Is.Empty);
         }
 
         [Test]
-        public void BuildFloor_CopiesCells_Defensively()
+        public void PlaceStructures_CopiesPlacementCollectionDefensively()
         {
-            // Arrange
-            var cells = new List<MapCoord>
-            {
-                new MapCoord(0, 0)
-            };
+            var request = new StructurePlacementRequest(
+                TestDefinition,
+                new MapCellCoord(0, 0, 0),
+                FootprintRotation.Deg0);
+            var placements = new List<StructurePlacementRequest> { request };
 
-            // Act
-            var intent = BuildIntent.PlaceFloor(cells, TestElevation);
-            cells.Clear();
+            BuildIntent intent = BuildIntent.PlaceStructures(placements);
+            placements.Clear();
 
-            // Assert
-            Assert.That(intent.Cells, Has.Count.EqualTo(1));
-            Assert.That(intent.Cells, Is.Not.SameAs(cells));
-        }
-
-        #endregion
-
-        #region RemoveFloor
-
-        [Test]
-        public void RemoveFloor_NullCells_ThrowsArgumentNullException()
-        {
-            // Arrange / Act / Assert
-            Assert.Throws<ArgumentNullException>(() => BuildIntent.RemoveFloor(null!, TestElevation));
+            Assert.That(intent.PlacementRequests, Has.Count.EqualTo(1));
+            Assert.That(intent.PlacementRequests, Is.Not.SameAs(placements));
         }
 
         [Test]
-        public void RemoveFloor_EmptyCells_ThrowsArgumentException()
+        public void PlaceStructure_CreatesSinglePlacementRequest()
         {
-            // Arrange
-            var cells = new List<MapCoord>();
+            var anchor = new MapCellCoord(-1, 4, 2);
 
-            // Act / Assert
-            Assert.Throws<ArgumentException>(() => BuildIntent.RemoveFloor(cells, TestElevation));
-        }
+            BuildIntent intent = BuildIntent.PlaceStructure(
+                TestDefinition,
+                anchor,
+                FootprintRotation.Deg270);
 
-        [Test]
-        public void RemoveFloor_ValidCells_CreatesCorrectIntent()
-        {
-            // Arrange
-            var elevation = new Elevation(4);
-            var cells = new[]
-            {
-                new MapCoord(1, 1)
-            };
-
-            // Act
-            var intent = BuildIntent.RemoveFloor(cells, elevation);
-
-            // Assert
-            Assert.That(intent.Kind, Is.EqualTo(BuildKind.Floor));
-            Assert.That(intent.Operation, Is.EqualTo(BuildOperation.Remove));
-            Assert.That(intent.Cells, Has.Count.EqualTo(1));
-            Assert.That(intent.Cells[0], Is.EqualTo(cells[0]));
-            Assert.That(intent.Elevation, Is.EqualTo(elevation));
-        }
-
-        [Test]
-        public void RemoveFloor_CopiesCells_Defensively()
-        {
-            // Arrange
-            var cells = new List<MapCoord>
-            {
-                new MapCoord(3, 3)
-            };
-
-            // Act
-            var intent = BuildIntent.RemoveFloor(cells, TestElevation);
-            cells.Clear();
-
-            // Assert
-            Assert.That(intent.Cells, Has.Count.EqualTo(1));
-            Assert.That(intent.Cells, Is.Not.SameAs(cells));
-        }
-
-        #endregion
-
-        #region BuildWall
-
-        [Test]
-        public void BuildWall_NullCells_ThrowsArgumentNullException()
-        {
-            // Arrange / Act / Assert
-            Assert.Throws<ArgumentNullException>(() =>
-                BuildIntent.PlaceWall(null!, TestElevation));
-        }
-
-        [Test]
-        public void BuildWall_EmptyCells_ThrowsArgumentException()
-        {
-            // Arrange
-            var cells = new List<MapCoord>();
-
-            // Act / Assert
-            Assert.Throws<ArgumentException>(() =>
-                BuildIntent.PlaceWall(cells, TestElevation));
-        }
-
-        [Test]
-        public void BuildWall_ValidCells_CreatesCorrectIntent()
-        {
-            // Arrange
-            var elevation = new Elevation(6);
-            var cells = new[]
-            {
-                new MapCoord(5, 0)
-            };
-
-            // Act
-            var intent = BuildIntent.PlaceWall(cells, elevation);
-
-            // Assert
-            Assert.That(intent.Kind, Is.EqualTo(BuildKind.Wall));
             Assert.That(intent.Operation, Is.EqualTo(BuildOperation.Place));
-            Assert.That(intent.Cells, Has.Count.EqualTo(1));
-            Assert.That(intent.Cells[0], Is.EqualTo(cells[0]));
-            Assert.That(intent.Elevation, Is.EqualTo(elevation));
-        }
-
-        [Test]
-        public void BuildWall_CopiesCells_Defensively()
-        {
-            // Arrange
-            var cells = new List<MapCoord>
-            {
-                new MapCoord(2, 0)
-            };
-
-            // Act
-            var intent = BuildIntent.PlaceWall(cells, TestElevation);
-            cells.Clear();
-
-            // Assert
-            Assert.That(intent.Cells, Has.Count.EqualTo(1));
-            Assert.That(intent.Cells, Is.Not.SameAs(cells));
+            Assert.That(intent.PlacementRequests, Has.Count.EqualTo(1));
+            Assert.That(intent.PlacementRequests[0].Definition, Is.SameAs(TestDefinition));
+            Assert.That(intent.PlacementRequests[0].Anchor, Is.EqualTo(anchor));
+            Assert.That(intent.PlacementRequests[0].Rotation, Is.EqualTo(FootprintRotation.Deg270));
+            Assert.That(intent.RemovalRequests, Is.Empty);
         }
 
         #endregion
 
-        #region RemoveWall
+        #region Removal
 
         [Test]
-        public void RemoveWall_NullCells_ThrowsArgumentNullException()
+        public void RemoveStructuresAt_NullTargets_ThrowsArgumentNullException()
         {
-            // Arrange / Act / Assert
-            Assert.Throws<ArgumentNullException>(() => BuildIntent.RemoveWall(null!, TestElevation));
+            Assert.Throws<ArgumentNullException>(() => BuildIntent.RemoveStructuresAt(null!));
         }
 
         [Test]
-        public void RemoveWall_EmptyCells_ThrowsArgumentException()
+        public void RemoveStructuresAt_EmptyTargets_ThrowsArgumentException()
         {
-            // Arrange
-            var cells = new List<MapCoord>();
-
-            // Act / Assert
-            Assert.Throws<ArgumentException>(() => BuildIntent.RemoveWall(cells, TestElevation));
+            Assert.Throws<ArgumentException>(() => BuildIntent.RemoveStructuresAt(Array.Empty<MapCellCoord>()));
         }
 
         [Test]
-        public void RemoveWall_ValidCells_CreatesCorrectIntent()
+        public void RemoveStructuresAt_ValidTargets_CreatesStructureRemovalIntent()
         {
-            // Arrange
-            var elevation = new Elevation(-8);
-            var cells = new[]
+            var targets = new[]
             {
-                new MapCoord(5, 0)
+                new MapCellCoord(1, 0, 1),
+                new MapCellCoord(2, 0, 2)
             };
 
-            // Act
-            var intent = BuildIntent.RemoveWall(cells, elevation);
+            BuildIntent intent = BuildIntent.RemoveStructuresAt(targets);
 
-            // Assert
-            Assert.That(intent.Kind, Is.EqualTo(BuildKind.Wall));
             Assert.That(intent.Operation, Is.EqualTo(BuildOperation.Remove));
-            Assert.That(intent.Cells, Has.Count.EqualTo(1));
-            Assert.That(intent.Cells[0], Is.EqualTo(cells[0]));
-            Assert.That(intent.Elevation, Is.EqualTo(elevation));
+            Assert.That(intent.PlacementRequests, Is.Empty);
+            Assert.That(intent.RemovalRequests.Select(r => r.TargetCell), Is.EqualTo(targets));
         }
 
         [Test]
-        public void RemoveWall_CopiesCells_Defensively()
+        public void RemoveStructuresAt_CopiesTargetsDefensively()
         {
-            // Arrange
-            var cells = new List<MapCoord>
+            var targets = new List<MapCellCoord>
             {
-                new MapCoord(9, 9)
+                new MapCellCoord(1, 0, 1)
             };
 
-            // Act
-            var intent = BuildIntent.RemoveWall(cells, TestElevation);
-            cells.Clear();
+            BuildIntent intent = BuildIntent.RemoveStructuresAt(targets);
+            targets.Clear();
 
-            // Assert
-            Assert.That(intent.Cells, Has.Count.EqualTo(1));
-            Assert.That(intent.Cells, Is.Not.SameAs(cells));
+            Assert.That(intent.RemovalRequests, Has.Count.EqualTo(1));
+            Assert.That(intent.RemovalRequests[0].TargetCell, Is.EqualTo(new MapCellCoord(1, 0, 1)));
+        }
+
+        [Test]
+        public void RemoveStructureAt_CreatesSingleTargetRequest()
+        {
+            var target = new MapCellCoord(3, 2, 1);
+
+            BuildIntent intent = BuildIntent.RemoveStructureAt(target);
+
+            Assert.That(intent.Operation, Is.EqualTo(BuildOperation.Remove));
+            Assert.That(intent.PlacementRequests, Is.Empty);
+            Assert.That(intent.RemovalRequests, Has.Count.EqualTo(1));
+            Assert.That(intent.RemovalRequests[0].TargetCell, Is.EqualTo(target));
+        }
+
+        #endregion
+
+        #region Immutability
+
+        [Test]
+        public void StructureRequestTypes_ExposeImmutableProperties()
+        {
+            AssertNoPublicSetters(typeof(StructurePlacementRequest));
+            AssertNoPublicSetters(typeof(StructureRemovalRequest));
+            AssertNoPublicSetters(typeof(StructureDefinition));
+            AssertNoPublicSetters(typeof(MapCellFootprint));
+            AssertNoPublicSetters(typeof(MapCellOffset));
+        }
+
+        [Test]
+        public void BuildIntent_DoesNotExposeLegacyFloorWallContract()
+        {
+            string[] factoryNames = typeof(BuildIntent)
+                .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Select(method => method.Name)
+                .ToArray();
+
+            Assert.That(factoryNames, Does.Not.Contain("PlaceFloor"));
+            Assert.That(factoryNames, Does.Not.Contain("RemoveFloor"));
+            Assert.That(factoryNames, Does.Not.Contain("PlaceWall"));
+            Assert.That(factoryNames, Does.Not.Contain("RemoveWall"));
+            Assert.That(typeof(BuildIntent).GetProperty("Kind"), Is.Null);
+            Assert.That(typeof(BuildIntent).GetProperty("Cells"), Is.Null);
+            Assert.That(typeof(BuildIntent).GetProperty("Elevation"), Is.Null);
+        }
+
+        [Test]
+        public void CoreBuildContracts_DoNotExposeRendererData()
+        {
+            string[] forbiddenTerms =
+            {
+                "RendererMode",
+                "RenderMode",
+                "Mesh",
+                "MultiMesh",
+                "Scene",
+                "PackedScene",
+                "SpawnVariant",
+                "SpawnLayer",
+                "Godot"
+            };
+
+            Type[] contractTypes =
+            {
+                typeof(BuildIntent),
+                typeof(BuildResult),
+                typeof(BuildStructureResult),
+                typeof(StructurePlacementRequest),
+                typeof(StructureRemovalRequest),
+                typeof(StructureDefinition)
+            };
+
+            foreach (Type type in contractTypes)
+            {
+                string[] memberNames = type
+                    .GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
+                    .Select(member => member.Name)
+                    .ToArray();
+
+                foreach (string forbiddenTerm in forbiddenTerms)
+                {
+                    Assert.That(
+                        memberNames.Any(name => name.Contains(forbiddenTerm, StringComparison.Ordinal)),
+                        Is.False,
+                        $"{type.Name} exposes {forbiddenTerm}.");
+                }
+            }
         }
 
         #endregion
@@ -257,41 +232,28 @@ namespace CosmosCasino.Tests.Game.Build
         #region General
 
         [Test]
-        public void Intent_StoresMultipleCells_InOriginalOrder()
+        public void ToString_ReturnsReadableStructureSummary()
         {
-            // Arrange
-            var cells = new[]
-            {
-                new MapCoord(0, 0),
-                new MapCoord(1, 0),
-                new MapCoord(2, 0)
-            };
+            BuildIntent placement = BuildIntent.PlaceStructure(
+                TestDefinition,
+                new MapCellCoord(0, 0, 0),
+                FootprintRotation.Deg0);
+            BuildIntent removal = BuildIntent.RemoveStructureAt(new MapCellCoord(0, 0, 0));
 
-            // Act
-            var intent = BuildIntent.PlaceFloor(cells, TestElevation);
-
-            // Assert
-            Assert.That(intent.Cells.Count, Is.EqualTo(3));
-            Assert.That(intent.Cells.SequenceEqual(cells), Is.True);
+            Assert.That(placement.ToString(), Is.EqualTo("Place 1 structures"));
+            Assert.That(removal.ToString(), Is.EqualTo("Remove structures from 1 target cells"));
         }
 
-        [Test]
-        public void ToString_ReturnsReadableSummary()
+        #endregion
+
+        #region Helpers
+
+        private void AssertNoPublicSetters(Type type)
         {
-            // Arrange
-            var cells = new[]
+            foreach (PropertyInfo property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                new MapCoord(0, 0),
-                new MapCoord(1, 0)
-            };
-
-            var intent = BuildIntent.PlaceWall(cells, TestElevation);
-
-            // Act
-            var text = intent.ToString();
-
-            // Assert
-            Assert.That(text, Is.EqualTo("Place Wall for 2 cells at elevation -4"));
+                Assert.That(property.SetMethod, Is.Null, $"{type.Name}.{property.Name} should be immutable.");
+            }
         }
 
         #endregion

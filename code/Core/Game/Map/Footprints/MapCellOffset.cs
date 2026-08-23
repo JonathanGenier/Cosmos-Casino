@@ -3,27 +3,8 @@ namespace CosmosCasino.Core.Game.Map
     /// <summary>
     /// Immutable offset from a footprint anchor in authoritative X/Y/Z map-cell space.
     /// </summary>
-    internal readonly struct MapCellOffset : IEquatable<MapCellOffset>
+    public readonly struct MapCellOffset : IEquatable<MapCellOffset>
     {
-        #region Fields
-
-        /// <summary>
-        /// Horizontal X offset.
-        /// </summary>
-        internal readonly int X;
-
-        /// <summary>
-        /// Vertical Y offset.
-        /// </summary>
-        internal readonly int Y;
-
-        /// <summary>
-        /// Horizontal Z offset.
-        /// </summary>
-        internal readonly int Z;
-
-        #endregion
-
         #region Initialization
 
         /// <summary>
@@ -32,12 +13,31 @@ namespace CosmosCasino.Core.Game.Map
         /// <param name="x">Horizontal X offset.</param>
         /// <param name="y">Vertical Y offset.</param>
         /// <param name="z">Horizontal Z offset.</param>
-        internal MapCellOffset(int x, int y, int z)
+        public MapCellOffset(int x, int y, int z)
         {
             X = x;
             Y = y;
             Z = z;
         }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the horizontal X offset.
+        /// </summary>
+        public int X { get; }
+
+        /// <summary>
+        /// Gets the vertical Y offset.
+        /// </summary>
+        public int Y { get; }
+
+        /// <summary>
+        /// Gets the horizontal Z offset.
+        /// </summary>
+        public int Z { get; }
 
         #endregion
 

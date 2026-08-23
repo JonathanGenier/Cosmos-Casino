@@ -3,7 +3,7 @@ namespace CosmosCasino.Core.Game.Map
     /// <summary>
     /// Immutable global logical cell coordinate in authoritative X/Y/Z map space.
     /// </summary>
-    public readonly struct MapCellCoord : IEquatable<MapCellCoord>
+    public readonly partial struct MapCellCoord : IEquatable<MapCellCoord>
     {
         #region Fields
 

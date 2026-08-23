@@ -53,10 +53,11 @@ public sealed class FloorBuildContext : BuildContextBase
         switch (buildOperation)
         {
             case BuildOperation.Place:
-                intent = BuildIntent.PlaceFloor(cells, elevation);
+                intent = BuildIntent.PlaceStructures(
+                    CreatePlacementRequests(BuildStructureDefinitions.Floor, cells, elevation));
                 break;
             case BuildOperation.Remove:
-                intent = BuildIntent.RemoveFloor(cells, elevation);
+                intent = BuildIntent.RemoveStructuresAt(CreateRemovalTargets(cells, elevation));
                 break;
             case BuildOperation.None:
                 intent = null!;

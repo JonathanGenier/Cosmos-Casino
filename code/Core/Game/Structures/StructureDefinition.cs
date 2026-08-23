@@ -5,7 +5,7 @@ namespace CosmosCasino.Core.Game.Structures
     /// <summary>
     /// Immutable domain definition shared by structure instances of the same type.
     /// </summary>
-    internal sealed class StructureDefinition
+    public sealed class StructureDefinition
     {
         #region Initialization
 
@@ -15,7 +15,7 @@ namespace CosmosCasino.Core.Game.Structures
         /// <param name="id">The stable definition identity.</param>
         /// <param name="footprint">The deterministic map-cell footprint used by structures of this definition.</param>
         /// <exception cref="ArgumentNullException">Thrown when <paramref name="footprint"/> is null.</exception>
-        internal StructureDefinition(StructureDefinitionId id, MapCellFootprint footprint)
+        public StructureDefinition(StructureDefinitionId id, MapCellFootprint footprint)
         {
             ArgumentNullException.ThrowIfNull(footprint);
 
@@ -30,12 +30,12 @@ namespace CosmosCasino.Core.Game.Structures
         /// <summary>
         /// Gets the stable identity for this definition.
         /// </summary>
-        internal StructureDefinitionId Id { get; }
+        public StructureDefinitionId Id { get; }
 
         /// <summary>
         /// Gets the immutable deterministic footprint for structures of this definition.
         /// </summary>
-        internal MapCellFootprint Footprint { get; }
+        public MapCellFootprint Footprint { get; }
 
         #endregion
     }
