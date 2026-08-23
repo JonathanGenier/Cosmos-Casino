@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Structures;
 using Godot;
 using System;
 
@@ -23,19 +23,16 @@ public sealed partial class BuildUi : Control
     private Button? _cancelButton;
 
     [Export]
-    private Button? _floorButton;
-
-    [Export]
-    private Button? _wallButton;
+    private Button? _blockButton;
 
     #endregion
 
     #region Events
 
     /// <summary>
-    /// Occurs when a build kind is selected.
+    /// Occurs when a structure definition is selected.
     /// </summary>
-    public event Action<BuildKind>? BuildKindSelected;
+    public event Action<StructureDefinition>? StructureDefinitionSelected;
 
     /// <summary>
     /// Raised when the player cancels the current build selection.
@@ -54,16 +51,10 @@ public sealed partial class BuildUi : Control
         set => _cancelButton = value;
     }
 
-    private Button FloorButton
+    private Button BlockButton
     {
-        get => _floorButton ?? throw new InvalidOperationException("FloorButton not assigned.");
-        set => _floorButton = value;
-    }
-
-    private Button WallButton
-    {
-        get => _wallButton ?? throw new InvalidOperationException("WallButton not assigned.");
-        set => _wallButton = value;
+        get => _blockButton ?? throw new InvalidOperationException("BlockButton not assigned.");
+        set => _blockButton = value;
     }
 
     #endregion
@@ -75,8 +66,7 @@ public sealed partial class BuildUi : Control
     /// </summary>
     public override void _Ready()
     {
-        FloorButton.Toggled += OnFloorToggled;
-        WallButton.Toggled += OnWallToggled;
+        BlockButton.Toggled += OnBlockToggled;
         CancelButton.Pressed += ClearToggles;
     }
 
@@ -86,8 +76,7 @@ public sealed partial class BuildUi : Control
     /// </summary>
     public override void _ExitTree()
     {
-        FloorButton.Toggled -= OnFloorToggled;
-        WallButton.Toggled -= OnWallToggled;
+        BlockButton.Toggled -= OnBlockToggled;
         CancelButton.Pressed -= ClearToggles;
     }
 
@@ -101,42 +90,34 @@ public sealed partial class BuildUi : Control
     /// </summary>
     private void ClearToggles()
     {
-        FloorButton.SetPressedNoSignal(false);
-        WallButton.SetPressedNoSignal(false);
+        BlockButton.SetPressedNoSignal(false);
         BuildCancelled?.Invoke();
     }
 
     /// <summary>
-    /// Handles toggle state changes for the metal floor button.
-    /// Emits a floor selection intent when toggled on.
+    /// Handles toggle state changes for the structural block button.
     /// </summary>
     /// <param name="toggled">
     /// Whether the button was toggled on.
     /// </param>
-    private void OnFloorToggled(bool toggled)
+    private void OnBlockToggled(bool toggled)
     {
         if (toggled)
         {
-            SelectBuildKind(BuildKind.Floor);
-        }
-    }
-
-    private void OnWallToggled(bool toggled)
-    {
-        if (toggled)
-        {
-            SelectBuildKind(BuildKind.Wall);
+            SelectStructureDefinition(StructureDefinitions.Block);
         }
     }
 
     #endregion
 
-    private void SelectBuildKind(BuildKind kind)
-    {
-        FloorButton.SetPressedNoSignal(kind == BuildKind.Floor);
-        WallButton.SetPressedNoSignal(kind == BuildKind.Wall);
+    #region Selection
 
-        BuildKindSelected?.Invoke(kind);
+    private void SelectStructureDefinition(StructureDefinition definition)
+    {
+        BlockButton.SetPressedNoSignal(definition.Id == StructureDefinitions.BlockDefinitionId);
+
+        StructureDefinitionSelected?.Invoke(definition);
     }
 
+    #endregion
 }

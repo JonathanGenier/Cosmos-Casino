@@ -22,5 +22,23 @@ namespace CosmosCasino.Core.Game.Map
             elevation = default;
             return false;
         }
+
+        /// <summary>
+        /// Attempts to resolve the authoritative structure identity occupying the specified global map cell.
+        /// </summary>
+        /// <param name="coord">The global logical cell coordinate to query.</param>
+        /// <param name="structureId">The authoritative structure identity when the cell is occupied by a structure.</param>
+        /// <returns><c>true</c> when the cell references an existing structure; otherwise, <c>false</c>.</returns>
+        public bool TryGetStructureIdAt(MapCellCoord coord, out StructureId structureId)
+        {
+            if (TryGetStructureAt(coord, out var structure))
+            {
+                structureId = structure.Id;
+                return true;
+            }
+
+            structureId = default;
+            return false;
+        }
     }
 }

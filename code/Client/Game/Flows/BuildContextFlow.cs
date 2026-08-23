@@ -1,4 +1,4 @@
-using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Structures;
 using System;
 
 /// <summary>
@@ -33,7 +33,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
         _buildUiManager = ui;
         _buildContext = context;
 
-        _buildUiManager.BuildKindSelected += OnBuildKindSelected;
+        _buildUiManager.StructureDefinitionSelected += OnStructureDefinitionSelected;
         _buildUiManager.BuildCancelled += OnBuildCancelled;
     }
 
@@ -53,7 +53,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
             return;
         }
 
-        _buildUiManager.BuildKindSelected -= OnBuildKindSelected;
+        _buildUiManager.StructureDefinitionSelected -= OnStructureDefinitionSelected;
         _buildUiManager.BuildCancelled -= OnBuildCancelled;
         _disposed = true;
     }
@@ -62,16 +62,9 @@ public class BuildContextFlow : IGameFlow, IDisposable
 
     #region Ui Input Action
 
-    private void OnBuildKindSelected(BuildKind buildKind)
+    private void OnStructureDefinitionSelected(StructureDefinition definition)
     {
-        BuildContextBase context = buildKind switch
-        {
-            BuildKind.Floor => new FloorBuildContext(),
-            BuildKind.Wall => new WallBuildContext(),
-            _ => throw new NotSupportedException($"Build kind '{buildKind}' is not supported.")
-        };
-
-        _buildContext.SetContext(context);
+        _buildContext.SetContext(new StructureBuildContext(definition));
     }
 
     /// <summary>

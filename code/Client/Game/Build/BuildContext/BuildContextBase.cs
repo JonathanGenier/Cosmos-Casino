@@ -10,9 +10,7 @@ using System.Linq;
 /// type and intent.
 /// </summary>
 /// <remarks>This class is intended to be inherited by types that define specific build contexts for various build
-/// operations. It exposes members for identifying the build kind and for attempting to create a build intent based on
-/// cursor positions. Implementations should ensure that the context accurately reflects the state and requirements of
-/// the build process.</remarks>
+/// operations. Implementations create Core build intents from logical cursor targets resolved by the Client.</remarks>
 public abstract class BuildContextBase
 {
     #region Enums
@@ -26,35 +24,23 @@ public abstract class BuildContextBase
 
     #endregion
 
-    #region Properties
-
-    /// <summary>
-    /// Gets the kind of build this context represents.
-    /// Used to validate and route build intent.
-    /// </summary>
-    public abstract BuildKind Kind { get; }
-
-    #endregion
-
     #region Abstract Methods
 
     /// <summary>
-    /// Attempts to create a build intent between the specified start and end map cells.
+    /// Attempts to create a build intent between the specified start and current cursor targets.
     /// </summary>
-    /// <param name="startCell">The coordinates of the starting map cell for the build intent.</param>
-    /// <param name="endCell">The coordinates of the ending map cell for the build intent.</param>
+    /// <param name="startTarget">The cursor target where the build operation started.</param>
+    /// <param name="currentTarget">The current cursor target used to create the build intent.</param>
     /// <param name="buildOperation">The type of build operation to perform (e.g., place, remove).</param>
     /// <param name="buildInteractionMode">The interaction mode affecting the build operation.</param>
-    /// <param name="elevation">The shared logical elevation targeted by every cell in the build intent.</param>
     /// <param name="intent">When this method returns, contains the resulting build intent if the operation succeeds; otherwise, the default
     /// value.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
     public abstract bool TryCreateBuildIntent(
-        MapCoord startCell,
-        MapCoord endCell,
+        CursorTarget startTarget,
+        CursorTarget currentTarget,
         BuildOperation buildOperation,
         BuildInteractionMode buildInteractionMode,
-        Elevation elevation,
         out BuildIntent intent);
 
     /// <summary>
@@ -67,7 +53,14 @@ public abstract class BuildContextBase
     /// <param name="buildInteractionMode">The interaction mode affecting the build operation.</param>
     /// <returns>A read-only list of <see cref="MapCoord"/> objects representing the cells between <paramref
     /// name="startCell"/> and <paramref name="endCell"/>. The list may be empty if no valid path exists.</returns>
-    public abstract IReadOnlyList<MapCoord> GetCells(MapCoord startCell, MapCoord endCell, BuildOperation buildOperation, BuildInteractionMode buildInteractionMode);
+    public virtual IReadOnlyList<MapCoord> GetCells(
+        MapCoord startCell,
+        MapCoord endCell,
+        BuildOperation buildOperation,
+        BuildInteractionMode buildInteractionMode)
+    {
+        return Array.Empty<MapCoord>();
+    }
 
     #endregion
 

@@ -13,33 +13,22 @@ using System.Collections.Generic;
 /// construction are required. Instances of this class are immutable and thread-safe.</remarks>
 public sealed class WallBuildContext : BuildContextBase
 {
-    #region Properties
-
-    /// <summary>
-    /// Gets the type of build operation represented by this instance.
-    /// </summary>
-    public override BuildKind Kind => BuildKind.Wall;
-
-    #endregion
-
     #region Build Intent
 
     /// <summary>
-    /// Attempts to create a build intent representing a wall between the specified start and end cells.
+    /// Attempts to create a build intent representing a wall between the specified cursor targets.
     /// </summary>
-    /// <param name="startCell">The starting cell coordinate for the wall.</param>
-    /// <param name="endCell">The ending cell coordinate for the wall.</param>
+    /// <param name="startTarget">The cursor target where the build operation started.</param>
+    /// <param name="currentTarget">The current cursor target used to create the build intent.</param>
     /// <param name="buildOperation">The type of build operation to perform.</param>
     /// <param name="buildInteractionMode">The interaction mode that influences cell selection for the build operation.</param>
-    /// <param name="elevation">The shared logical elevation targeted by every cell in the wall intent.</param>
     /// <param name="intent">When this method returns, contains the created build intent if successful; otherwise, null.</param>
     /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
     public override bool TryCreateBuildIntent(
-        MapCoord startCell,
-        MapCoord endCell,
+        CursorTarget startTarget,
+        CursorTarget currentTarget,
         BuildOperation buildOperation,
         BuildInteractionMode buildInteractionMode,
-        Elevation elevation,
         out BuildIntent intent)
     {
         // Legacy walls still use CellLayer state and are not migrated into authoritative Structures.

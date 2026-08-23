@@ -35,7 +35,6 @@ internal sealed class CursorTargetResolver
     /// <param name="hit">The physical hit returned by Godot physics.</param>
     /// <param name="target">When this method returns, contains the logical cursor target if one was resolved.</param>
     /// <returns><see langword="true"/> if a logical target was resolved; otherwise, <see langword="false"/>.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when a buildable collider has no buildable pick identity.</exception>
     public bool TryResolve(CursorPhysicsHit hit, out CursorTarget target)
     {
         if (IsInLayer(hit.Collider, CollisionLayers.Terrain))
@@ -45,14 +44,7 @@ internal sealed class CursorTargetResolver
 
         if (IsInLayer(hit.Collider, CollisionLayers.Buildable))
         {
-            if (BuildablePickTarget.TryFind(hit.Collider, out var spawnKey))
-            {
-                target = CursorTarget.Buildable(spawnKey);
-                return true;
-            }
-
-            throw new InvalidOperationException(
-                $"Buildable collider '{hit.Collider.Name}' does not expose a {nameof(BuildablePickTarget)}.");
+            return TryResolveStructure(hit, out target);
         }
 
         target = default;
@@ -75,7 +67,7 @@ internal sealed class CursorTargetResolver
             return false;
         }
 
-        target = CursorTarget.Terrain(coord, elevation);
+        target = CursorTarget.Terrain(MapCellCoord.FromMapCoord(coord, elevation));
         return true;
     }
 
@@ -83,9 +75,58 @@ internal sealed class CursorTargetResolver
 
     #region Helpers
 
-    private static bool IsInLayer(CollisionObject3D collider, uint layer)
+    private bool TryResolveOccupiedStructureCell(CollisionObject3D collider, out MapCellCoord occupiedCell)
+    {
+        if (StructurePickTarget.TryFind(collider, out occupiedCell))
+        {
+            return true;
+        }
+
+        if (BuildablePickTarget.TryFind(collider, out var spawnKey))
+        {
+            occupiedCell = MapCellCoord.FromMapCoord(spawnKey.Coord, spawnKey.Elevation);
+            return true;
+        }
+
+        occupiedCell = default;
+        return false;
+    }
+
+    private bool IsInLayer(CollisionObject3D collider, uint layer)
     {
         return (collider.CollisionLayer & layer) != 0;
+    }
+
+    private bool TryResolveStructure(CursorPhysicsHit hit, out CursorTarget target)
+    {
+        if (!TryResolveOccupiedStructureCell(hit.Collider, out var occupiedCell))
+        {
+            target = default;
+            return false;
+        }
+
+        if (!_mapManager.TryGetStructureIdAt(occupiedCell, out var structureId))
+        {
+            target = default;
+            return false;
+        }
+
+        if (!CursorSurfaceFaceResolver.TryResolve(hit.WorldNormal, out CursorSurfaceFace face))
+        {
+            target = default;
+            return false;
+        }
+
+        MapCellOffset offset = CursorSurfaceFaceResolver.GetOffset(face);
+
+        if (!CursorSurfaceFaceResolver.TryAddOffset(occupiedCell, offset, out var placementCell))
+        {
+            target = default;
+            return false;
+        }
+
+        target = CursorTarget.Structure(occupiedCell, placementCell, structureId, face);
+        return true;
     }
 
     #endregion

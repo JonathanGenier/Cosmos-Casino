@@ -1,6 +1,5 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
-using CosmosCasino.Core.Game.Map;
 using System;
 
 /// <summary>
@@ -14,9 +13,8 @@ public sealed class BuildContext
     #region Fields
 
     private BuildContextBase? _activeContext;
-    private MapCoord? _startCell;
-    private MapCoord? _currentCell;
-    private Elevation? _startElevation;
+    private CursorTarget? _startTarget;
+    private CursorTarget? _currentTarget;
     private BuildOperation _currentBuildOperation;
     private BuildInteractionMode _currentBuildInteractionMode;
 
@@ -76,9 +74,9 @@ public sealed class BuildContext
     /// Gets a value indicating whether a preview operation is currently active in the context.
     /// </summary>
     public bool IsBuildActive => _activeContext != null
-        && _startCell.HasValue
-        && _currentCell.HasValue
-        && _startElevation.HasValue;
+        && _startTarget.HasValue
+        && _currentTarget.HasValue
+        && _currentBuildOperation != BuildOperation.None;
 
     #endregion
 
@@ -124,7 +122,7 @@ public sealed class BuildContext
     /// <param name="buildOperation">The build operation to perform. Determines the type of build action that will be initiated.</param>
     public void BeginBuild(CursorContext start, BuildOperation buildOperation)
     {
-        if (_activeContext == null || _startCell != null)
+        if (_activeContext == null || _startTarget != null)
         {
             return;
         }
@@ -134,9 +132,8 @@ public sealed class BuildContext
             return;
         }
 
-        _startCell = start.Target.Coord;
-        _currentCell = _startCell;
-        _startElevation = start.Target.Elevation;
+        _startTarget = start.Target;
+        _currentTarget = start.Target;
         _currentBuildOperation = buildOperation;
         BuildStarted?.Invoke();
     }
@@ -157,21 +154,21 @@ public sealed class BuildContext
     /// </param>
     public void UpdateBuild(CursorContext current, BuildInteractionMode buildInteractionMode)
     {
-        if (_activeContext == null || _startCell == null)
+        if (_activeContext == null || _startTarget == null)
         {
             return;
         }
 
-        var newCell = current.Target.Coord;
-        bool cellChanged = newCell != _currentCell;
+        var newTarget = current.Target;
+        bool targetChanged = newTarget != _currentTarget;
         bool interactionChanged = SetBuildInteractionMode(buildInteractionMode);
 
-        if (!cellChanged && !interactionChanged)
+        if (!targetChanged && !interactionChanged)
         {
             return;
         }
 
-        _currentCell = newCell;
+        _currentTarget = newTarget;
         BuildChanged?.Invoke();
     }
 
@@ -183,16 +180,16 @@ public sealed class BuildContext
     /// <param name="current">The current cursor context containing the logical target at the time the build operation ends.</param>
     public void EndBuild(CursorContext current)
     {
-        if (_activeContext == null || _startCell == null)
+        if (_activeContext == null || _startTarget == null)
         {
             return;
         }
 
-        var currentCell = current.Target.Coord;
+        var currentTarget = current.Target;
 
-        if (currentCell != _currentCell)
+        if (currentTarget != _currentTarget)
         {
-            _currentCell = currentCell;
+            _currentTarget = currentTarget;
             BuildChanged?.Invoke();
         }
 
@@ -223,20 +220,18 @@ public sealed class BuildContext
     public BuildIntent? TryCreateBuildIntent()
     {
         if (_activeContext == null
-            || _startCell == null
-            || _currentCell == null
-            || _startElevation == null
+            || _startTarget == null
+            || _currentTarget == null
             || _currentBuildOperation == BuildOperation.None)
         {
             return null;
         }
 
         if (!_activeContext.TryCreateBuildIntent(
-            _startCell.Value,
-            _currentCell.Value,
+            _startTarget.Value,
+            _currentTarget.Value,
             _currentBuildOperation,
             _currentBuildInteractionMode,
-            _startElevation.Value,
             out var intent))
         {
             return null;
@@ -260,11 +255,10 @@ public sealed class BuildContext
         }
 
         if (!_activeContext.TryCreateBuildIntent(
-            cursorContext.Target.Coord,
-            cursorContext.Target.Coord,
+            cursorContext.Target,
+            cursorContext.Target,
             BuildOperation.Place,
             BuildInteractionMode.Default,
-            cursorContext.Target.Elevation,
             out var intent))
         {
             return null;
@@ -318,17 +312,15 @@ public sealed class BuildContext
     /// has been cleared. This method is typically used to reset the build process to its initial state.</remarks>
     private void ClearBuild()
     {
-        if (_startCell == null
-            && _currentCell == null
-            && _startElevation == null
+        if (_startTarget == null
+            && _currentTarget == null
             && _currentBuildOperation == BuildOperation.None)
         {
             return;
         }
 
-        _startCell = null;
-        _currentCell = null;
-        _startElevation = null;
+        _startTarget = null;
+        _currentTarget = null;
         _currentBuildOperation = BuildOperation.None;
         _currentBuildInteractionMode = BuildInteractionMode.Default;
         BuildCleared?.Invoke();

@@ -9,7 +9,7 @@ public enum CursorTargetKind
     Terrain,
 
     /// <summary>
-    /// Spawned buildable target.
+    /// Authoritative structure target.
     /// </summary>
-    Buildable
+    Structure
 }
