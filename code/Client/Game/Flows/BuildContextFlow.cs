@@ -34,6 +34,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
         _buildContext = context;
 
         _buildUiManager.StructureBuildToolSelected += OnStructureBuildToolSelected;
+        _buildUiManager.PillarBuildSelected += OnPillarBuildSelected;
         _buildUiManager.BuildCancelled += OnBuildCancelled;
     }
 
@@ -54,6 +55,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
         }
 
         _buildUiManager.StructureBuildToolSelected -= OnStructureBuildToolSelected;
+        _buildUiManager.PillarBuildSelected -= OnPillarBuildSelected;
         _buildUiManager.BuildCancelled -= OnBuildCancelled;
         _disposed = true;
     }
@@ -67,6 +69,11 @@ public class BuildContextFlow : IGameFlow, IDisposable
         _buildContext.SetContext(new StructureBuildContext(
             StructureDefinitions.Block,
             buildTool));
+    }
+
+    private void OnPillarBuildSelected()
+    {
+        _buildContext.SetContext(new SingleStructureBuildContext(StructureDefinitions.Pillar));
     }
 
     /// <summary>
