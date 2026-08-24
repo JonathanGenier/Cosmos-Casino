@@ -30,6 +30,9 @@ public sealed partial class BuildUi : Control
     [Export]
     private Button? _pillarButton;
 
+    [Export]
+    private Button? _doorButton;
+
     #endregion
 
     #region Events
@@ -43,6 +46,11 @@ public sealed partial class BuildUi : Control
     /// Occurs when the Pillar structure build tool is selected.
     /// </summary>
     public event Action? PillarBuildSelected;
+
+    /// <summary>
+    /// Occurs when the Door structure build tool is selected.
+    /// </summary>
+    public event Action? DoorBuildSelected;
 
     /// <summary>
     /// Raised when the player cancels the current build selection.
@@ -79,6 +87,12 @@ public sealed partial class BuildUi : Control
         set => _pillarButton = value;
     }
 
+    private Button DoorButton
+    {
+        get => _doorButton ?? throw new InvalidOperationException("DoorButton not assigned.");
+        set => _doorButton = value;
+    }
+
     #endregion
 
     #region Godot Process
@@ -91,6 +105,7 @@ public sealed partial class BuildUi : Control
         FloorButton.Toggled += OnFloorToggled;
         WallButton.Toggled += OnWallToggled;
         PillarButton.Toggled += OnPillarToggled;
+        DoorButton.Toggled += OnDoorToggled;
         CancelButton.Pressed += ClearToggles;
     }
 
@@ -103,6 +118,7 @@ public sealed partial class BuildUi : Control
         FloorButton.Toggled -= OnFloorToggled;
         WallButton.Toggled -= OnWallToggled;
         PillarButton.Toggled -= OnPillarToggled;
+        DoorButton.Toggled -= OnDoorToggled;
         CancelButton.Pressed -= ClearToggles;
     }
 
@@ -119,6 +135,7 @@ public sealed partial class BuildUi : Control
         FloorButton.SetPressedNoSignal(false);
         WallButton.SetPressedNoSignal(false);
         PillarButton.SetPressedNoSignal(false);
+        DoorButton.SetPressedNoSignal(false);
         BuildCancelled?.Invoke();
     }
 
@@ -164,6 +181,20 @@ public sealed partial class BuildUi : Control
         }
     }
 
+    /// <summary>
+    /// Handles toggle state changes for the Door structure button.
+    /// </summary>
+    /// <param name="toggled">
+    /// Whether the button was toggled on.
+    /// </param>
+    private void OnDoorToggled(bool toggled)
+    {
+        if (toggled)
+        {
+            SelectDoorBuildTool();
+        }
+    }
+
     #endregion
 
     #region Selection
@@ -173,6 +204,7 @@ public sealed partial class BuildUi : Control
         FloorButton.SetPressedNoSignal(buildTool == StructureBuildTool.Floor);
         WallButton.SetPressedNoSignal(buildTool == StructureBuildTool.Wall);
         PillarButton.SetPressedNoSignal(false);
+        DoorButton.SetPressedNoSignal(false);
 
         StructureBuildToolSelected?.Invoke(buildTool);
     }
@@ -182,8 +214,19 @@ public sealed partial class BuildUi : Control
         FloorButton.SetPressedNoSignal(false);
         WallButton.SetPressedNoSignal(false);
         PillarButton.SetPressedNoSignal(true);
+        DoorButton.SetPressedNoSignal(false);
 
         PillarBuildSelected?.Invoke();
+    }
+
+    private void SelectDoorBuildTool()
+    {
+        FloorButton.SetPressedNoSignal(false);
+        WallButton.SetPressedNoSignal(false);
+        PillarButton.SetPressedNoSignal(false);
+        DoorButton.SetPressedNoSignal(true);
+
+        DoorBuildSelected?.Invoke();
     }
 
     #endregion

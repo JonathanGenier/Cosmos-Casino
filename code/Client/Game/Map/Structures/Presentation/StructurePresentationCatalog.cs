@@ -13,6 +13,7 @@ public sealed class StructurePresentationCatalog
 
     private const int BlockPresentationKeyValue = 1;
     private const int PillarPresentationKeyValue = 2;
+    private const int DoorPresentationKeyValue = 3;
 
     private readonly Dictionary<StructureDefinitionId, StructurePresentationDefinition> _definitions;
 
@@ -44,7 +45,8 @@ public sealed class StructurePresentationCatalog
         return new StructurePresentationCatalog(new[]
         {
             CreateBlockPresentation(),
-            CreatePillarPresentation()
+            CreatePillarPresentation(),
+            CreateDoorPresentation()
         });
     }
 
@@ -77,10 +79,12 @@ public sealed class StructurePresentationCatalog
             StructureRenderStrategy.GeneratedSectionMesh,
             mesh: null,
             material: null,
+            scene: null,
             localBoundsSize: new Vector3(
                 WorldGridMetrics.GridUnitSize,
                 WorldGridMetrics.VerticalGridUnitSize,
-                WorldGridMetrics.GridUnitSize));
+                WorldGridMetrics.GridUnitSize),
+            sceneLocalOffset: Vector3.Zero);
     }
 
     private static StructurePresentationDefinition CreatePillarPresentation()
@@ -104,7 +108,28 @@ public sealed class StructurePresentationCatalog
                 Size = boundsSize
             },
             material,
-            boundsSize);
+            scene: null,
+            localBoundsSize: boundsSize,
+            sceneLocalOffset: Vector3.Zero);
+    }
+
+    private static StructurePresentationDefinition CreateDoorPresentation()
+    {
+        return new StructurePresentationDefinition(
+            StructureDefinitions.DoorDefinitionId,
+            new StructurePresentationKey(DoorPresentationKeyValue),
+            StructureRenderStrategy.Scene,
+            mesh: null,
+            material: null,
+            scene: GD.Load<PackedScene>("res://scenes/game/structures/door.tscn"),
+            localBoundsSize: new Vector3(
+                WorldGridMetrics.GridUnitSize,
+                WorldGridMetrics.VerticalGridUnitSize,
+                WorldGridMetrics.GridUnitSize),
+            sceneLocalOffset: new Vector3(
+                WorldGridMetrics.GridUnitSize * 0.5f,
+                WorldGridMetrics.VerticalGridUnitSize * 0.5f,
+                0f));
     }
 
     #endregion

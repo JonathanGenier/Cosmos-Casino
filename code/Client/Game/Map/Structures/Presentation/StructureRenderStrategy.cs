@@ -11,5 +11,10 @@ internal enum StructureRenderStrategy
     /// <summary>
     /// The structure renders through section-partitioned MultiMesh batches.
     /// </summary>
-    MultiMesh
+    MultiMesh,
+
+    /// <summary>
+    /// The structure renders through one reusable scene instance per authoritative Structure.
+    /// </summary>
+    Scene
 }

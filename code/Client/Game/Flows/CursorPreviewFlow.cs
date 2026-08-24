@@ -43,6 +43,7 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
 
         _cursorManager.CursorTargetChanged += OnCursorTargetChanged;
         _cursorManager.CursorContextLost += OnCursorContextLost;
+        _buildContext.ContextChanged += OnBuildContextChanged;
         _buildContext.BuildCleared += OnBuildCleared;
     }
 
@@ -65,6 +66,7 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
 
         _cursorManager.CursorTargetChanged -= OnCursorTargetChanged;
         _cursorManager.CursorContextLost -= OnCursorContextLost;
+        _buildContext.ContextChanged -= OnBuildContextChanged;
         _buildContext.BuildCleared -= OnBuildCleared;
         _isDisposed = true;
     }
@@ -110,6 +112,14 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
     private void OnCursorContextLost()
     {
         _buildPreviewManager.ClearCursorPreview();
+    }
+
+    private void OnBuildContextChanged()
+    {
+        if (_cursorManager.TryGetCursorContext(out var cursorContext))
+        {
+            UpdateCursorPreview(cursorContext);
+        }
     }
 
     private void OnBuildCleared()

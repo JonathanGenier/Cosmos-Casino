@@ -30,6 +30,11 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     public event Action? PillarBuildSelected;
 
     /// <summary>
+    /// Occurs when the player selects the structural Door build tool.
+    /// </summary>
+    public event Action? DoorBuildSelected;
+
+    /// <summary>
     /// Raised when the player cancels the current build selection.
     /// Consumers are expected to clear build context and restore
     /// default interaction state.
@@ -71,6 +76,7 @@ public sealed partial class BuildUiManager : InitializableNodeManager
         BuildUi = AddNode(GD.Load<PackedScene>(GameUiPaths.Build).Instantiate<BuildUi>());
         BuildUi.StructureBuildToolSelected += OnStructureBuildToolSelected;
         BuildUi.PillarBuildSelected += OnPillarBuildSelected;
+        BuildUi.DoorBuildSelected += OnDoorBuildSelected;
         BuildUi.BuildCancelled += OnBuildCancelled;
     }
 
@@ -82,6 +88,7 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     {
         BuildUi.StructureBuildToolSelected -= OnStructureBuildToolSelected;
         BuildUi.PillarBuildSelected -= OnPillarBuildSelected;
+        BuildUi.DoorBuildSelected -= OnDoorBuildSelected;
         BuildUi.BuildCancelled -= OnBuildCancelled;
     }
 
@@ -97,6 +104,11 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     private void OnPillarBuildSelected()
     {
         PillarBuildSelected?.Invoke();
+    }
+
+    private void OnDoorBuildSelected()
+    {
+        DoorBuildSelected?.Invoke();
     }
 
     /// <summary>

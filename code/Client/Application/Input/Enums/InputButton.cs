@@ -84,6 +84,11 @@ public enum InputButton
     /// </summary>
     RotateRight,
 
+    /// <summary>
+    /// Represents the keyboard input action for rotating the active build context.
+    /// </summary>
+    BuildRotate,
+
     #endregion
 
     #region Console Input

@@ -29,4 +29,17 @@ public abstract class BuildContextBase
         out BuildIntent intent);
 
     #endregion
+
+    #region Rotation
+
+    /// <summary>
+    /// Attempts to rotate this build context clockwise.
+    /// </summary>
+    /// <returns><c>true</c> when the context rotation changed; otherwise, <c>false</c>.</returns>
+    public virtual bool TryRotateClockwise()
+    {
+        return false;
+    }
+
+    #endregion
 }
