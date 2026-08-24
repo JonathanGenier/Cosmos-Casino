@@ -75,20 +75,31 @@ internal sealed class CursorTargetResolver
 
     #region Helpers
 
-    private bool TryResolveOccupiedStructureCell(CollisionObject3D collider, out MapCellCoord occupiedCell)
+    private bool TryResolveStructureHit(
+        CursorPhysicsHit hit,
+        out MapCellCoord occupiedCell,
+        out CursorSurfaceFace face)
     {
-        if (StructurePickTarget.TryFind(collider, out occupiedCell))
+        if (StructureCollisionRegionTarget.TryResolve(hit.Collider, hit, out occupiedCell, out face))
         {
             return true;
         }
 
-        if (BuildablePickTarget.TryFind(collider, out var spawnKey))
+        if (StructurePickTarget.TryFind(hit.Collider, out occupiedCell)
+            && CursorSurfaceFaceResolver.TryResolve(hit.WorldNormal, out face))
+        {
+            return true;
+        }
+
+        if (BuildablePickTarget.TryFind(hit.Collider, out var spawnKey)
+            && CursorSurfaceFaceResolver.TryResolve(hit.WorldNormal, out face))
         {
             occupiedCell = MapCellCoord.FromMapCoord(spawnKey.Coord, spawnKey.Elevation);
             return true;
         }
 
         occupiedCell = default;
+        face = default;
         return false;
     }
 
@@ -99,19 +110,13 @@ internal sealed class CursorTargetResolver
 
     private bool TryResolveStructure(CursorPhysicsHit hit, out CursorTarget target)
     {
-        if (!TryResolveOccupiedStructureCell(hit.Collider, out var occupiedCell))
+        if (!TryResolveStructureHit(hit, out var occupiedCell, out CursorSurfaceFace face))
         {
             target = default;
             return false;
         }
 
         if (!_mapManager.TryGetStructureIdAt(occupiedCell, out var structureId))
-        {
-            target = default;
-            return false;
-        }
-
-        if (!CursorSurfaceFaceResolver.TryResolve(hit.WorldNormal, out CursorSurfaceFace face))
         {
             target = default;
             return false;

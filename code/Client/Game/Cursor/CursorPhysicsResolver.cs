@@ -73,11 +73,14 @@ internal sealed class CursorPhysicsResolver
             return false;
         }
 
+        int faceIndex = result.ContainsKey("face_index") ? (int)result["face_index"] : -1;
+
         hit = new CursorPhysicsHit(
             ray.Origin,
             (Vector3)result["position"],
             (Vector3)result["normal"],
-            collider);
+            collider,
+            faceIndex);
         return true;
     }
 
