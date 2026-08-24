@@ -35,6 +35,7 @@ public sealed partial class GameManager : NodeManager
     private CursorManager? _cursorManager;
     private TerrainRenderManager? _terrainRenderManager;
     private StructureRenderManager? _structureRenderManager;
+    private StructureCollisionManager? _structureCollisionManager;
 
     // ----------------------------------------------------
     // FLOWS
@@ -43,6 +44,7 @@ public sealed partial class GameManager : NodeManager
     private BuildContextFlow? _buildContextFlow;
     private BuildRequestFlow? _buildRequestFlow;
     private StructureRenderFlow? _structureRenderFlow;
+    private StructureCollisionFlow? _structureCollisionFlow;
     private BuildPreviewFlow? _buildPreviewFlow;
     private BuildInputFlow? _buildInputFlow;
     private CursorPreviewFlow? _cursorPreviewFlow;
@@ -131,6 +133,12 @@ public sealed partial class GameManager : NodeManager
         set => _structureRenderManager = value;
     }
 
+    private StructureCollisionManager StructureCollisionManager
+    {
+        get => _structureCollisionManager ?? throw new InvalidOperationException($"{nameof(StructureCollisionManager)} is not initialized.");
+        set => _structureCollisionManager = value;
+    }
+
     // ----------------------------------------------------------------------------------------------------------------------------
     // FLOWS
 
@@ -156,6 +164,12 @@ public sealed partial class GameManager : NodeManager
     {
         get => _structureRenderFlow ?? throw new InvalidOperationException($"{nameof(StructureRenderFlow)} is not initialized.");
         set => _structureRenderFlow = value;
+    }
+
+    private StructureCollisionFlow StructureCollisionFlow
+    {
+        get => _structureCollisionFlow ?? throw new InvalidOperationException($"{nameof(StructureCollisionFlow)} is not initialized.");
+        set => _structureCollisionFlow = value;
     }
 
     private BuildPreviewFlow BuildPreviewFlow
@@ -271,6 +285,7 @@ public sealed partial class GameManager : NodeManager
         BuildContextFlow?.Dispose();
         BuildRequestFlow?.Dispose();
         StructureRenderFlow?.Dispose();
+        StructureCollisionFlow?.Dispose();
         CameraInputFlow?.Dispose();
         BuildPreviewFlow?.Dispose();
         BuildInputFlow?.Dispose();
@@ -336,6 +351,9 @@ public sealed partial class GameManager : NodeManager
         StructureRenderManager = AddInitializableNode<StructureRenderManager>(
             srm => srm.Initialize(GameSession.MapManager));
 
+        StructureCollisionManager = AddInitializableNode<StructureCollisionManager>(
+            scm => scm.Initialize(GameSession.MapManager));
+
 #if DEBUG
         CursorDebugVisualizer.Initialize(CursorManager);
 #endif
@@ -357,6 +375,7 @@ public sealed partial class GameManager : NodeManager
         BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, BuildContext);
         BuildRequestFlow = new BuildRequestFlow(BuildProcessManager, BuildContext);
         StructureRenderFlow = new StructureRenderFlow(BuildProcessManager, StructureRenderManager);
+        StructureCollisionFlow = new StructureCollisionFlow(BuildProcessManager, StructureCollisionManager);
         BuildPreviewFlow = new BuildPreviewFlow(BuildContext, BuildProcessManager.BuildPreviewManager, BuildProcessManager);
         BuildInputFlow = new BuildInputFlow(AppServices.InputManager, CursorManager, BuildContext);
         CursorPreviewFlow = new CursorPreviewFlow(BuildContext, BuildProcessManager.BuildPreviewManager, CursorManager, BuildProcessManager);

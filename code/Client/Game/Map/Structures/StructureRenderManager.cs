@@ -1,5 +1,4 @@
 using CosmosCasino.Core.Game.Map;
-using CosmosCasino.Core.Game.Structures;
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -65,26 +64,12 @@ public sealed partial class StructureRenderManager : InitializableNodeManager
     /// </summary>
     public void RebuildAllFromAuthoritativeState()
     {
-        var occupiedSections = new HashSet<StructureRenderSectionCoord>();
-
-        foreach (StructureSnapshot snapshot in MapManager.GetStructureSnapshots())
-        {
-            if (!IsGeneratedOpaqueBlock(snapshot.Definition.Id))
-            {
-                continue;
-            }
-
-            foreach (MapCellCoord cell in snapshot.Definition.Footprint.Resolve(snapshot.Anchor, snapshot.Rotation))
-            {
-                occupiedSections.Add(StructureRenderSectionMath.ToSectionCoord(cell));
-            }
-        }
+        IReadOnlyList<StructureRenderSectionCoord> occupiedSections =
+            StructureSectionInvalidation.GetOccupiedBlockSections(MapManager);
 
         RemoveSectionsExcept(occupiedSections);
 
-        foreach (StructureRenderSectionCoord sectionCoord in occupiedSections.OrderBy(static coord => coord.X)
-            .ThenBy(static coord => coord.Y)
-            .ThenBy(static coord => coord.Z))
+        foreach (StructureRenderSectionCoord sectionCoord in occupiedSections)
         {
             RebuildSection(sectionCoord);
         }
@@ -103,32 +88,7 @@ public sealed partial class StructureRenderManager : InitializableNodeManager
             return;
         }
 
-        var dirtySections = new HashSet<StructureRenderSectionCoord>();
-
-        foreach (MapCellCoord cell in affectedCells)
-        {
-            StructureRenderSectionCoord owningSection = StructureRenderSectionMath.ToSectionCoord(cell);
-            dirtySections.Add(owningSection);
-
-            foreach (MapCellOffset offset in StructureRenderNeighborOffsets.SixAxis)
-            {
-                if (!StructureRenderSectionMath.TryAddOffset(cell, offset, out MapCellCoord neighbor))
-                {
-                    continue;
-                }
-
-                StructureRenderSectionCoord neighborSection = StructureRenderSectionMath.ToSectionCoord(neighbor);
-
-                if (neighborSection != owningSection)
-                {
-                    dirtySections.Add(neighborSection);
-                }
-            }
-        }
-
-        foreach (StructureRenderSectionCoord sectionCoord in dirtySections.OrderBy(static coord => coord.X)
-            .ThenBy(static coord => coord.Y)
-            .ThenBy(static coord => coord.Z))
+        foreach (StructureRenderSectionCoord sectionCoord in StructureSectionInvalidation.GetDirtySections(affectedCells))
         {
             RebuildSection(sectionCoord);
         }
@@ -156,46 +116,10 @@ public sealed partial class StructureRenderManager : InitializableNodeManager
 
     #region Section Rebuild
 
-    private bool IsGeneratedOpaqueBlock(StructureDefinitionId definitionId)
-    {
-        return definitionId == StructureDefinitions.BlockDefinitionId;
-    }
-
-    private StructureRenderSectionSnapshot CaptureSectionSnapshot(StructureRenderSectionCoord sectionCoord)
-    {
-        StructureRenderSectionBounds bounds = StructureRenderSectionMath.GetBounds(sectionCoord);
-        StructureRenderSectionBounds haloBounds = StructureRenderSectionMath.Expand(bounds, amount: 1);
-        var renderableBlocks = new List<MapCellCoord>();
-        var compatibleBlocks = new HashSet<MapCellCoord>();
-
-        ForEachCell(haloBounds, cell =>
-        {
-            if (!MapManager.TryGetStructureSnapshotAt(cell, out StructureSnapshot snapshot)
-                || !IsGeneratedOpaqueBlock(snapshot.Definition.Id))
-            {
-                return;
-            }
-
-            compatibleBlocks.Add(cell);
-
-            if (bounds.Contains(cell))
-            {
-                renderableBlocks.Add(cell);
-            }
-        });
-
-        renderableBlocks.Sort(CompareCells);
-
-        return new StructureRenderSectionSnapshot(
-            sectionCoord,
-            bounds.Min,
-            renderableBlocks,
-            compatibleBlocks);
-    }
-
     private void RebuildSection(StructureRenderSectionCoord sectionCoord)
     {
-        StructureRenderSectionSnapshot snapshot = CaptureSectionSnapshot(sectionCoord);
+        StructureRenderSectionSnapshot snapshot =
+            StructureSectionSnapshotFactory.CaptureBlockSection(MapManager, sectionCoord);
 
         if (snapshot.BlockCount == 0)
         {
@@ -233,13 +157,14 @@ public sealed partial class StructureRenderManager : InitializableNodeManager
         view.QueueFree();
     }
 
-    private void RemoveSectionsExcept(HashSet<StructureRenderSectionCoord> retainedSections)
+    private void RemoveSectionsExcept(IReadOnlyList<StructureRenderSectionCoord> retainedSections)
     {
+        var retainedSectionSet = new HashSet<StructureRenderSectionCoord>(retainedSections);
         StructureRenderSectionCoord[] existingSections = _sectionViews.Keys.ToArray();
 
         foreach (StructureRenderSectionCoord sectionCoord in existingSections)
         {
-            if (!retainedSections.Contains(sectionCoord))
+            if (!retainedSectionSet.Contains(sectionCoord))
             {
                 RemoveSection(sectionCoord);
             }
@@ -256,54 +181,6 @@ public sealed partial class StructureRenderManager : InitializableNodeManager
         {
             AlbedoColor = new Color(0.62f, 0.66f, 0.72f, 1f)
         };
-    }
-
-    private int CompareCells(MapCellCoord left, MapCellCoord right)
-    {
-        int xComparison = left.X.CompareTo(right.X);
-
-        if (xComparison != 0)
-        {
-            return xComparison;
-        }
-
-        int yComparison = left.Y.CompareTo(right.Y);
-
-        if (yComparison != 0)
-        {
-            return yComparison;
-        }
-
-        return left.Z.CompareTo(right.Z);
-    }
-
-    private void ForEachCell(StructureRenderSectionBounds bounds, Action<MapCellCoord> visit)
-    {
-        for (int x = bounds.Min.X; ; x++)
-        {
-            for (int y = bounds.Min.Y; ; y++)
-            {
-                for (int z = bounds.Min.Z; ; z++)
-                {
-                    visit(new MapCellCoord(x, y, z));
-
-                    if (z == bounds.Max.Z)
-                    {
-                        break;
-                    }
-                }
-
-                if (y == bounds.Max.Y)
-                {
-                    break;
-                }
-            }
-
-            if (x == bounds.Max.X)
-            {
-                break;
-            }
-        }
     }
 
     #endregion
