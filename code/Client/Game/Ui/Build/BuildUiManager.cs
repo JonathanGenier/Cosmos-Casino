@@ -1,4 +1,3 @@
-using CosmosCasino.Core.Game.Structures;
 using Godot;
 using System;
 
@@ -20,10 +19,10 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     #region Events
 
     /// <summary>
-    /// Occurs when a structure definition is selected.
+    /// Occurs when a structure build interaction tool is selected.
     /// </summary>
-    /// <remarks>Subscribers are notified with the selected structure definition when the event is raised.</remarks>
-    public event Action<StructureDefinition>? StructureDefinitionSelected;
+    /// <remarks>Subscribers are notified with the selected Client-side build tool when the event is raised.</remarks>
+    public event Action<StructureBuildTool>? StructureBuildToolSelected;
 
     /// <summary>
     /// Raised when the player cancels the current build selection.
@@ -65,7 +64,7 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     protected override void OnReady()
     {
         BuildUi = AddNode(GD.Load<PackedScene>(GameUiPaths.Build).Instantiate<BuildUi>());
-        BuildUi.StructureDefinitionSelected += OnStructureDefinitionSelected;
+        BuildUi.StructureBuildToolSelected += OnStructureBuildToolSelected;
         BuildUi.BuildCancelled += OnBuildCancelled;
     }
 
@@ -75,7 +74,7 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     /// </summary>
     protected override void OnExit()
     {
-        BuildUi.StructureDefinitionSelected -= OnStructureDefinitionSelected;
+        BuildUi.StructureBuildToolSelected -= OnStructureBuildToolSelected;
         BuildUi.BuildCancelled -= OnBuildCancelled;
     }
 
@@ -83,9 +82,9 @@ public sealed partial class BuildUiManager : InitializableNodeManager
 
     #region BuildUi Callbacks
 
-    private void OnStructureDefinitionSelected(StructureDefinition definition)
+    private void OnStructureBuildToolSelected(StructureBuildTool buildTool)
     {
-        StructureDefinitionSelected?.Invoke(definition);
+        StructureBuildToolSelected?.Invoke(buildTool);
     }
 
     /// <summary>
