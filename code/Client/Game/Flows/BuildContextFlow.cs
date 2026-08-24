@@ -33,7 +33,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
         _buildUiManager = ui;
         _buildContext = context;
 
-        _buildUiManager.StructureDefinitionSelected += OnStructureDefinitionSelected;
+        _buildUiManager.StructureBuildToolSelected += OnStructureBuildToolSelected;
         _buildUiManager.BuildCancelled += OnBuildCancelled;
     }
 
@@ -53,7 +53,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
             return;
         }
 
-        _buildUiManager.StructureDefinitionSelected -= OnStructureDefinitionSelected;
+        _buildUiManager.StructureBuildToolSelected -= OnStructureBuildToolSelected;
         _buildUiManager.BuildCancelled -= OnBuildCancelled;
         _disposed = true;
     }
@@ -62,9 +62,11 @@ public class BuildContextFlow : IGameFlow, IDisposable
 
     #region Ui Input Action
 
-    private void OnStructureDefinitionSelected(StructureDefinition definition)
+    private void OnStructureBuildToolSelected(StructureBuildTool buildTool)
     {
-        _buildContext.SetContext(new StructureBuildContext(definition));
+        _buildContext.SetContext(new StructureBuildContext(
+            StructureDefinitions.Block,
+            buildTool));
     }
 
     /// <summary>

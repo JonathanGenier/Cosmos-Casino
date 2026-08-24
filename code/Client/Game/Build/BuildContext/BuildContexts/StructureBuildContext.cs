@@ -3,6 +3,7 @@ using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Structures;
 using System;
+using System.Collections.Generic;
 
 /// <summary>
 /// Build context for generalized Core-owned structure definitions.
@@ -15,14 +16,17 @@ public sealed class StructureBuildContext : BuildContextBase
     /// Initializes a new generalized structure build context.
     /// </summary>
     /// <param name="definition">The structure definition to place.</param>
+    /// <param name="buildTool">The Client-side interaction tool used to resolve drag cells.</param>
     /// <param name="rotation">The selected footprint rotation.</param>
     public StructureBuildContext(
         StructureDefinition definition,
+        StructureBuildTool buildTool,
         FootprintRotation rotation = FootprintRotation.Deg0)
     {
         ArgumentNullException.ThrowIfNull(definition);
 
         Definition = definition;
+        BuildTool = buildTool;
         Rotation = rotation;
     }
 
@@ -34,6 +38,11 @@ public sealed class StructureBuildContext : BuildContextBase
     /// Gets the structure definition placed by this context.
     /// </summary>
     public StructureDefinition Definition { get; }
+
+    /// <summary>
+    /// Gets the Client-side tool strategy used to resolve structure drag selections.
+    /// </summary>
+    public StructureBuildTool BuildTool { get; }
 
     /// <summary>
     /// Gets the selected footprint rotation.
@@ -73,17 +82,37 @@ public sealed class StructureBuildContext : BuildContextBase
         BuildInteractionMode buildInteractionMode,
         out BuildIntent intent)
     {
+        IReadOnlyList<MapCellCoord> cells = StructureDragCellResolver.Resolve(
+            BuildTool,
+            buildOperation,
+            buildInteractionMode,
+            startTarget,
+            currentTarget);
+
+        if (cells.Count == 0)
+        {
+            intent = null!;
+            return false;
+        }
+
         switch (buildOperation)
         {
             case BuildOperation.Place:
-                intent = BuildIntent.PlaceStructure(
-                    Definition,
-                    currentTarget.PlacementCell,
-                    Rotation);
+                var placements = new StructurePlacementRequest[cells.Count];
+
+                for (int i = 0; i < cells.Count; i++)
+                {
+                    placements[i] = new StructurePlacementRequest(
+                        Definition,
+                        cells[i],
+                        Rotation);
+                }
+
+                intent = BuildIntent.PlaceStructures(placements);
                 return true;
 
             case BuildOperation.Remove:
-                intent = BuildIntent.RemoveStructureAt(currentTarget.TargetCell);
+                intent = BuildIntent.RemoveStructuresAt(cells);
                 return true;
 
             case BuildOperation.None:
