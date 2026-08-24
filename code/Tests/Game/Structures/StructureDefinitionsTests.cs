@@ -42,5 +42,42 @@ namespace CosmosCasino.Tests.Game.Structures
         }
 
         #endregion
+
+        #region Pillar Definition
+
+        [Test]
+        public void Pillar_HasStableExpectedDefinitionId()
+        {
+            Assert.That(StructureDefinitions.PillarDefinitionIdValue, Is.EqualTo(1001));
+            Assert.That(StructureDefinitions.PillarDefinitionId.Value, Is.EqualTo(StructureDefinitions.PillarDefinitionIdValue));
+            Assert.That(StructureDefinitions.Pillar.Id, Is.EqualTo(StructureDefinitions.PillarDefinitionId));
+            Assert.That(StructureDefinitions.PillarDefinitionId, Is.Not.EqualTo(StructureDefinitions.BlockDefinitionId));
+        }
+
+        [Test]
+        public void Pillar_FootprintContainsOnlyAnchorOffset()
+        {
+            Assert.That(
+                StructureDefinitions.Pillar.Footprint.Offsets,
+                Is.EqualTo(new[]
+                {
+                    new MapCellOffset(0, 0, 0)
+                }));
+        }
+
+        [TestCase(FootprintRotation.Deg0)]
+        [TestCase(FootprintRotation.Deg90)]
+        [TestCase(FootprintRotation.Deg180)]
+        [TestCase(FootprintRotation.Deg270)]
+        public void Pillar_ResolveAtArbitraryAnchor_OccupiesOnlyAnchor(FootprintRotation rotation)
+        {
+            var anchor = new MapCellCoord(-7, 25, 11);
+
+            IReadOnlyList<MapCellCoord> resolved = StructureDefinitions.Pillar.Footprint.Resolve(anchor, rotation);
+
+            Assert.That(resolved, Is.EqualTo(new[] { anchor }));
+        }
+
+        #endregion
     }
 }
