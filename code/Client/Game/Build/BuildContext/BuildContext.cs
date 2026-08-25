@@ -35,6 +35,11 @@ public sealed class BuildContext
     public event Action? ContextDeactivated;
 
     /// <summary>
+    /// Occurs when the active context's placement state changes.
+    /// </summary>
+    public event Action? ContextChanged;
+
+    /// <summary>
     /// Occurs when a build process is started.
     /// </summary>
     /// <remarks>This event is raised before any build steps are executed.</remarks>
@@ -95,6 +100,7 @@ public sealed class BuildContext
         Clear();
         _activeContext = context;
         ContextActivated?.Invoke();
+        ContextChanged?.Invoke();
     }
 
     /// <summary>
@@ -205,6 +211,27 @@ public sealed class BuildContext
     public void CancelBuild()
     {
         ClearBuild();
+    }
+
+    /// <summary>
+    /// Attempts to rotate the active build context clockwise.
+    /// </summary>
+    /// <returns><c>true</c> when the active context rotation changed; otherwise, <c>false</c>.</returns>
+    public bool RotateActiveContextClockwise()
+    {
+        if (_activeContext == null || !_activeContext.TryRotateClockwise())
+        {
+            return false;
+        }
+
+        ContextChanged?.Invoke();
+
+        if (IsBuildActive)
+        {
+            BuildChanged?.Invoke();
+        }
+
+        return true;
     }
 
     #endregion

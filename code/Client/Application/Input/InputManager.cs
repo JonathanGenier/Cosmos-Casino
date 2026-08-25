@@ -102,6 +102,12 @@ public sealed partial class InputManager : Node
     public delegate void BuildCanceledEventHandler();
 
     /// <summary>
+    /// Emitted when the active build context should rotate clockwise.
+    /// </summary>
+    [Signal]
+    public delegate void BuildRotatedEventHandler();
+
+    /// <summary>
     /// Emitted whena modifier key (Shift, Ctrl, Alt) state changes (Pressed, Held, Released).
     /// </summary>
     [Signal]
@@ -199,6 +205,11 @@ public sealed partial class InputManager : Node
     /// Gets a value indicating whether the Escape key is currently pressed.
     /// </summary>
     public bool IsEscapeKeyPressed => IsPressed(_inputState[InputButton.Escape], _previousInputState[InputButton.Escape]);
+
+    /// <summary>
+    /// Gets a value indicating whether the build rotation input was pressed during the current input state.
+    /// </summary>
+    public bool IsBuildRotatePressed => IsPressed(_inputState[InputButton.BuildRotate], _previousInputState[InputButton.BuildRotate]);
 
     #endregion
 
@@ -309,6 +320,13 @@ public sealed partial class InputManager : Node
 
                 case Key.E:
                     _inputState[InputButton.RotateRight] = pressed;
+                    break;
+
+                // ─────────────────────────────
+                // Build Rotation
+                // ─────────────────────────────
+                case Key.R:
+                    _inputState[InputButton.BuildRotate] = pressed;
                     break;
 
                 // ─────────────────────────────

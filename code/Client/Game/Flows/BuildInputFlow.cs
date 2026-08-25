@@ -99,6 +99,7 @@ public sealed class BuildInputFlow : IDisposable
         _inputManager.BuildRemovePressed += OnBuildRemovePressed;
         _inputManager.BuildRemoveReleased += OnBuildRemoveReleased;
         _inputManager.BuildCanceled += OnBuildCanceled;
+        _inputManager.BuildRotated += OnBuildRotated;
         _inputManager.ModifierChanged += OnModifierChanged;
         _cursorManager.CursorTargetChanged += OnCursorTargetChanged;
         _isSubscribed = true;
@@ -124,6 +125,7 @@ public sealed class BuildInputFlow : IDisposable
         _inputManager.BuildRemovePressed -= OnBuildRemovePressed;
         _inputManager.BuildRemoveReleased -= OnBuildRemoveReleased;
         _inputManager.BuildCanceled -= OnBuildCanceled;
+        _inputManager.BuildRotated -= OnBuildRotated;
         _inputManager.ModifierChanged -= OnModifierChanged;
         _cursorManager.CursorTargetChanged -= OnCursorTargetChanged;
         _isSubscribed = false;
@@ -225,6 +227,11 @@ public sealed class BuildInputFlow : IDisposable
     {
         _buildContext.CancelBuild();
         ResetState();
+    }
+
+    private void OnBuildRotated()
+    {
+        _buildContext.RotateActiveContextClockwise();
     }
 
     #endregion

@@ -53,6 +53,16 @@ public sealed class SingleStructureBuildContext : BuildContextBase
         Rotation = rotation;
     }
 
+    /// <summary>
+    /// Rotates the selected footprint clockwise for future placement intents.
+    /// </summary>
+    /// <returns><c>true</c> when the rotation changed.</returns>
+    public override bool TryRotateClockwise()
+    {
+        Rotation = GetNextClockwiseRotation(Rotation);
+        return true;
+    }
+
     #endregion
 
     #region Build Intent
@@ -96,6 +106,22 @@ public sealed class SingleStructureBuildContext : BuildContextBase
             default:
                 throw new InvalidOperationException($"Unsupported build operation: {buildOperation}");
         }
+    }
+
+    #endregion
+
+    #region Helpers
+
+    private FootprintRotation GetNextClockwiseRotation(FootprintRotation rotation)
+    {
+        return rotation switch
+        {
+            FootprintRotation.Deg0 => FootprintRotation.Deg90,
+            FootprintRotation.Deg90 => FootprintRotation.Deg180,
+            FootprintRotation.Deg180 => FootprintRotation.Deg270,
+            FootprintRotation.Deg270 => FootprintRotation.Deg0,
+            _ => throw new ArgumentOutOfRangeException(nameof(rotation), rotation, "Unsupported footprint rotation.")
+        };
     }
 
     #endregion

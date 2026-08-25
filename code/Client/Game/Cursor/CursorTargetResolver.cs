@@ -80,6 +80,11 @@ internal sealed class CursorTargetResolver
         out MapCellCoord occupiedCell,
         out CursorSurfaceFace face)
     {
+        if (StructureSceneCollisionTarget.TryResolve(hit.Collider, hit, out occupiedCell, out face))
+        {
+            return true;
+        }
+
         if (StructureInstanceCollisionTarget.TryResolve(hit.Collider, hit, out occupiedCell, out face))
         {
             return true;

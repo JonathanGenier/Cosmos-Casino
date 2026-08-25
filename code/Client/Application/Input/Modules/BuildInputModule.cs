@@ -72,6 +72,7 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
             return;
         }
 
+        ProcessBuildRotationInput();
         ProcessMouseStartInputs();
     }
 
@@ -138,6 +139,16 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
             _inputManager.EmitSignal(InputManager.SignalName.BuildRemovePressed);
             return;
         }
+    }
+
+    private void ProcessBuildRotationInput()
+    {
+        if (!_inputManager.IsBuildRotatePressed)
+        {
+            return;
+        }
+
+        _inputManager.EmitSignal(InputManager.SignalName.BuildRotated);
     }
 
     #endregion

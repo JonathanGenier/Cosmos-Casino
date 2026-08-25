@@ -36,6 +36,7 @@ public sealed partial class GameManager : NodeManager
     private TerrainRenderManager? _terrainRenderManager;
     private StructureRenderManager? _structureRenderManager;
     private StructureInstanceRenderManager? _structureInstanceRenderManager;
+    private StructureSceneRenderManager? _structureSceneRenderManager;
     private StructureCollisionManager? _structureCollisionManager;
     private StructureInstanceCollisionManager? _structureInstanceCollisionManager;
 
@@ -47,6 +48,7 @@ public sealed partial class GameManager : NodeManager
     private BuildRequestFlow? _buildRequestFlow;
     private StructureRenderFlow? _structureRenderFlow;
     private StructureInstanceRenderFlow? _structureInstanceRenderFlow;
+    private StructureSceneRenderFlow? _structureSceneRenderFlow;
     private StructureCollisionFlow? _structureCollisionFlow;
     private StructureInstanceCollisionFlow? _structureInstanceCollisionFlow;
     private BuildPreviewFlow? _buildPreviewFlow;
@@ -144,6 +146,12 @@ public sealed partial class GameManager : NodeManager
         set => _structureInstanceRenderManager = value;
     }
 
+    private StructureSceneRenderManager StructureSceneRenderManager
+    {
+        get => _structureSceneRenderManager ?? throw new InvalidOperationException($"{nameof(StructureSceneRenderManager)} is not initialized.");
+        set => _structureSceneRenderManager = value;
+    }
+
     private StructureCollisionManager StructureCollisionManager
     {
         get => _structureCollisionManager ?? throw new InvalidOperationException($"{nameof(StructureCollisionManager)} is not initialized.");
@@ -187,6 +195,12 @@ public sealed partial class GameManager : NodeManager
     {
         get => _structureInstanceRenderFlow ?? throw new InvalidOperationException($"{nameof(StructureInstanceRenderFlow)} is not initialized.");
         set => _structureInstanceRenderFlow = value;
+    }
+
+    private StructureSceneRenderFlow StructureSceneRenderFlow
+    {
+        get => _structureSceneRenderFlow ?? throw new InvalidOperationException($"{nameof(StructureSceneRenderFlow)} is not initialized.");
+        set => _structureSceneRenderFlow = value;
     }
 
     private StructureCollisionFlow StructureCollisionFlow
@@ -321,6 +335,7 @@ public sealed partial class GameManager : NodeManager
         BuildRequestFlow?.Dispose();
         StructureRenderFlow?.Dispose();
         StructureInstanceRenderFlow?.Dispose();
+        StructureSceneRenderFlow?.Dispose();
         StructureCollisionFlow?.Dispose();
         StructureInstanceCollisionFlow?.Dispose();
         CameraInputFlow?.Dispose();
@@ -392,6 +407,9 @@ public sealed partial class GameManager : NodeManager
         StructureInstanceRenderManager = AddInitializableNode<StructureInstanceRenderManager>(
             sirm => sirm.Initialize(GameSession.MapManager, StructurePresentations));
 
+        StructureSceneRenderManager = AddInitializableNode<StructureSceneRenderManager>(
+            ssrm => ssrm.Initialize(GameSession.MapManager, StructurePresentations));
+
         StructureCollisionManager = AddInitializableNode<StructureCollisionManager>(
             scm => scm.Initialize(GameSession.MapManager));
 
@@ -420,6 +438,7 @@ public sealed partial class GameManager : NodeManager
         BuildRequestFlow = new BuildRequestFlow(BuildProcessManager, BuildContext);
         StructureRenderFlow = new StructureRenderFlow(BuildProcessManager, StructureRenderManager);
         StructureInstanceRenderFlow = new StructureInstanceRenderFlow(BuildProcessManager, StructureInstanceRenderManager);
+        StructureSceneRenderFlow = new StructureSceneRenderFlow(BuildProcessManager, StructureSceneRenderManager);
         StructureCollisionFlow = new StructureCollisionFlow(BuildProcessManager, StructureCollisionManager);
         StructureInstanceCollisionFlow = new StructureInstanceCollisionFlow(BuildProcessManager, StructureInstanceCollisionManager);
         BuildPreviewFlow = new BuildPreviewFlow(BuildContext, BuildProcessManager.BuildPreviewManager, BuildProcessManager);

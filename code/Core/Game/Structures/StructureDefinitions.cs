@@ -19,6 +19,11 @@ namespace CosmosCasino.Core.Game.Structures
         /// </summary>
         public const int PillarDefinitionIdValue = 1001;
 
+        /// <summary>
+        /// The stable built-in definition identity for the structural Door.
+        /// </summary>
+        public const int DoorDefinitionIdValue = 1002;
+
         #endregion
 
         #region Properties
@@ -32,6 +37,11 @@ namespace CosmosCasino.Core.Game.Structures
         /// Gets the stable built-in definition identity for the structural Pillar.
         /// </summary>
         public static StructureDefinitionId PillarDefinitionId { get; } = new(PillarDefinitionIdValue);
+
+        /// <summary>
+        /// Gets the stable built-in definition identity for the structural Door.
+        /// </summary>
+        public static StructureDefinitionId DoorDefinitionId { get; } = new(DoorDefinitionIdValue);
 
         /// <summary>
         /// Gets the canonical one-cell structural Block definition.
@@ -51,6 +61,19 @@ namespace CosmosCasino.Core.Game.Structures
             new MapCellFootprint(new[]
             {
                 new MapCellOffset(0, 0, 0)
+            }));
+
+        /// <summary>
+        /// Gets the canonical multi-cell structural Door definition.
+        /// </summary>
+        public static StructureDefinition Door { get; } = new(
+            DoorDefinitionId,
+            new MapCellFootprint(new[]
+            {
+                new MapCellOffset(0, 0, 0),
+                new MapCellOffset(0, 1, 0),
+                new MapCellOffset(1, 0, 0),
+                new MapCellOffset(1, 1, 0)
             }));
 
         #endregion
