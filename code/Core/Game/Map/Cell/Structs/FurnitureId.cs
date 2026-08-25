@@ -1,8 +1,8 @@
 namespace CosmosCasino.Core.Game.Map
 {
     /// <summary>
-    /// Identifies furniture occupying or reserving a local map cell.
+    /// Identifies one authoritative furniture aggregate occupying or reserving map cells.
     /// </summary>
-    /// <param name="Value">The externally supplied furniture identity value.</param>
-    internal readonly record struct FurnitureId(int Value);
+    /// <param name="Value">The Core-assigned furniture identity value.</param>
+    public readonly record struct FurnitureId(int Value);
 }

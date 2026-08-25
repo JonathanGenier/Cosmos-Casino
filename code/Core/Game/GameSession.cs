@@ -1,5 +1,6 @@
 using CosmosCasino.Core.Configs;
 using CosmosCasino.Core.Game.Build;
+using CosmosCasino.Core.Game.Furniture;
 using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Terrain;
 
@@ -24,6 +25,7 @@ namespace CosmosCasino.Core.Game
         {
             MapManager = new MapManager();
             BuildManager = new BuildManager(MapManager);
+            FurnitureManager = new FurnitureManager(MapManager);
 
             var seed = 0;
             var mapSize = TerrainConfigs.TileCountPerAxis;
@@ -41,6 +43,11 @@ namespace CosmosCasino.Core.Game
         /// authoritative game state.
         /// </summary>
         public BuildManager BuildManager { get; private set; }
+
+        /// <summary>
+        /// Provides access to the core furniture manager responsible for validating and executing furniture operations.
+        /// </summary>
+        public FurnitureManager FurnitureManager { get; private set; }
 
         /// <summary>
         /// Provides access to the global <see cref="MapManager"/> responsible for
