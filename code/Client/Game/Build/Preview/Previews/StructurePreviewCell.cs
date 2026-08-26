@@ -10,6 +10,7 @@ public sealed partial class StructurePreviewCell : Node3D
     #region Fields
 
     private StandardMaterial3D? _material;
+    private BoxMesh? _mesh;
     private bool _isInitialized;
 
     #endregion
@@ -31,6 +32,7 @@ public sealed partial class StructurePreviewCell : Node3D
     public void Reset()
     {
         SetValidity(BuildPreviewValidity.NoOp);
+        SetCellSize(GetWorldGridCellSize());
         Position = Vector3.Zero;
         Hide();
     }
@@ -57,6 +59,21 @@ public sealed partial class StructurePreviewCell : Node3D
         };
     }
 
+    /// <summary>
+    /// Sets the preview cell's local bounds size.
+    /// </summary>
+    /// <param name="size">The local bounds size to render.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the preview cell has not been initialized.</exception>
+    internal void SetCellSize(Vector3 size)
+    {
+        if (_mesh == null)
+        {
+            throw new InvalidOperationException($"{nameof(StructurePreviewCell)} has not been initialized.");
+        }
+
+        _mesh.Size = size;
+    }
+
     #endregion
 
     #region Initialization
@@ -78,21 +95,32 @@ public sealed partial class StructurePreviewCell : Node3D
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
         };
 
+        _mesh = new BoxMesh
+        {
+            Size = GetWorldGridCellSize()
+        };
+
         var mesh = new MeshInstance3D
         {
-            Mesh = new BoxMesh
-            {
-                Size = new Vector3(
-                    WorldGridMetrics.GridUnitSize,
-                    WorldGridMetrics.VerticalGridUnitSize,
-                    WorldGridMetrics.GridUnitSize)
-            },
+            Mesh = _mesh,
             MaterialOverride = material
         };
 
         AddChild(mesh);
         _material = material;
         _isInitialized = true;
+    }
+
+    #endregion
+
+    #region Helpers
+
+    private static Vector3 GetWorldGridCellSize()
+    {
+        return new Vector3(
+            WorldGridMetrics.GridUnitSize,
+            WorldGridMetrics.VerticalGridUnitSize,
+            WorldGridMetrics.GridUnitSize);
     }
 
     #endregion

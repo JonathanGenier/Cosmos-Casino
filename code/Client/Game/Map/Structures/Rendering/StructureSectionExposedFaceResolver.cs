@@ -1,5 +1,4 @@
 using CosmosCasino.Core.Game.Map;
-using Godot;
 using System;
 using System.Collections.Generic;
 
@@ -29,7 +28,7 @@ internal static class StructureSectionExposedFaceResolver
 
         foreach (MapCellCoord cell in snapshot.RenderableBlocks)
         {
-            Vector3 center = ToSectionLocalCenter(snapshot.OriginCell, cell);
+            var center = StructureGridMetrics.ToSectionLocalCenter(snapshot.OriginCell, cell);
 
             foreach (StructureBlockFace face in StructureBlockFace.All)
             {
@@ -44,14 +43,6 @@ internal static class StructureSectionExposedFaceResolver
         }
 
         return exposedFaces;
-    }
-
-    private static Vector3 ToSectionLocalCenter(MapCellCoord originCell, MapCellCoord cell)
-    {
-        return new Vector3(
-            (cell.X - originCell.X) * WorldGridMetrics.GridUnitSize,
-            (cell.Y - originCell.Y) * WorldGridMetrics.VerticalGridUnitSize,
-            (cell.Z - originCell.Z) * WorldGridMetrics.GridUnitSize);
     }
 
     #endregion

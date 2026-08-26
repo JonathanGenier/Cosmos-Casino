@@ -22,7 +22,7 @@ internal static class StructureInstanceTransformResolver
         FootprintRotation rotation)
     {
         return GridPlacementTransformResolver.ResolveLocalTransform(
-            anchor,
+            StructureGridMetrics.ToGodotCenter(anchor),
             rotation,
             StructureRenderSectionMath.ToSectionWorldOrigin(sectionCoord));
     }

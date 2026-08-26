@@ -20,9 +20,22 @@ internal static class GridPlacementTransformResolver
         MapCellCoord anchor,
         FootprintRotation rotation)
     {
+        return ResolveWorldTransform(anchor.ToGodotCenter(), rotation);
+    }
+
+    /// <summary>
+    /// Resolves a world-space Godot transform for a pre-resolved world-space anchor and rotation.
+    /// </summary>
+    /// <param name="worldAnchor">The world-space anchor position.</param>
+    /// <param name="rotation">The authoritative footprint rotation.</param>
+    /// <returns>The world-space Godot transform.</returns>
+    internal static Transform3D ResolveWorldTransform(
+        Vector3 worldAnchor,
+        FootprintRotation rotation)
+    {
         return new Transform3D(
             Basis.Identity.Rotated(Vector3.Up, ToGodotYawRadians(rotation)),
-            anchor.ToGodotCenter());
+            worldAnchor);
     }
 
     /// <summary>
@@ -37,9 +50,24 @@ internal static class GridPlacementTransformResolver
         FootprintRotation rotation,
         Vector3 worldOrigin)
     {
+        return ResolveLocalTransform(anchor.ToGodotCenter(), rotation, worldOrigin);
+    }
+
+    /// <summary>
+    /// Resolves a local Godot transform from a pre-resolved world-space anchor relative to the specified world origin.
+    /// </summary>
+    /// <param name="worldAnchor">The world-space anchor position.</param>
+    /// <param name="rotation">The authoritative footprint rotation.</param>
+    /// <param name="worldOrigin">The world-space origin of the local coordinate frame.</param>
+    /// <returns>The local Godot transform.</returns>
+    internal static Transform3D ResolveLocalTransform(
+        Vector3 worldAnchor,
+        FootprintRotation rotation,
+        Vector3 worldOrigin)
+    {
         return new Transform3D(
             Basis.Identity.Rotated(Vector3.Up, ToGodotYawRadians(rotation)),
-            anchor.ToGodotCenter() - worldOrigin);
+            worldAnchor - worldOrigin);
     }
 
     #endregion

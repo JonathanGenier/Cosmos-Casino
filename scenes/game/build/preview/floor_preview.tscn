@@ -4,6 +4,7 @@
 [ext_resource type="Shader" uid="uid://bs0r3v7q262gr" path="res://assets/shaders/preview.gdshader" id="1_usgch"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_ackx7"]
+size = Vector3(1, 1, 1)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ibtf5"]
 render_priority = 0
@@ -14,6 +15,5 @@ shader_parameter/color = Color(1.2513996e-06, 0.57392997, 0.7894288, 0.047058824
 script = ExtResource("1_ibtf5")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.25, 0, 0, 0, 1, 0, -0.125, 0)
 mesh = SubResource("BoxMesh_ackx7")
 surface_material_override/0 = SubResource("ShaderMaterial_ibtf5")
