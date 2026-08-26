@@ -48,7 +48,7 @@ internal sealed partial class StructureSceneView : Node3D
         }
 
         StructureId = snapshot.Id;
-        Transform = StructureGodotTransformResolver.ResolveWorldTransform(snapshot.Anchor, snapshot.Rotation);
+        Transform = GridPlacementTransformResolver.ResolveWorldTransform(snapshot.Anchor, snapshot.Rotation);
         _sceneRoot = InstantiateSceneRoot(presentation);
         AddChild(_sceneRoot);
         AddCollisionProxies(snapshot, presentation);

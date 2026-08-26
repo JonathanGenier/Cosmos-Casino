@@ -80,6 +80,8 @@ public sealed partial class StructureInstanceCollisionManager : InitializableNod
                 AddInstance(snapshot.Id, snapshot.Anchor, snapshot.Rotation, presentation);
             }
         }
+
+        RebuildDirtyRegions(_regions.Keys);
     }
 
     /// <summary>
@@ -96,7 +98,20 @@ public sealed partial class StructureInstanceCollisionManager : InitializableNod
             return;
         }
 
-        foreach (BuildStructureResult structure in buildResult.Structures)
+        ApplyChanges(buildResult.Structures);
+    }
+
+    /// <summary>
+    /// Applies repeated-structure collision changes from one successful authoritative transaction.
+    /// </summary>
+    /// <param name="structures">The already-classified structure changes to apply.</param>
+    public void ApplyChanges(IReadOnlyList<BuildStructureResult> structures)
+    {
+        ArgumentNullException.ThrowIfNull(structures);
+
+        var dirtyKeys = new HashSet<StructureInstanceBatchKey>();
+
+        foreach (BuildStructureResult structure in structures)
         {
             if (structure.Outcome != BuildOperationOutcome.Valid)
             {
@@ -108,19 +123,31 @@ public sealed partial class StructureInstanceCollisionManager : InitializableNod
                 case BuildStructureResultKind.Created:
                     if (TryGetInstancedPresentation(structure.DefinitionId, out StructurePresentationDefinition presentation))
                     {
-                        AddInstance(structure.StructureId, structure.Anchor, structure.Rotation, presentation);
+                        MarkExistingInstanceDirty(structure.StructureId, dirtyKeys);
+                        StructureInstanceBatchKey key = AddInstance(
+                            structure.StructureId,
+                            structure.Anchor,
+                            structure.Rotation,
+                            presentation);
+                        dirtyKeys.Add(key);
                     }
 
                     break;
 
                 case BuildStructureResultKind.Removed:
-                    RemoveInstance(structure.StructureId);
+                    if (RemoveInstance(structure.StructureId, out StructureInstanceBatchKey removedKey))
+                    {
+                        dirtyKeys.Add(removedKey);
+                    }
+
                     break;
 
                 default:
                     throw new InvalidOperationException($"Unsupported structure result kind: {structure.Kind}");
             }
         }
+
+        RebuildDirtyRegions(dirtyKeys);
     }
 
     #endregion
@@ -139,7 +166,7 @@ public sealed partial class StructureInstanceCollisionManager : InitializableNod
 
     #region Instance Operations
 
-    private void AddInstance(
+    private StructureInstanceBatchKey AddInstance(
         StructureId structureId,
         MapCellCoord anchor,
         FootprintRotation rotation,
@@ -147,7 +174,7 @@ public sealed partial class StructureInstanceCollisionManager : InitializableNod
     {
         if (_handles.ContainsKey(structureId))
         {
-            RemoveInstance(structureId);
+            RemoveInstance(structureId, out _);
         }
 
         StructureInstanceBatchKey key = CreateBatchKey(presentation, anchor);
@@ -155,19 +182,26 @@ public sealed partial class StructureInstanceCollisionManager : InitializableNod
         int slot = region.AddInstance(structureId, anchor, rotation);
 
         _handles[structureId] = new StructureInstanceHandle(key, slot);
+        return key;
     }
 
-    private void RemoveInstance(StructureId structureId)
+    private bool RemoveInstance(
+        StructureId structureId,
+        out StructureInstanceBatchKey removedKey)
     {
+        removedKey = default;
+
         if (!_handles.TryGetValue(structureId, out StructureInstanceHandle handle))
         {
-            return;
+            return false;
         }
+
+        removedKey = handle.BatchKey;
 
         if (!_regions.TryGetValue(handle.BatchKey, out StructureInstanceCollisionRegionView? region))
         {
             _handles.Remove(structureId);
-            return;
+            return true;
         }
 
         if (region.RemoveInstance(structureId, out StructureId? movedStructureId, out int movedSlot)
@@ -182,6 +216,8 @@ public sealed partial class StructureInstanceCollisionManager : InitializableNod
         {
             RemoveRegion(handle.BatchKey);
         }
+
+        return true;
     }
 
     #endregion
@@ -230,6 +266,64 @@ public sealed partial class StructureInstanceCollisionManager : InitializableNod
     #endregion
 
     #region Helpers
+
+    private void MarkExistingInstanceDirty(
+        StructureId structureId,
+        HashSet<StructureInstanceBatchKey> dirtyKeys)
+    {
+        if (_handles.TryGetValue(structureId, out StructureInstanceHandle existingHandle))
+        {
+            dirtyKeys.Add(existingHandle.BatchKey);
+        }
+    }
+
+    private void RebuildDirtyRegions(IEnumerable<StructureInstanceBatchKey> dirtyKeys)
+    {
+        var sortedKeys = new List<StructureInstanceBatchKey>(dirtyKeys);
+        sortedKeys.Sort(CompareBatchKeys);
+
+        foreach (StructureInstanceBatchKey key in sortedKeys)
+        {
+            if (!_regions.TryGetValue(key, out StructureInstanceCollisionRegionView? region))
+            {
+                continue;
+            }
+
+            if (region.ActiveCount == 0)
+            {
+                RemoveRegion(key);
+                continue;
+            }
+
+            region.RebuildCollision();
+        }
+
+        static int CompareBatchKeys(StructureInstanceBatchKey left, StructureInstanceBatchKey right)
+        {
+            int presentationComparison = left.PresentationKey.Value.CompareTo(right.PresentationKey.Value);
+
+            if (presentationComparison != 0)
+            {
+                return presentationComparison;
+            }
+
+            int xComparison = left.SectionCoord.X.CompareTo(right.SectionCoord.X);
+
+            if (xComparison != 0)
+            {
+                return xComparison;
+            }
+
+            int yComparison = left.SectionCoord.Y.CompareTo(right.SectionCoord.Y);
+
+            if (yComparison != 0)
+            {
+                return yComparison;
+            }
+
+            return left.SectionCoord.Z.CompareTo(right.SectionCoord.Z);
+        }
+    }
 
     private bool TryGetInstancedPresentation(
         StructureDefinitionId definitionId,

@@ -142,7 +142,6 @@ internal sealed partial class StructureInstanceCollisionRegionView : Node3D
 
         _entries.Add(entry);
         _slotsByStructureId.Add(structureId, slot);
-        RebuildCollision();
         return slot;
     }
 
@@ -180,7 +179,6 @@ internal sealed partial class StructureInstanceCollisionRegionView : Node3D
 
         _entries.RemoveAt(lastSlot);
         _slotsByStructureId.Remove(structureId);
-        RebuildCollision();
         return true;
     }
 
@@ -204,6 +202,19 @@ internal sealed partial class StructureInstanceCollisionRegionView : Node3D
         }
 
         _triangleTargets = Array.Empty<StructureCollisionTriangleTarget>();
+    }
+
+    /// <summary>
+    /// Rebuilds generated collision geometry from the current logical region entries.
+    /// </summary>
+    internal void RebuildCollision()
+    {
+        StructureInstanceCollisionMeshBuildResult buildResult =
+            StructureInstanceCollisionMeshBuilder.Build(_entries, Presentation.LocalBoundsSize);
+
+        CollisionShape.SetFaces(buildResult.TriangleVertices);
+        CollisionShapeNode.Disabled = buildResult.TriangleCount == 0;
+        _triangleTargets = buildResult.TriangleTargets;
     }
 
     #endregion
@@ -256,20 +267,6 @@ internal sealed partial class StructureInstanceCollisionRegionView : Node3D
         cell = default;
         face = default;
         return false;
-    }
-
-    #endregion
-
-    #region Helpers
-
-    private void RebuildCollision()
-    {
-        StructureInstanceCollisionMeshBuildResult buildResult =
-            StructureInstanceCollisionMeshBuilder.Build(_entries, Presentation.LocalBoundsSize);
-
-        CollisionShape.SetFaces(buildResult.TriangleVertices);
-        CollisionShapeNode.Disabled = buildResult.TriangleCount == 0;
-        _triangleTargets = buildResult.TriangleTargets;
     }
 
     #endregion
