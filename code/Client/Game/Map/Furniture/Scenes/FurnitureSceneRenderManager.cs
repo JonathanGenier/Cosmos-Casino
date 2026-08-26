@@ -128,9 +128,23 @@ public sealed partial class FurnitureSceneRenderManager : InitializableNodeManag
             return;
         }
 
-        if (!MapManager.TryGetFurnitureSnapshotAt(change.Anchor, out FurnitureSnapshot snapshot))
+        if (change.AffectedCells.Count == 0)
         {
-            throw new InvalidOperationException($"Created furniture '{change.FurnitureId}' was missing from Core state.");
+            throw new InvalidOperationException($"Created furniture '{change.FurnitureId}' had no affected cells.");
+        }
+
+        MapCellCoord occupiedCell = change.AffectedCells[0];
+
+        if (!MapManager.TryGetFurnitureSnapshotAt(occupiedCell, out FurnitureSnapshot snapshot))
+        {
+            throw new InvalidOperationException(
+                $"Created furniture '{change.FurnitureId}' could not be resolved from occupied cell '{occupiedCell}'.");
+        }
+
+        if (snapshot.Id != change.FurnitureId)
+        {
+            throw new InvalidOperationException(
+                $"Occupied cell '{occupiedCell}' resolved furniture '{snapshot.Id}' instead of expected '{change.FurnitureId}'.");
         }
 
         AddView(snapshot, presentation);
