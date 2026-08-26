@@ -14,6 +14,7 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
     private readonly BuildPreviewManager _buildPreviewManager;
     private readonly CursorManager _cursorManager;
     private readonly BuildProcessManager _buildProcessManager;
+    private readonly FurnitureProcessManager _furnitureProcessManager;
 
     private bool _isDisposed;
 
@@ -29,21 +30,30 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
     /// <param name="buildPreviewManager">The manager responsible for handling build previews. Cannot be null.</param>
     /// <param name="cursorManager">The manager that tracks and manages cursor state and events. Cannot be null.</param>
     /// <param name="buildProcessManager">The manager that coordinates the build process. Cannot be null.</param>
-    public CursorPreviewFlow(BuildContext buildContext, BuildPreviewManager buildPreviewManager, CursorManager cursorManager, BuildProcessManager buildProcessManager)
+    /// <param name="furnitureProcessManager">The manager that coordinates furniture placement evaluation. Cannot be null.</param>
+    public CursorPreviewFlow(
+        BuildContext buildContext,
+        BuildPreviewManager buildPreviewManager,
+        CursorManager cursorManager,
+        BuildProcessManager buildProcessManager,
+        FurnitureProcessManager furnitureProcessManager)
     {
         ArgumentNullException.ThrowIfNull(buildContext);
         ArgumentNullException.ThrowIfNull(buildPreviewManager);
         ArgumentNullException.ThrowIfNull(cursorManager);
         ArgumentNullException.ThrowIfNull(buildProcessManager);
+        ArgumentNullException.ThrowIfNull(furnitureProcessManager);
 
         _buildContext = buildContext;
         _buildPreviewManager = buildPreviewManager;
         _cursorManager = cursorManager;
         _buildProcessManager = buildProcessManager;
+        _furnitureProcessManager = furnitureProcessManager;
 
         _cursorManager.CursorTargetChanged += OnCursorTargetChanged;
         _cursorManager.CursorContextLost += OnCursorContextLost;
         _buildContext.ContextChanged += OnBuildContextChanged;
+        _buildContext.ContextDeactivated += OnBuildContextDeactivated;
         _buildContext.BuildCleared += OnBuildCleared;
     }
 
@@ -67,6 +77,7 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
         _cursorManager.CursorTargetChanged -= OnCursorTargetChanged;
         _cursorManager.CursorContextLost -= OnCursorContextLost;
         _buildContext.ContextChanged -= OnBuildContextChanged;
+        _buildContext.ContextDeactivated -= OnBuildContextDeactivated;
         _buildContext.BuildCleared -= OnBuildCleared;
         _isDisposed = true;
     }
@@ -88,16 +99,25 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
             return;
         }
 
-        var buildIntent = _buildContext.TryCreateCursorPreviewIntent(cursorContext);
+        var buildIntent = _buildContext.TryCreateStructureCursorPreviewIntent(cursorContext);
 
-        if (buildIntent == null)
+        if (buildIntent != null)
         {
-            _buildPreviewManager.ClearCursorPreview();
+            var buildResult = _buildProcessManager.EvaluateBuildIntent(buildIntent);
+            _buildPreviewManager.ShowPreview(BuildPreviewDataFactory.FromBuildResult(buildResult));
             return;
         }
 
-        var buildResult = _buildProcessManager.EvaluateBuildIntent(buildIntent);
-        _buildPreviewManager.ShowPreview(buildResult);
+        var furnitureRequest = _buildContext.TryCreateFurnitureCursorPreviewRequest(cursorContext);
+
+        if (furnitureRequest != null)
+        {
+            var furnitureResult = _furnitureProcessManager.EvaluatePlacement(furnitureRequest);
+            _buildPreviewManager.ShowPreview(BuildPreviewDataFactory.FromFurniturePlacement(furnitureRequest, furnitureResult));
+            return;
+        }
+
+        _buildPreviewManager.ClearCursorPreview();
     }
 
     #endregion
@@ -120,6 +140,11 @@ public class CursorPreviewFlow : IGameFlow, IDisposable
         {
             UpdateCursorPreview(cursorContext);
         }
+    }
+
+    private void OnBuildContextDeactivated()
+    {
+        _buildPreviewManager.ClearCursorPreview();
     }
 
     private void OnBuildCleared()

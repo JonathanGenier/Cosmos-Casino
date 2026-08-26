@@ -67,6 +67,11 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
             return;
         }
 
+        if (ProcessCancelInput())
+        {
+            return;
+        }
+
         if (_inputManager.IsInputBlockedByUi)
         {
             return;
@@ -108,6 +113,17 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
         }
 
         return false;
+    }
+
+    private bool ProcessCancelInput()
+    {
+        if (!_inputManager.IsEscapeKeyPressed)
+        {
+            return false;
+        }
+
+        _inputManager.EmitSignal(InputManager.SignalName.BuildCanceled);
+        return true;
     }
 
     private void ProcessMouseStartInputs()

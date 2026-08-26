@@ -7,7 +7,7 @@ using System;
 /// <summary>
 /// Build context for a single selected Core structure definition.
 /// </summary>
-public sealed class SingleStructureBuildContext : BuildContextBase
+public sealed class SingleStructureBuildContext : BuildContextBase, IStructureBuildIntentContext
 {
     #region Initialization
 
@@ -39,6 +39,20 @@ public sealed class SingleStructureBuildContext : BuildContextBase
     /// Gets the selected footprint rotation.
     /// </summary>
     public FootprintRotation Rotation { get; private set; }
+
+    #endregion
+
+    #region Capabilities
+
+    /// <summary>
+    /// Determines whether this context supports the specified player-facing build operation.
+    /// </summary>
+    /// <param name="buildOperation">The requested player-facing build operation.</param>
+    /// <returns><c>true</c> for placement and removal; otherwise, <c>false</c>.</returns>
+    public override bool SupportsBuildOperation(BuildOperation buildOperation)
+    {
+        return buildOperation is BuildOperation.Place or BuildOperation.Remove;
+    }
 
     #endregion
 
@@ -76,7 +90,7 @@ public sealed class SingleStructureBuildContext : BuildContextBase
     /// <param name="buildInteractionMode">The active build interaction mode.</param>
     /// <param name="intent">The created build intent when successful.</param>
     /// <returns><see langword="true"/> when an intent was created; otherwise, <see langword="false"/>.</returns>
-    public override bool TryCreateBuildIntent(
+    public bool TryCreateBuildIntent(
         CursorTarget startTarget,
         CursorTarget currentTarget,
         BuildOperation buildOperation,
@@ -110,19 +124,4 @@ public sealed class SingleStructureBuildContext : BuildContextBase
 
     #endregion
 
-    #region Helpers
-
-    private FootprintRotation GetNextClockwiseRotation(FootprintRotation rotation)
-    {
-        return rotation switch
-        {
-            FootprintRotation.Deg0 => FootprintRotation.Deg90,
-            FootprintRotation.Deg90 => FootprintRotation.Deg180,
-            FootprintRotation.Deg180 => FootprintRotation.Deg270,
-            FootprintRotation.Deg270 => FootprintRotation.Deg0,
-            _ => throw new ArgumentOutOfRangeException(nameof(rotation), rotation, "Unsupported footprint rotation.")
-        };
-    }
-
-    #endregion
 }

@@ -147,8 +147,7 @@ public sealed class BuildInputFlow : IDisposable
             return;
         }
 
-        _isPrimaryHeld = true;
-        _buildContext.BeginBuild(startContext, BuildOperation.Place);
+        _isPrimaryHeld = _buildContext.BeginBuild(startContext, BuildOperation.Place);
     }
 
     /// <summary>
@@ -184,8 +183,7 @@ public sealed class BuildInputFlow : IDisposable
             return;
         }
 
-        _isSecondaryHeld = true;
-        _buildContext.BeginBuild(startContext, BuildOperation.Remove);
+        _isSecondaryHeld = _buildContext.BeginBuild(startContext, BuildOperation.Remove);
     }
 
     private void OnBuildRemoveReleased()
@@ -225,7 +223,22 @@ public sealed class BuildInputFlow : IDisposable
     /// </summary>
     private void OnBuildCanceled()
     {
-        _buildContext.CancelBuild();
+        if (_inputManager.IsEscapeKeyPressed)
+        {
+            _buildContext.CancelContext();
+            ResetState();
+            return;
+        }
+
+        if (_buildContext.IsBuildActive)
+        {
+            _buildContext.CancelBuild();
+        }
+        else
+        {
+            _buildContext.CancelContext();
+        }
+
         ResetState();
     }
 

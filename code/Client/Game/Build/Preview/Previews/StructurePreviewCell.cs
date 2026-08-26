@@ -1,4 +1,3 @@
-using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
 using Godot;
 using System;
@@ -27,35 +26,35 @@ public sealed partial class StructurePreviewCell : Node3D
     }
 
     /// <summary>
-    /// Sets the preview cell color from a Core build evaluation outcome.
+    /// Resets the preview cell for pooled reuse.
     /// </summary>
-    /// <param name="outcome">The Core build outcome.</param>
+    public void Reset()
+    {
+        SetValidity(BuildPreviewValidity.NoOp);
+        Position = Vector3.Zero;
+        Hide();
+    }
+
+    /// <summary>
+    /// Sets the preview cell color from a Client preview validity state.
+    /// </summary>
+    /// <param name="validity">The Client preview validity state.</param>
     /// <exception cref="InvalidOperationException">Thrown if the preview cell has not been initialized.</exception>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if the outcome is unsupported.</exception>
-    public void SetValidity(BuildOperationOutcome outcome)
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if the validity state is unsupported.</exception>
+    internal void SetValidity(BuildPreviewValidity validity)
     {
         if (_material == null)
         {
             throw new InvalidOperationException($"{nameof(StructurePreviewCell)} has not been initialized.");
         }
 
-        _material.AlbedoColor = outcome switch
+        _material.AlbedoColor = validity switch
         {
-            BuildOperationOutcome.Valid => PreviewColors.ValidColor,
-            BuildOperationOutcome.NoOp => PreviewColors.NoOpColor,
-            BuildOperationOutcome.Invalid => PreviewColors.InvalidColor,
-            _ => throw new ArgumentOutOfRangeException(nameof(outcome), outcome, "Unsupported build outcome.")
+            BuildPreviewValidity.Valid => PreviewColors.ValidColor,
+            BuildPreviewValidity.NoOp => PreviewColors.NoOpColor,
+            BuildPreviewValidity.Invalid => PreviewColors.InvalidColor,
+            _ => throw new ArgumentOutOfRangeException(nameof(validity), validity, "Unsupported preview validity.")
         };
-    }
-
-    /// <summary>
-    /// Resets the preview cell for pooled reuse.
-    /// </summary>
-    public void Reset()
-    {
-        SetValidity(BuildOperationOutcome.NoOp);
-        Position = Vector3.Zero;
-        Hide();
     }
 
     #endregion

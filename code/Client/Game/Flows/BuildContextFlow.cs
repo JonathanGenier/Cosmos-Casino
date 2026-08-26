@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Game.Furniture;
 using CosmosCasino.Core.Game.Structures;
 using System;
 
@@ -16,6 +17,7 @@ public class BuildContextFlow : IGameFlow, IDisposable
     private readonly BuildUiManager _buildUiManager;
     private readonly BuildContext _buildContext;
 
+    private bool _isApplyingUiSelection;
     private bool _disposed;
 
     #endregion
@@ -36,7 +38,9 @@ public class BuildContextFlow : IGameFlow, IDisposable
         _buildUiManager.StructureBuildToolSelected += OnStructureBuildToolSelected;
         _buildUiManager.PillarBuildSelected += OnPillarBuildSelected;
         _buildUiManager.DoorBuildSelected += OnDoorBuildSelected;
+        _buildUiManager.CasinoTableBuildSelected += OnCasinoTableBuildSelected;
         _buildUiManager.BuildCancelled += OnBuildCancelled;
+        _buildContext.ContextDeactivated += OnContextDeactivated;
     }
 
     #endregion
@@ -58,7 +62,9 @@ public class BuildContextFlow : IGameFlow, IDisposable
         _buildUiManager.StructureBuildToolSelected -= OnStructureBuildToolSelected;
         _buildUiManager.PillarBuildSelected -= OnPillarBuildSelected;
         _buildUiManager.DoorBuildSelected -= OnDoorBuildSelected;
+        _buildUiManager.CasinoTableBuildSelected -= OnCasinoTableBuildSelected;
         _buildUiManager.BuildCancelled -= OnBuildCancelled;
+        _buildContext.ContextDeactivated -= OnContextDeactivated;
         _disposed = true;
     }
 
@@ -68,19 +74,24 @@ public class BuildContextFlow : IGameFlow, IDisposable
 
     private void OnStructureBuildToolSelected(StructureBuildTool buildTool)
     {
-        _buildContext.SetContext(new StructureBuildContext(
+        SetContextFromUi(new StructureBuildContext(
             StructureDefinitions.Block,
             buildTool));
     }
 
     private void OnPillarBuildSelected()
     {
-        _buildContext.SetContext(new SingleStructureBuildContext(StructureDefinitions.Pillar));
+        SetContextFromUi(new SingleStructureBuildContext(StructureDefinitions.Pillar));
     }
 
     private void OnDoorBuildSelected()
     {
-        _buildContext.SetContext(new SingleStructureBuildContext(StructureDefinitions.Door));
+        SetContextFromUi(new SingleStructureBuildContext(StructureDefinitions.Door));
+    }
+
+    private void OnCasinoTableBuildSelected()
+    {
+        SetContextFromUi(new FurnitureBuildContext(FurnitureDefinitions.CasinoTable));
     }
 
     /// <summary>
@@ -92,6 +103,30 @@ public class BuildContextFlow : IGameFlow, IDisposable
     private void OnBuildCancelled()
     {
         _buildContext.CancelContext();
+    }
+
+    private void OnContextDeactivated()
+    {
+        if (_isApplyingUiSelection)
+        {
+            return;
+        }
+
+        _buildUiManager.ClearSelection();
+    }
+
+    private void SetContextFromUi(BuildContextBase context)
+    {
+        _isApplyingUiSelection = true;
+
+        try
+        {
+            _buildContext.SetContext(context);
+        }
+        finally
+        {
+            _isApplyingUiSelection = false;
+        }
     }
 
     #endregion

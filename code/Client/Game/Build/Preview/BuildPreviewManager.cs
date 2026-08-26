@@ -1,16 +1,12 @@
-using CosmosCasino.Core.Game.Build;
-using CosmosCasino.Core.Game.Build.Domain;
 using CosmosCasino.Core.Game.Map;
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 /// <summary>
-/// Manages generic structure footprint previews within the game world.
+/// Manages generic build footprint previews within the game world.
 /// </summary>
-/// <remarks>The manager displays Client-only preview cells from Core build evaluation data. Placement validity comes
-/// from <see cref="BuildResult.Outcome"/>.</remarks>
+/// <remarks>The manager displays Client-only preview cells from domain-specific preview data.</remarks>
 public sealed partial class BuildPreviewManager : InitializableNodeManager
 {
     #region Fields
@@ -93,26 +89,6 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     }
 
     /// <summary>
-    /// Displays a visual preview of the specified build result based on the current preview mode.
-    /// </summary>
-    /// <param name="buildResult">The Core build result to preview.</param>
-    public void ShowPreview(BuildResult buildResult)
-    {
-        ArgumentNullException.ThrowIfNull(buildResult);
-
-        switch (_currentMode)
-        {
-            case BuildPreviewMode.Cursor:
-                ShowCursorPreview(buildResult);
-                break;
-
-            case BuildPreviewMode.Drag:
-                ShowDragPreview(buildResult);
-                break;
-        }
-    }
-
-    /// <summary>
     /// Removes any active cursor preview.
     /// </summary>
     public void ClearCursorPreview()
@@ -129,51 +105,69 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
         _currentMode = BuildPreviewMode.Cursor;
     }
 
+    /// <summary>
+    /// Displays a visual preview of the specified build preview data based on the current preview mode.
+    /// </summary>
+    /// <param name="previewData">The Client-only preview data to render.</param>
+    internal void ShowPreview(BuildPreviewData previewData)
+    {
+        ArgumentNullException.ThrowIfNull(previewData);
+
+        switch (_currentMode)
+        {
+            case BuildPreviewMode.Cursor:
+                ShowCursorPreview(previewData);
+                break;
+
+            case BuildPreviewMode.Drag:
+                ShowDragPreview(previewData);
+                break;
+        }
+    }
+
     #endregion
 
     #region Preview
 
-    private void ShowCursorPreview(BuildResult buildResult)
+    private void ShowCursorPreview(BuildPreviewData previewData)
     {
-        ShowStructurePreview(buildResult, _cursorPreviews);
+        ShowBuildPreview(previewData, _cursorPreviews);
     }
 
-    private void ShowDragPreview(BuildResult buildResult)
+    private void ShowDragPreview(BuildPreviewData previewData)
     {
-        ShowStructurePreview(buildResult, _dragPreviews);
+        ShowBuildPreview(previewData, _dragPreviews);
     }
 
-    private void ShowStructurePreview(
-        BuildResult buildResult,
+    private void ShowBuildPreview(
+        BuildPreviewData previewData,
         List<StructurePreviewCell> activePreviews)
     {
-        IReadOnlyList<MapCellCoord> cells = GetPreviewCells(buildResult);
-
-        if (cells.Count == 0)
+        if (previewData.Cells.Count == 0)
         {
             ClearPreviewCells(activePreviews);
             return;
         }
 
-        RenderPreviewCells(activePreviews, cells, buildResult.Outcome);
+        RenderPreviewCells(activePreviews, previewData.Cells, previewData.Validity);
     }
 
     private void RenderPreviewCells(
         List<StructurePreviewCell> activePreviews,
         IReadOnlyList<MapCellCoord> cells,
-        BuildOperationOutcome outcome)
+        BuildPreviewValidity validity)
     {
         int i = 0;
 
         for (; i < cells.Count && i < activePreviews.Count; i++)
         {
-            ShowPreviewCell(activePreviews[i], cells[i], outcome);
+            ShowPreviewCell(activePreviews[i], cells[i], validity);
         }
 
         for (; i < cells.Count; i++)
         {
             StructurePreviewCell preview = StructurePreviewPool.Fetch();
-            ShowPreviewCell(preview, cells[i], outcome);
+            ShowPreviewCell(preview, cells[i], validity);
             activePreviews.Add(preview);
         }
 
@@ -191,10 +185,10 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     private void ShowPreviewCell(
         StructurePreviewCell preview,
         MapCellCoord cell,
-        BuildOperationOutcome outcome)
+        BuildPreviewValidity validity)
     {
         preview.SetWorldPosition(cell.ToGodotCenter());
-        preview.SetValidity(outcome);
+        preview.SetValidity(validity);
         preview.Show();
     }
 
@@ -224,43 +218,6 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     private void ResetStructurePreviewCell(StructurePreviewCell preview)
     {
         preview.Reset();
-    }
-
-    #endregion
-
-    #region Helper Methods
-
-    private IReadOnlyList<MapCellCoord> GetPreviewCells(BuildResult buildResult)
-    {
-        if (buildResult.Structures.Count > 0)
-        {
-            return buildResult.Structures
-                .SelectMany(structure => structure.AffectedCells)
-                .ToArray();
-        }
-
-        return buildResult.Intent.Operation switch
-        {
-            BuildOperation.Place => buildResult.Intent.PlacementRequests
-                .SelectMany(GetPlacementPreviewCells)
-                .ToArray(),
-            BuildOperation.Remove => buildResult.Intent.RemovalRequests
-                .Select(request => request.TargetCell)
-                .ToArray(),
-            _ => Array.Empty<MapCellCoord>()
-        };
-    }
-
-    private IReadOnlyList<MapCellCoord> GetPlacementPreviewCells(StructurePlacementRequest request)
-    {
-        try
-        {
-            return request.Definition.Footprint.Resolve(request.Anchor, request.Rotation);
-        }
-        catch (ArgumentOutOfRangeException)
-        {
-            return new[] { request.Anchor };
-        }
     }
 
     #endregion

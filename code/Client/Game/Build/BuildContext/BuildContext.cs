@@ -1,5 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Furniture;
 using System;
 
 /// <summary>
@@ -126,22 +127,29 @@ public sealed class BuildContext
     /// registered build start event handlers are invoked.</remarks>
     /// <param name="start">The context representing the starting target for the build operation. Must be valid.</param>
     /// <param name="buildOperation">The build operation to perform. Determines the type of build action that will be initiated.</param>
-    public void BeginBuild(CursorContext start, BuildOperation buildOperation)
+    /// <returns><c>true</c> when the build operation started; otherwise, <c>false</c>.</returns>
+    public bool BeginBuild(CursorContext start, BuildOperation buildOperation)
     {
         if (_activeContext == null || _startTarget != null)
         {
-            return;
+            return false;
         }
 
         if (!start.IsValid)
         {
-            return;
+            return false;
+        }
+
+        if (!_activeContext.SupportsBuildOperation(buildOperation))
+        {
+            return false;
         }
 
         _startTarget = start.Target;
         _currentTarget = start.Target;
         _currentBuildOperation = buildOperation;
         BuildStarted?.Invoke();
+        return true;
     }
 
     /// <summary>
@@ -236,28 +244,34 @@ public sealed class BuildContext
 
     #endregion
 
-    #region Build Intent API
+    #region Request API
 
     /// <summary>
-    /// Attempts to create a new build intent based on the current context and cell selection.
+    /// Attempts to create a new Structure build intent based on the current context and cell selection.
     /// </summary>
     /// <remarks>Returns <see langword="null"/> if there is no active context or if the required cell
     /// selections are not set.</remarks>
-    /// <returns>A <see cref="BuildIntent"/> instance if a build intent can be created; otherwise, <see langword="null"/>.</returns>
-    public BuildIntent? TryCreateBuildIntent()
+    /// <returns>A <see cref="BuildIntent"/> instance if a Structure build intent can be created; otherwise, <see langword="null"/>.</returns>
+    public BuildIntent? TryCreateStructureBuildIntent()
     {
-        if (_activeContext == null
-            || _startTarget == null
-            || _currentTarget == null
-            || _currentBuildOperation == BuildOperation.None)
+        if (!TryGetActiveBuildState(
+            out BuildContextBase activeContext,
+            out CursorTarget startTarget,
+            out CursorTarget currentTarget,
+            out BuildOperation buildOperation))
         {
             return null;
         }
 
-        if (!_activeContext.TryCreateBuildIntent(
-            _startTarget.Value,
-            _currentTarget.Value,
-            _currentBuildOperation,
+        if (activeContext is not IStructureBuildIntentContext structureContext)
+        {
+            return null;
+        }
+
+        if (!structureContext.TryCreateBuildIntent(
+            startTarget,
+            currentTarget,
+            buildOperation,
             _currentBuildInteractionMode,
             out var intent))
         {
@@ -268,20 +282,23 @@ public sealed class BuildContext
     }
 
     /// <summary>
-    /// Attempts to create a build intent based on the specified cursor context.
+    /// Attempts to create a Structure build intent based on the specified cursor context.
     /// </summary>
     /// <param name="cursorContext">The cursor context that provides a single logical target and validation state. Must be valid to create
     /// a build intent.</param>
     /// <returns>A <see cref="BuildIntent"/> representing the build action to perform if the context is valid; otherwise, <see
     /// langword="null"/>.</returns>
-    public BuildIntent? TryCreateCursorPreviewIntent(CursorContext cursorContext)
+    public BuildIntent? TryCreateStructureCursorPreviewIntent(CursorContext cursorContext)
     {
-        if (!cursorContext.IsValid || _activeContext == null)
+        if (!cursorContext.IsValid
+            || _activeContext == null
+            || !_activeContext.SupportsBuildOperation(BuildOperation.Place)
+            || _activeContext is not IStructureBuildIntentContext structureContext)
         {
             return null;
         }
 
-        if (!_activeContext.TryCreateBuildIntent(
+        if (!structureContext.TryCreateBuildIntent(
             cursorContext.Target,
             cursorContext.Target,
             BuildOperation.Place,
@@ -292,6 +309,67 @@ public sealed class BuildContext
         }
 
         return intent;
+    }
+
+    /// <summary>
+    /// Attempts to create a new Furniture placement request based on the current context and cell selection.
+    /// </summary>
+    /// <returns>A <see cref="FurniturePlacementRequest"/> if one can be created; otherwise, <see langword="null"/>.</returns>
+    public FurniturePlacementRequest? TryCreateFurniturePlacementRequest()
+    {
+        if (!TryGetActiveBuildState(
+            out BuildContextBase activeContext,
+            out CursorTarget startTarget,
+            out CursorTarget currentTarget,
+            out BuildOperation buildOperation))
+        {
+            return null;
+        }
+
+        if (activeContext is not IFurniturePlacementContext furnitureContext)
+        {
+            return null;
+        }
+
+        if (!furnitureContext.TryCreateFurniturePlacementRequest(
+            startTarget,
+            currentTarget,
+            buildOperation,
+            _currentBuildInteractionMode,
+            out var request))
+        {
+            return null;
+        }
+
+        return request;
+    }
+
+    /// <summary>
+    /// Attempts to create a Furniture placement request based on the specified cursor context.
+    /// </summary>
+    /// <param name="cursorContext">The cursor context that provides a single logical target and validation state.</param>
+    /// <returns>A <see cref="FurniturePlacementRequest"/> if one can be created; otherwise, <see langword="null"/>.</returns>
+    public FurniturePlacementRequest? TryCreateFurnitureCursorPreviewRequest(CursorContext cursorContext)
+    {
+        if (!cursorContext.IsValid
+            || _activeContext == null
+            || !_activeContext.SupportsBuildOperation(BuildOperation.Place)
+            || _activeContext is not IFurniturePlacementContext furnitureContext)
+        {
+            return null;
+        }
+
+        if (!furnitureContext.TryCreateFurniturePlacementRequest(
+            cursorContext.Target,
+            cursorContext.Target,
+            BuildOperation.Place,
+            BuildInteractionMode.Default,
+            out var request))
+        {
+            return null;
+        }
+
+        return request;
     }
 
     #endregion
@@ -313,6 +391,31 @@ public sealed class BuildContext
         }
 
         _currentBuildInteractionMode = buildInteractionMode;
+        return true;
+    }
+
+    private bool TryGetActiveBuildState(
+        out BuildContextBase activeContext,
+        out CursorTarget startTarget,
+        out CursorTarget currentTarget,
+        out BuildOperation buildOperation)
+    {
+        if (_activeContext == null
+            || _startTarget == null
+            || _currentTarget == null
+            || _currentBuildOperation == BuildOperation.None)
+        {
+            activeContext = null!;
+            startTarget = default;
+            currentTarget = default;
+            buildOperation = BuildOperation.None;
+            return false;
+        }
+
+        activeContext = _activeContext;
+        startTarget = _startTarget.Value;
+        currentTarget = _currentTarget.Value;
+        buildOperation = _currentBuildOperation;
         return true;
     }
 

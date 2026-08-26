@@ -8,7 +8,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Build context for generalized Core-owned structure definitions.
 /// </summary>
-public sealed class StructureBuildContext : BuildContextBase
+public sealed class StructureBuildContext : BuildContextBase, IStructureBuildIntentContext
 {
     #region Initialization
 
@@ -51,6 +51,20 @@ public sealed class StructureBuildContext : BuildContextBase
 
     #endregion
 
+    #region Capabilities
+
+    /// <summary>
+    /// Determines whether this context supports the specified player-facing build operation.
+    /// </summary>
+    /// <param name="buildOperation">The requested player-facing build operation.</param>
+    /// <returns><c>true</c> for placement and removal; otherwise, <c>false</c>.</returns>
+    public override bool SupportsBuildOperation(BuildOperation buildOperation)
+    {
+        return buildOperation is BuildOperation.Place or BuildOperation.Remove;
+    }
+
+    #endregion
+
     #region Rotation
 
     /// <summary>
@@ -75,7 +89,7 @@ public sealed class StructureBuildContext : BuildContextBase
     /// <param name="buildInteractionMode">The active build interaction mode.</param>
     /// <param name="intent">The created build intent when successful.</param>
     /// <returns><see langword="true"/> when an intent was created; otherwise, <see langword="false"/>.</returns>
-    public override bool TryCreateBuildIntent(
+    public bool TryCreateBuildIntent(
         CursorTarget startTarget,
         CursorTarget currentTarget,
         BuildOperation buildOperation,
