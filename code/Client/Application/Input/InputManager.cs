@@ -18,6 +18,8 @@ public sealed partial class InputManager : Node
     private readonly InputState _inputState = new();
     private readonly InputState _previousInputState = new();
     private readonly List<IInputModule> _modules = new();
+    private readonly bool[] _consumedPressedButtons = new bool[(int)InputButton.Count];
+    private readonly bool[] _consumedReleasedButtons = new bool[(int)InputButton.Count];
 
     private bool _isInputBlockedByUi;
 
@@ -98,8 +100,9 @@ public sealed partial class InputManager : Node
     /// Emitted when the current build operation is canceled.
     /// This signal aborts any active build or removal gesture and resets build state.
     /// </summary>
+    /// <param name="cancellationScope">The build interaction scope affected by the cancellation input.</param>
     [Signal]
-    public delegate void BuildCanceledEventHandler();
+    public delegate void BuildCanceledEventHandler(BuildCancellationScope cancellationScope);
 
     /// <summary>
     /// Emitted when the active build context should rotate clockwise.
@@ -213,6 +216,62 @@ public sealed partial class InputManager : Node
 
     #endregion
 
+    #region Input Consumption
+
+    /// <summary>
+    /// Attempts to consume a pressed edge for the specified input button during the current frame.
+    /// </summary>
+    /// <param name="button">The input button edge to consume.</param>
+    /// <returns><c>true</c> when the button was pressed and had not already been consumed this frame; otherwise, <c>false</c>.</returns>
+    public bool TryConsumePressed(InputButton button)
+    {
+        ValidateConsumableButton(button);
+
+        int index = (int)button;
+
+        if (_consumedPressedButtons[index]
+            || !IsPressed(_inputState[button], _previousInputState[button]))
+        {
+            return false;
+        }
+
+        _consumedPressedButtons[index] = true;
+        return true;
+    }
+
+    /// <summary>
+    /// Attempts to consume a released edge for the specified input button during the current frame.
+    /// </summary>
+    /// <param name="button">The input button edge to consume.</param>
+    /// <returns><c>true</c> when the button was released and had not already been consumed this frame; otherwise, <c>false</c>.</returns>
+    public bool TryConsumeReleased(InputButton button)
+    {
+        ValidateConsumableButton(button);
+
+        int index = (int)button;
+
+        if (_consumedReleasedButtons[index]
+            || !IsReleased(_inputState[button], _previousInputState[button]))
+        {
+            return false;
+        }
+
+        _consumedReleasedButtons[index] = true;
+        return true;
+    }
+
+    /// <summary>
+    /// Gets whether the specified input manager signal currently has connected subscribers.
+    /// </summary>
+    /// <param name="signalName">The input manager signal to inspect.</param>
+    /// <returns><c>true</c> when the signal has at least one connected subscriber; otherwise, <c>false</c>.</returns>
+    public bool HasSignalSubscribers(StringName signalName)
+    {
+        return GetSignalConnectionList(signalName).Count > 0;
+    }
+
+    #endregion
+
     #region Godot Process
 
     /// <summary>
@@ -247,6 +306,7 @@ public sealed partial class InputManager : Node
 
         _inputState.CopyTo(_previousInputState);
         _inputState.ResetFrameState();
+        ResetConsumedInputs();
         _isInputBlockedByUi = GetViewport().GuiGetHoveredControl() != null;
     }
 
@@ -435,6 +495,20 @@ public sealed partial class InputManager : Node
     private static bool IsHeld(bool current)
     {
         return current;
+    }
+
+    private static void ValidateConsumableButton(InputButton button)
+    {
+        if (button < 0 || button >= InputButton.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(button), button, "Unsupported input button.");
+        }
+    }
+
+    private void ResetConsumedInputs()
+    {
+        Array.Clear(_consumedPressedButtons);
+        Array.Clear(_consumedReleasedButtons);
     }
 
     #endregion

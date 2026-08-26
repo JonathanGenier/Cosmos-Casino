@@ -221,22 +221,28 @@ public sealed class BuildInputFlow : IDisposable
     /// <summary>
     /// Cancels the current build operation.
     /// </summary>
-    private void OnBuildCanceled()
+    private void OnBuildCanceled(BuildCancellationScope cancellationScope)
     {
-        if (_inputManager.IsEscapeKeyPressed)
+        switch (cancellationScope)
         {
-            _buildContext.CancelContext();
-            ResetState();
-            return;
-        }
+            case BuildCancellationScope.ActiveBuild:
+                if (_buildContext.IsBuildActive)
+                {
+                    _buildContext.CancelBuild();
+                }
+                else
+                {
+                    _buildContext.CancelContext();
+                }
 
-        if (_buildContext.IsBuildActive)
-        {
-            _buildContext.CancelBuild();
-        }
-        else
-        {
-            _buildContext.CancelContext();
+                break;
+
+            case BuildCancellationScope.BuildContext:
+                _buildContext.CancelContext();
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unsupported build cancellation scope: {cancellationScope}");
         }
 
         ResetState();

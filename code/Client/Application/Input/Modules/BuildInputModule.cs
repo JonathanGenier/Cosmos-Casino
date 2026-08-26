@@ -62,12 +62,12 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
             return;
         }
 
-        if (ProcessMouseReleaseInputs())
+        if (ProcessCancelInput())
         {
             return;
         }
 
-        if (ProcessCancelInput())
+        if (ProcessMouseReleaseInputs())
         {
             return;
         }
@@ -100,13 +100,13 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
 
     private bool ProcessMouseReleaseInputs()
     {
-        if (_inputManager.IsPrimaryReleased)
+        if (_inputManager.TryConsumeReleased(InputButton.Primary))
         {
             _inputManager.EmitSignal(InputManager.SignalName.BuildPlaceReleased);
             return true;
         }
 
-        if (_inputManager.IsSecondaryReleased)
+        if (_inputManager.TryConsumeReleased(InputButton.Secondary))
         {
             _inputManager.EmitSignal(InputManager.SignalName.BuildRemoveReleased);
             return true;
@@ -117,12 +117,12 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
 
     private bool ProcessCancelInput()
     {
-        if (!_inputManager.IsEscapeKeyPressed)
+        if (!_inputManager.TryConsumePressed(InputButton.Escape))
         {
             return false;
         }
 
-        _inputManager.EmitSignal(InputManager.SignalName.BuildCanceled);
+        _inputManager.EmitSignal(InputManager.SignalName.BuildCanceled, (int)BuildCancellationScope.BuildContext);
         return true;
     }
 
@@ -131,17 +131,22 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
         // -------------------------------------
         // 1. Mouse Cancel
         // -------------------------------------
-        if ((_inputManager.IsPrimaryHeld && _inputManager.IsSecondaryPressed)
-            || (_inputManager.IsPrimaryPressed && _inputManager.IsSecondaryHeld))
+        if (_inputManager.IsPrimaryHeld && _inputManager.TryConsumePressed(InputButton.Secondary))
         {
-            _inputManager.EmitSignal(InputManager.SignalName.BuildCanceled);
+            _inputManager.EmitSignal(InputManager.SignalName.BuildCanceled, (int)BuildCancellationScope.ActiveBuild);
+            return;
+        }
+
+        if (_inputManager.IsSecondaryHeld && _inputManager.TryConsumePressed(InputButton.Primary))
+        {
+            _inputManager.EmitSignal(InputManager.SignalName.BuildCanceled, (int)BuildCancellationScope.ActiveBuild);
             return;
         }
 
         // -------------------------------------
         // 2. Mouse Build
         // -------------------------------------
-        if (_inputManager.IsPrimaryPressed)
+        if (_inputManager.TryConsumePressed(InputButton.Primary))
         {
             _inputManager.EmitSignal(InputManager.SignalName.BuildPlacePressed);
             return;
@@ -150,7 +155,7 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
         // -------------------------------------
         // 3. Mouse Remove
         // -------------------------------------
-        if (_inputManager.IsSecondaryPressed)
+        if (_inputManager.TryConsumePressed(InputButton.Secondary))
         {
             _inputManager.EmitSignal(InputManager.SignalName.BuildRemovePressed);
             return;
@@ -159,7 +164,7 @@ public sealed class BuildInputModule : IInputModule, IGameInputModule
 
     private void ProcessBuildRotationInput()
     {
-        if (!_inputManager.IsBuildRotatePressed)
+        if (!_inputManager.TryConsumePressed(InputButton.BuildRotate))
         {
             return;
         }
