@@ -114,6 +114,8 @@ public sealed class ConsoleInputFlow : IAppFlow, IDisposable
         {
             _consoleUiManager.HideConsoleUi();
         }
+
+        UnsubscribeToConsoleInput();
     }
 
     #endregion
