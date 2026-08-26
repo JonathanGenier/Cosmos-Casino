@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Game.Build;
+using CosmosCasino.Core.Game.Build.Domain;
 using System;
 
 /// <summary>
@@ -72,7 +73,37 @@ public class BuildRequestFlow : IGameFlow, IDisposable
             return;
         }
 
-        _clientBuildManager.ExecuteBuildIntent(buildIntent);
+        BuildResult buildResult = _clientBuildManager.ExecuteBuildIntent(buildIntent);
+
+        if (buildResult.Outcome == BuildOperationOutcome.Invalid)
+        {
+            DisplayFailureMessage(buildResult.FailureReason);
+        }
+    }
+
+    #endregion
+
+    #region Display Failure
+
+    private void DisplayFailureMessage(BuildFailureReason failureReason)
+    {
+        switch (failureReason)
+        {
+            case BuildFailureReason.None:
+            case BuildFailureReason.FootprintCoordinateOverflow:
+            case BuildFailureReason.OutsideGeneratedWorld:
+            case BuildFailureReason.OccupancyConflict:
+            case BuildFailureReason.InconsistentReservationState:
+            case BuildFailureReason.IntraBatchFootprintOverlap:
+            case BuildFailureReason.StructureIdAllocationExhausted:
+            case BuildFailureReason.StructureIdAlreadyExists:
+            case BuildFailureReason.StructureStateInconsistent:
+                ConsoleLog.Info(failureReason.ToString());
+                break;
+
+            default:
+                throw new InvalidOperationException($"{failureReason} not implemented");
+        }
     }
 
     #endregion

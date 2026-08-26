@@ -95,7 +95,18 @@ public sealed partial class StructureSceneRenderManager : InitializableNodeManag
             return;
         }
 
-        foreach (BuildStructureResult structure in buildResult.Structures)
+        ApplyChanges(buildResult.Structures);
+    }
+
+    /// <summary>
+    /// Applies scene-rendered structure changes from one successful authoritative transaction.
+    /// </summary>
+    /// <param name="structures">The already-classified structure changes to apply.</param>
+    public void ApplyChanges(IReadOnlyList<BuildStructureResult> structures)
+    {
+        ArgumentNullException.ThrowIfNull(structures);
+
+        foreach (BuildStructureResult structure in structures)
         {
             if (structure.Outcome != BuildOperationOutcome.Valid)
             {
@@ -141,9 +152,23 @@ public sealed partial class StructureSceneRenderManager : InitializableNodeManag
             return;
         }
 
-        if (!MapManager.TryGetStructureSnapshotAt(structure.Anchor, out StructureSnapshot snapshot))
+        if (structure.AffectedCells.Count == 0)
         {
-            throw new InvalidOperationException($"Created scene-rendered structure '{structure.StructureId}' was missing from Core state.");
+            throw new InvalidOperationException($"Created scene-rendered structure '{structure.StructureId}' had no affected cells.");
+        }
+
+        MapCellCoord occupiedCell = structure.AffectedCells[0];
+
+        if (!MapManager.TryGetStructureSnapshotAt(occupiedCell, out StructureSnapshot snapshot))
+        {
+            throw new InvalidOperationException(
+                $"Created scene-rendered structure '{structure.StructureId}' could not be resolved from occupied cell '{occupiedCell}'.");
+        }
+
+        if (snapshot.Id != structure.StructureId)
+        {
+            throw new InvalidOperationException(
+                $"Occupied cell '{occupiedCell}' resolved structure '{snapshot.Id}' instead of expected '{structure.StructureId}'.");
         }
 
         AddView(snapshot, presentation);

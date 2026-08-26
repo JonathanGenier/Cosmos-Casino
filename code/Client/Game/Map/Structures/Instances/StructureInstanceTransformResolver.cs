@@ -21,7 +21,7 @@ internal static class StructureInstanceTransformResolver
         MapCellCoord anchor,
         FootprintRotation rotation)
     {
-        return StructureGodotTransformResolver.ResolveLocalTransform(
+        return GridPlacementTransformResolver.ResolveLocalTransform(
             anchor,
             rotation,
             StructureRenderSectionMath.ToSectionWorldOrigin(sectionCoord));

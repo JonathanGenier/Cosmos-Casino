@@ -31,6 +31,7 @@ public sealed partial class GameManager : NodeManager
 
     private CameraManager? _cameraManager;
     private BuildProcessManager? _buildProcessManager;
+    private FurnitureProcessManager? _furnitureProcessManager;
     private GameUiManager? _gameUiManager;
     private CursorManager? _cursorManager;
     private TerrainRenderManager? _terrainRenderManager;
@@ -39,6 +40,7 @@ public sealed partial class GameManager : NodeManager
     private StructureSceneRenderManager? _structureSceneRenderManager;
     private StructureCollisionManager? _structureCollisionManager;
     private StructureInstanceCollisionManager? _structureInstanceCollisionManager;
+    private FurnitureSceneRenderManager? _furnitureSceneRenderManager;
 
     // ----------------------------------------------------
     // FLOWS
@@ -46,11 +48,7 @@ public sealed partial class GameManager : NodeManager
     private CameraInputFlow? _cameraInputFlow;
     private BuildContextFlow? _buildContextFlow;
     private BuildRequestFlow? _buildRequestFlow;
-    private StructureRenderFlow? _structureRenderFlow;
-    private StructureInstanceRenderFlow? _structureInstanceRenderFlow;
-    private StructureSceneRenderFlow? _structureSceneRenderFlow;
-    private StructureCollisionFlow? _structureCollisionFlow;
-    private StructureInstanceCollisionFlow? _structureInstanceCollisionFlow;
+    private WorldRepresentationFlow? _worldRepresentationFlow;
     private BuildPreviewFlow? _buildPreviewFlow;
     private BuildInputFlow? _buildInputFlow;
     private CursorPreviewFlow? _cursorPreviewFlow;
@@ -60,6 +58,8 @@ public sealed partial class GameManager : NodeManager
 
     private ResourceAssembler? _resourceAssembler;
     private StructurePresentationCatalog? _structurePresentationCatalog;
+    private FurniturePresentationCatalog? _furniturePresentationCatalog;
+    private WorldRepresentationCoordinator? _worldRepresentationCoordinator;
 
     // ----------------------------------------------------
     // DEBUG ONLY
@@ -116,6 +116,12 @@ public sealed partial class GameManager : NodeManager
         set => _buildProcessManager = value;
     }
 
+    private FurnitureProcessManager FurnitureProcessManager
+    {
+        get => _furnitureProcessManager ?? throw new InvalidOperationException($"{nameof(FurnitureProcessManager)} is not initialized.");
+        set => _furnitureProcessManager = value;
+    }
+
     private GameUiManager GameUiManager
     {
         get => _gameUiManager ?? throw new InvalidOperationException($"{nameof(GameUiManager)} is not initialized.");
@@ -164,6 +170,12 @@ public sealed partial class GameManager : NodeManager
         set => _structureInstanceCollisionManager = value;
     }
 
+    private FurnitureSceneRenderManager FurnitureSceneRenderManager
+    {
+        get => _furnitureSceneRenderManager ?? throw new InvalidOperationException($"{nameof(FurnitureSceneRenderManager)} is not initialized.");
+        set => _furnitureSceneRenderManager = value;
+    }
+
     // ----------------------------------------------------------------------------------------------------------------------------
     // FLOWS
 
@@ -185,34 +197,10 @@ public sealed partial class GameManager : NodeManager
         set => _buildRequestFlow = value;
     }
 
-    private StructureRenderFlow StructureRenderFlow
+    private WorldRepresentationFlow WorldRepresentationFlow
     {
-        get => _structureRenderFlow ?? throw new InvalidOperationException($"{nameof(StructureRenderFlow)} is not initialized.");
-        set => _structureRenderFlow = value;
-    }
-
-    private StructureInstanceRenderFlow StructureInstanceRenderFlow
-    {
-        get => _structureInstanceRenderFlow ?? throw new InvalidOperationException($"{nameof(StructureInstanceRenderFlow)} is not initialized.");
-        set => _structureInstanceRenderFlow = value;
-    }
-
-    private StructureSceneRenderFlow StructureSceneRenderFlow
-    {
-        get => _structureSceneRenderFlow ?? throw new InvalidOperationException($"{nameof(StructureSceneRenderFlow)} is not initialized.");
-        set => _structureSceneRenderFlow = value;
-    }
-
-    private StructureCollisionFlow StructureCollisionFlow
-    {
-        get => _structureCollisionFlow ?? throw new InvalidOperationException($"{nameof(StructureCollisionFlow)} is not initialized.");
-        set => _structureCollisionFlow = value;
-    }
-
-    private StructureInstanceCollisionFlow StructureInstanceCollisionFlow
-    {
-        get => _structureInstanceCollisionFlow ?? throw new InvalidOperationException($"{nameof(StructureInstanceCollisionFlow)} is not initialized.");
-        set => _structureInstanceCollisionFlow = value;
+        get => _worldRepresentationFlow ?? throw new InvalidOperationException($"{nameof(WorldRepresentationFlow)} is not initialized.");
+        set => _worldRepresentationFlow = value;
     }
 
     private BuildPreviewFlow BuildPreviewFlow
@@ -246,6 +234,18 @@ public sealed partial class GameManager : NodeManager
     {
         get => _structurePresentationCatalog ?? throw new InvalidOperationException($"{nameof(StructurePresentationCatalog)} is not initialized.");
         set => _structurePresentationCatalog = value;
+    }
+
+    private FurniturePresentationCatalog FurniturePresentations
+    {
+        get => _furniturePresentationCatalog ?? throw new InvalidOperationException($"{nameof(FurniturePresentationCatalog)} is not initialized.");
+        set => _furniturePresentationCatalog = value;
+    }
+
+    private WorldRepresentationCoordinator WorldRepresentationCoordinator
+    {
+        get => _worldRepresentationCoordinator ?? throw new InvalidOperationException($"{nameof(WorldRepresentationCoordinator)} is not initialized.");
+        set => _worldRepresentationCoordinator = value;
     }
 
     // ----------------------------------------------------------------------------------------------------------------------------
@@ -333,11 +333,7 @@ public sealed partial class GameManager : NodeManager
     {
         BuildContextFlow?.Dispose();
         BuildRequestFlow?.Dispose();
-        StructureRenderFlow?.Dispose();
-        StructureInstanceRenderFlow?.Dispose();
-        StructureSceneRenderFlow?.Dispose();
-        StructureCollisionFlow?.Dispose();
-        StructureInstanceCollisionFlow?.Dispose();
+        WorldRepresentationFlow?.Dispose();
         CameraInputFlow?.Dispose();
         BuildPreviewFlow?.Dispose();
         BuildInputFlow?.Dispose();
@@ -383,6 +379,7 @@ public sealed partial class GameManager : NodeManager
         AppServices = appServices;
         BuildContext = new BuildContext();
         StructurePresentations = StructurePresentationCatalog.CreateDefault();
+        FurniturePresentations = FurniturePresentationCatalog.CreateDefault();
 
         CursorManager = AddInitializableNode<CursorManager>(
             cm => cm.Initialize(GameSession.MapManager, CollisionLayers.Buildable | CollisionLayers.Terrain));
@@ -393,6 +390,9 @@ public sealed partial class GameManager : NodeManager
 
         BuildProcessManager = AddInitializableNode<BuildProcessManager>(
             cbm => cbm.Initialize(buildProcessServices));
+
+        FurnitureProcessManager = AddInitializableNode<FurnitureProcessManager>(
+            fpm => fpm.Initialize(GameSession.FurnitureManager));
 
         CameraManager = CreateNode<CameraManager>();
         GameUiManager = CreateInitializableNode<GameUiManager>(
@@ -416,6 +416,18 @@ public sealed partial class GameManager : NodeManager
         StructureInstanceCollisionManager = AddInitializableNode<StructureInstanceCollisionManager>(
             sicm => sicm.Initialize(GameSession.MapManager, StructurePresentations));
 
+        FurnitureSceneRenderManager = AddInitializableNode<FurnitureSceneRenderManager>(
+            fsrm => fsrm.Initialize(GameSession.MapManager, FurniturePresentations));
+
+        WorldRepresentationCoordinator = new WorldRepresentationCoordinator(
+            StructurePresentations,
+            StructureRenderManager,
+            StructureCollisionManager,
+            StructureInstanceRenderManager,
+            StructureInstanceCollisionManager,
+            StructureSceneRenderManager,
+            FurnitureSceneRenderManager);
+
 #if DEBUG
         CursorDebugVisualizer.Initialize(CursorManager);
 #endif
@@ -436,11 +448,10 @@ public sealed partial class GameManager : NodeManager
 
         BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, BuildContext);
         BuildRequestFlow = new BuildRequestFlow(BuildProcessManager, BuildContext);
-        StructureRenderFlow = new StructureRenderFlow(BuildProcessManager, StructureRenderManager);
-        StructureInstanceRenderFlow = new StructureInstanceRenderFlow(BuildProcessManager, StructureInstanceRenderManager);
-        StructureSceneRenderFlow = new StructureSceneRenderFlow(BuildProcessManager, StructureSceneRenderManager);
-        StructureCollisionFlow = new StructureCollisionFlow(BuildProcessManager, StructureCollisionManager);
-        StructureInstanceCollisionFlow = new StructureInstanceCollisionFlow(BuildProcessManager, StructureInstanceCollisionManager);
+        WorldRepresentationFlow = new WorldRepresentationFlow(
+            BuildProcessManager,
+            FurnitureProcessManager,
+            WorldRepresentationCoordinator);
         BuildPreviewFlow = new BuildPreviewFlow(BuildContext, BuildProcessManager.BuildPreviewManager, BuildProcessManager);
         BuildInputFlow = new BuildInputFlow(AppServices.InputManager, CursorManager, BuildContext);
         CursorPreviewFlow = new CursorPreviewFlow(BuildContext, BuildProcessManager.BuildPreviewManager, CursorManager, BuildProcessManager);

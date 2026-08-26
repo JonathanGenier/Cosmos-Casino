@@ -4,16 +4,16 @@ using Godot;
 using System;
 
 /// <summary>
-/// Resolves Client-only Godot transforms for authoritative structure anchors and rotations.
+/// Resolves Client-only Godot transforms for authoritative grid-placement anchors and rotations.
 /// </summary>
-internal static class StructureGodotTransformResolver
+internal static class GridPlacementTransformResolver
 {
     #region Transform
 
     /// <summary>
-    /// Resolves a world-space Godot transform for an authoritative structure anchor and rotation.
+    /// Resolves a world-space Godot transform for an authoritative grid-placement anchor and rotation.
     /// </summary>
-    /// <param name="anchor">The authoritative structure anchor.</param>
+    /// <param name="anchor">The authoritative grid-placement anchor.</param>
     /// <param name="rotation">The authoritative footprint rotation.</param>
     /// <returns>The world-space Godot transform.</returns>
     internal static Transform3D ResolveWorldTransform(
@@ -28,7 +28,7 @@ internal static class StructureGodotTransformResolver
     /// <summary>
     /// Resolves a local Godot transform relative to the specified world origin.
     /// </summary>
-    /// <param name="anchor">The authoritative structure anchor.</param>
+    /// <param name="anchor">The authoritative grid-placement anchor.</param>
     /// <param name="rotation">The authoritative footprint rotation.</param>
     /// <param name="worldOrigin">The world-space origin of the local coordinate frame.</param>
     /// <returns>The local Godot transform.</returns>

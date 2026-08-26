@@ -97,7 +97,18 @@ public sealed partial class StructureInstanceRenderManager : InitializableNodeMa
             return;
         }
 
-        foreach (BuildStructureResult structure in buildResult.Structures)
+        ApplyChanges(buildResult.Structures);
+    }
+
+    /// <summary>
+    /// Applies repeated-structure changes from one successful authoritative transaction.
+    /// </summary>
+    /// <param name="structures">The already-classified structure changes to apply.</param>
+    public void ApplyChanges(IReadOnlyList<BuildStructureResult> structures)
+    {
+        ArgumentNullException.ThrowIfNull(structures);
+
+        foreach (BuildStructureResult structure in structures)
         {
             if (structure.Outcome != BuildOperationOutcome.Valid)
             {

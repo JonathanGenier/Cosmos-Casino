@@ -78,7 +78,8 @@ public sealed partial class BuildProcessManager : InitializableNodeManager
     /// BuildCompleted event with the result. Ensure that event handlers for BuildCompleted are registered before
     /// calling this method if you need to respond to build completion.</remarks>
     /// <param name="buildIntent">The build intent that defines the set of operations to apply. Cannot be null.</param>
-    public void ExecuteBuildIntent(BuildIntent buildIntent)
+    /// <returns>The authoritative build result produced by Core.</returns>
+    public BuildResult ExecuteBuildIntent(BuildIntent buildIntent)
     {
         ArgumentNullException.ThrowIfNull(buildIntent);
 
@@ -89,6 +90,7 @@ public sealed partial class BuildProcessManager : InitializableNodeManager
 
         BuildResult buildResult = BuildManager.Execute(buildIntent);
         BuildCompleted?.Invoke(buildResult);
+        return buildResult;
     }
 
     #endregion
