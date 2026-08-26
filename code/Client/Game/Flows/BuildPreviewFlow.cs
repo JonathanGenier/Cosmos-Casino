@@ -13,6 +13,7 @@ public class BuildPreviewFlow : IGameFlow, IDisposable
     private readonly BuildContext _buildContext;
     private readonly BuildPreviewManager _buildPreviewManager;
     private readonly BuildProcessManager _buildProcessManager;
+    private readonly FurnitureProcessManager _furnitureProcessManager;
 
     private bool _isDisposed;
 
@@ -27,15 +28,22 @@ public class BuildPreviewFlow : IGameFlow, IDisposable
     /// <param name="buildContext">The build context to use for managing build-related state and operations. Cannot be null.</param>
     /// <param name="buildPreviewManager">The manager responsible for handling build preview functionality. Cannot be null.</param>
     /// <param name="buildProcessManager">The manager responsible for evaluating build intents and processing build operations. Cannot be null.</param>
-    public BuildPreviewFlow(BuildContext buildContext, BuildPreviewManager buildPreviewManager, BuildProcessManager buildProcessManager)
+    /// <param name="furnitureProcessManager">The manager responsible for evaluating furniture placement requests. Cannot be null.</param>
+    public BuildPreviewFlow(
+        BuildContext buildContext,
+        BuildPreviewManager buildPreviewManager,
+        BuildProcessManager buildProcessManager,
+        FurnitureProcessManager furnitureProcessManager)
     {
         ArgumentNullException.ThrowIfNull(buildContext);
         ArgumentNullException.ThrowIfNull(buildPreviewManager);
         ArgumentNullException.ThrowIfNull(buildProcessManager);
+        ArgumentNullException.ThrowIfNull(furnitureProcessManager);
 
         _buildContext = buildContext;
         _buildPreviewManager = buildPreviewManager;
         _buildProcessManager = buildProcessManager;
+        _furnitureProcessManager = furnitureProcessManager;
 
         _buildContext.BuildStarted += OnBuildStarted;
         _buildContext.BuildChanged += OnBuildChanged;
@@ -85,16 +93,25 @@ public class BuildPreviewFlow : IGameFlow, IDisposable
             return;
         }
 
-        var buildIntent = _buildContext.TryCreateBuildIntent();
+        var buildIntent = _buildContext.TryCreateStructureBuildIntent();
 
-        if (buildIntent == null)
+        if (buildIntent != null)
         {
-            _buildPreviewManager.ClearDragPreview();
+            var buildResult = _buildProcessManager.EvaluateBuildIntent(buildIntent);
+            _buildPreviewManager.ShowPreview(BuildPreviewDataFactory.FromBuildResult(buildResult));
             return;
         }
 
-        var buildResult = _buildProcessManager.EvaluateBuildIntent(buildIntent);
-        _buildPreviewManager.ShowPreview(buildResult);
+        var furnitureRequest = _buildContext.TryCreateFurniturePlacementRequest();
+
+        if (furnitureRequest != null)
+        {
+            var furnitureResult = _furnitureProcessManager.EvaluatePlacement(furnitureRequest);
+            _buildPreviewManager.ShowPreview(BuildPreviewDataFactory.FromFurniturePlacement(furnitureRequest, furnitureResult));
+            return;
+        }
+
+        _buildPreviewManager.ClearDragPreview();
     }
 
     private void OnBuildCleared()

@@ -35,6 +35,11 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     public event Action? DoorBuildSelected;
 
     /// <summary>
+    /// Occurs when the player selects the Casino Table furniture build tool.
+    /// </summary>
+    public event Action? CasinoTableBuildSelected;
+
+    /// <summary>
     /// Raised when the player cancels the current build selection.
     /// Consumers are expected to clear build context and restore
     /// default interaction state.
@@ -65,6 +70,18 @@ public sealed partial class BuildUiManager : InitializableNodeManager
 
     #endregion
 
+    #region Selection
+
+    /// <summary>
+    /// Clears every active build selection toggle without emitting a new cancellation intent.
+    /// </summary>
+    internal void ClearSelection()
+    {
+        BuildUi.ClearSelection();
+    }
+
+    #endregion
+
     #region Godot Process
 
     /// <summary>
@@ -77,6 +94,7 @@ public sealed partial class BuildUiManager : InitializableNodeManager
         BuildUi.StructureBuildToolSelected += OnStructureBuildToolSelected;
         BuildUi.PillarBuildSelected += OnPillarBuildSelected;
         BuildUi.DoorBuildSelected += OnDoorBuildSelected;
+        BuildUi.CasinoTableBuildSelected += OnCasinoTableBuildSelected;
         BuildUi.BuildCancelled += OnBuildCancelled;
     }
 
@@ -89,6 +107,7 @@ public sealed partial class BuildUiManager : InitializableNodeManager
         BuildUi.StructureBuildToolSelected -= OnStructureBuildToolSelected;
         BuildUi.PillarBuildSelected -= OnPillarBuildSelected;
         BuildUi.DoorBuildSelected -= OnDoorBuildSelected;
+        BuildUi.CasinoTableBuildSelected -= OnCasinoTableBuildSelected;
         BuildUi.BuildCancelled -= OnBuildCancelled;
     }
 
@@ -109,6 +128,11 @@ public sealed partial class BuildUiManager : InitializableNodeManager
     private void OnDoorBuildSelected()
     {
         DoorBuildSelected?.Invoke();
+    }
+
+    private void OnCasinoTableBuildSelected()
+    {
+        CasinoTableBuildSelected?.Invoke();
     }
 
     /// <summary>

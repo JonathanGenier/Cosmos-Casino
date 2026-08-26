@@ -1,32 +1,28 @@
-using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Map;
+using System;
 
 /// <summary>
-/// Provides a base class for build context objects that encapsulate information about a build operation, including its
-/// type and intent.
+/// Provides a base class for build context objects that encapsulate player-facing build interaction state.
 /// </summary>
-/// <remarks>This class is intended to be inherited by types that define specific build contexts for various build
-/// operations. Implementations create Core build intents from logical cursor targets resolved by the Client.</remarks>
+/// <remarks>
+/// This class owns interaction capability and rotation behavior only. Domain-specific request construction is exposed
+/// by specialized capability interfaces implemented by concrete contexts.
+/// </remarks>
 public abstract class BuildContextBase
 {
-    #region Abstract Methods
+    #region Capabilities
 
     /// <summary>
-    /// Attempts to create a build intent between the specified start and current cursor targets.
+    /// Determines whether this context supports the specified player-facing build operation.
     /// </summary>
-    /// <param name="startTarget">The cursor target where the build operation started.</param>
-    /// <param name="currentTarget">The current cursor target used to create the build intent.</param>
-    /// <param name="buildOperation">The type of build operation to perform (e.g., place, remove).</param>
-    /// <param name="buildInteractionMode">The interaction mode affecting the build operation.</param>
-    /// <param name="intent">When this method returns, contains the resulting build intent if the operation succeeds; otherwise, the default
-    /// value.</param>
-    /// <returns>true if a build intent was successfully created; otherwise, false.</returns>
-    public abstract bool TryCreateBuildIntent(
-        CursorTarget startTarget,
-        CursorTarget currentTarget,
-        BuildOperation buildOperation,
-        BuildInteractionMode buildInteractionMode,
-        out BuildIntent intent);
+    /// <param name="buildOperation">The requested player-facing build operation.</param>
+    /// <returns><c>true</c> when this context can handle the operation; otherwise, <c>false</c>.</returns>
+    public virtual bool SupportsBuildOperation(BuildOperation buildOperation)
+    {
+        _ = buildOperation;
+        return false;
+    }
 
     #endregion
 
@@ -39,6 +35,28 @@ public abstract class BuildContextBase
     public virtual bool TryRotateClockwise()
     {
         return false;
+    }
+
+    #endregion
+
+    #region Helpers
+
+    /// <summary>
+    /// Gets the next clockwise quarter-turn rotation.
+    /// </summary>
+    /// <param name="rotation">The current footprint rotation.</param>
+    /// <returns>The next clockwise footprint rotation.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the rotation is unsupported.</exception>
+    protected static FootprintRotation GetNextClockwiseRotation(FootprintRotation rotation)
+    {
+        return rotation switch
+        {
+            FootprintRotation.Deg0 => FootprintRotation.Deg90,
+            FootprintRotation.Deg90 => FootprintRotation.Deg180,
+            FootprintRotation.Deg180 => FootprintRotation.Deg270,
+            FootprintRotation.Deg270 => FootprintRotation.Deg0,
+            _ => throw new ArgumentOutOfRangeException(nameof(rotation), rotation, "Unsupported footprint rotation.")
+        };
     }
 
     #endregion

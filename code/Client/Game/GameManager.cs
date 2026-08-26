@@ -447,14 +447,23 @@ public sealed partial class GameManager : NodeManager
         }
 
         BuildContextFlow = new BuildContextFlow(GameUiManager.BuildUiManager, BuildContext);
-        BuildRequestFlow = new BuildRequestFlow(BuildProcessManager, BuildContext);
+        BuildRequestFlow = new BuildRequestFlow(BuildProcessManager, FurnitureProcessManager, BuildContext);
         WorldRepresentationFlow = new WorldRepresentationFlow(
             BuildProcessManager,
             FurnitureProcessManager,
             WorldRepresentationCoordinator);
-        BuildPreviewFlow = new BuildPreviewFlow(BuildContext, BuildProcessManager.BuildPreviewManager, BuildProcessManager);
+        BuildPreviewFlow = new BuildPreviewFlow(
+            BuildContext,
+            BuildProcessManager.BuildPreviewManager,
+            BuildProcessManager,
+            FurnitureProcessManager);
         BuildInputFlow = new BuildInputFlow(AppServices.InputManager, CursorManager, BuildContext);
-        CursorPreviewFlow = new CursorPreviewFlow(BuildContext, BuildProcessManager.BuildPreviewManager, CursorManager, BuildProcessManager);
+        CursorPreviewFlow = new CursorPreviewFlow(
+            BuildContext,
+            BuildProcessManager.BuildPreviewManager,
+            CursorManager,
+            BuildProcessManager,
+            FurnitureProcessManager);
         CameraInputFlow = new CameraInputFlow(AppServices.InputManager, CameraManager);
     }
 

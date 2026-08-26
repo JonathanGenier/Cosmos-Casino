@@ -33,6 +33,9 @@ public sealed partial class BuildUi : Control
     [Export]
     private Button? _doorButton;
 
+    [Export]
+    private Button? _casinoTableButton;
+
     #endregion
 
     #region Events
@@ -51,6 +54,11 @@ public sealed partial class BuildUi : Control
     /// Occurs when the Door structure build tool is selected.
     /// </summary>
     public event Action? DoorBuildSelected;
+
+    /// <summary>
+    /// Occurs when the Casino Table furniture build tool is selected.
+    /// </summary>
+    public event Action? CasinoTableBuildSelected;
 
     /// <summary>
     /// Raised when the player cancels the current build selection.
@@ -93,6 +101,12 @@ public sealed partial class BuildUi : Control
         set => _doorButton = value;
     }
 
+    private Button CasinoTableButton
+    {
+        get => _casinoTableButton ?? throw new InvalidOperationException("CasinoTableButton not assigned.");
+        set => _casinoTableButton = value;
+    }
+
     #endregion
 
     #region Godot Process
@@ -106,7 +120,8 @@ public sealed partial class BuildUi : Control
         WallButton.Toggled += OnWallToggled;
         PillarButton.Toggled += OnPillarToggled;
         DoorButton.Toggled += OnDoorToggled;
-        CancelButton.Pressed += ClearToggles;
+        CasinoTableButton.Toggled += OnCasinoTableToggled;
+        CancelButton.Pressed += OnCancelPressed;
     }
 
     /// <summary>
@@ -119,7 +134,8 @@ public sealed partial class BuildUi : Control
         WallButton.Toggled -= OnWallToggled;
         PillarButton.Toggled -= OnPillarToggled;
         DoorButton.Toggled -= OnDoorToggled;
-        CancelButton.Pressed -= ClearToggles;
+        CasinoTableButton.Toggled -= OnCasinoTableToggled;
+        CancelButton.Pressed -= OnCancelPressed;
     }
 
     #endregion
@@ -130,12 +146,18 @@ public sealed partial class BuildUi : Control
     /// Clears all build selection toggles and signals that the current
     /// build operation has been cancelled.
     /// </summary>
-    private void ClearToggles()
+    internal void ClearSelection()
     {
         FloorButton.SetPressedNoSignal(false);
         WallButton.SetPressedNoSignal(false);
         PillarButton.SetPressedNoSignal(false);
         DoorButton.SetPressedNoSignal(false);
+        CasinoTableButton.SetPressedNoSignal(false);
+    }
+
+    private void OnCancelPressed()
+    {
+        ClearSelection();
         BuildCancelled?.Invoke();
     }
 
@@ -195,6 +217,20 @@ public sealed partial class BuildUi : Control
         }
     }
 
+    /// <summary>
+    /// Handles toggle state changes for the Casino Table furniture button.
+    /// </summary>
+    /// <param name="toggled">
+    /// Whether the button was toggled on.
+    /// </param>
+    private void OnCasinoTableToggled(bool toggled)
+    {
+        if (toggled)
+        {
+            SelectCasinoTableBuildTool();
+        }
+    }
+
     #endregion
 
     #region Selection
@@ -205,6 +241,7 @@ public sealed partial class BuildUi : Control
         WallButton.SetPressedNoSignal(buildTool == StructureBuildTool.Wall);
         PillarButton.SetPressedNoSignal(false);
         DoorButton.SetPressedNoSignal(false);
+        CasinoTableButton.SetPressedNoSignal(false);
 
         StructureBuildToolSelected?.Invoke(buildTool);
     }
@@ -215,6 +252,7 @@ public sealed partial class BuildUi : Control
         WallButton.SetPressedNoSignal(false);
         PillarButton.SetPressedNoSignal(true);
         DoorButton.SetPressedNoSignal(false);
+        CasinoTableButton.SetPressedNoSignal(false);
 
         PillarBuildSelected?.Invoke();
     }
@@ -225,8 +263,20 @@ public sealed partial class BuildUi : Control
         WallButton.SetPressedNoSignal(false);
         PillarButton.SetPressedNoSignal(false);
         DoorButton.SetPressedNoSignal(true);
+        CasinoTableButton.SetPressedNoSignal(false);
 
         DoorBuildSelected?.Invoke();
+    }
+
+    private void SelectCasinoTableBuildTool()
+    {
+        FloorButton.SetPressedNoSignal(false);
+        WallButton.SetPressedNoSignal(false);
+        PillarButton.SetPressedNoSignal(false);
+        DoorButton.SetPressedNoSignal(false);
+        CasinoTableButton.SetPressedNoSignal(true);
+
+        CasinoTableBuildSelected?.Invoke();
     }
 
     #endregion

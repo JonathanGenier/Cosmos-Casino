@@ -4,7 +4,7 @@
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_dd774"]
 
-[node name="BuildUi" type="Control" node_paths=PackedStringArray("_cancelButton", "_floorButton", "_wallButton", "_pillarButton", "_doorButton")]
+[node name="BuildUi" type="Control" node_paths=PackedStringArray("_cancelButton", "_floorButton", "_wallButton", "_pillarButton", "_doorButton", "_casinoTableButton")]
 layout_mode = 3
 anchors_preset = 2
 anchor_top = 1.0
@@ -16,14 +16,15 @@ _floorButton = NodePath("HBoxContainer/VBoxContainer/Floor_Button")
 _wallButton = NodePath("HBoxContainer/VBoxContainer/Wall_Button")
 _pillarButton = NodePath("HBoxContainer/VBoxContainer/Pillar_Button")
 _doorButton = NodePath("HBoxContainer/VBoxContainer/Door_Button")
+_casinoTableButton = NodePath("HBoxContainer/VBoxContainer/Casino_Table_Button")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_top = -126.0
-offset_right = 278.0
+offset_top = -158.0
+offset_right = 340.0
 grow_vertical = 0
 
 [node name="Cancel_Button" type="Button" parent="HBoxContainer"]
@@ -61,4 +62,11 @@ layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_dd774")
 text = "Door
+"
+
+[node name="Casino_Table_Button" type="Button" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_dd774")
+text = "Casino Table
 "

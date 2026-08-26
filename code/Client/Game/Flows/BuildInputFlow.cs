@@ -147,8 +147,7 @@ public sealed class BuildInputFlow : IDisposable
             return;
         }
 
-        _isPrimaryHeld = true;
-        _buildContext.BeginBuild(startContext, BuildOperation.Place);
+        _isPrimaryHeld = _buildContext.BeginBuild(startContext, BuildOperation.Place);
     }
 
     /// <summary>
@@ -184,8 +183,7 @@ public sealed class BuildInputFlow : IDisposable
             return;
         }
 
-        _isSecondaryHeld = true;
-        _buildContext.BeginBuild(startContext, BuildOperation.Remove);
+        _isSecondaryHeld = _buildContext.BeginBuild(startContext, BuildOperation.Remove);
     }
 
     private void OnBuildRemoveReleased()
@@ -223,9 +221,30 @@ public sealed class BuildInputFlow : IDisposable
     /// <summary>
     /// Cancels the current build operation.
     /// </summary>
-    private void OnBuildCanceled()
+    private void OnBuildCanceled(BuildCancellationScope cancellationScope)
     {
-        _buildContext.CancelBuild();
+        switch (cancellationScope)
+        {
+            case BuildCancellationScope.ActiveBuild:
+                if (_buildContext.IsBuildActive)
+                {
+                    _buildContext.CancelBuild();
+                }
+                else
+                {
+                    _buildContext.CancelContext();
+                }
+
+                break;
+
+            case BuildCancellationScope.BuildContext:
+                _buildContext.CancelContext();
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unsupported build cancellation scope: {cancellationScope}");
+        }
+
         ResetState();
     }
 

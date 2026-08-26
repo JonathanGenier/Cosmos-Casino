@@ -1,5 +1,6 @@
 using CosmosCasino.Core.Game.Build;
 using CosmosCasino.Core.Game.Build.Domain;
+using CosmosCasino.Core.Game.Furniture;
 using System;
 
 /// <summary>
@@ -15,6 +16,7 @@ public class BuildRequestFlow : IGameFlow, IDisposable
     #region Fields
 
     private readonly BuildProcessManager _clientBuildManager;
+    private readonly FurnitureProcessManager _furnitureProcessManager;
     private readonly BuildContext _buildContext;
 
     private bool _isDisposed;
@@ -28,13 +30,19 @@ public class BuildRequestFlow : IGameFlow, IDisposable
     /// context.
     /// </summary>
     /// <param name="clientBuildManager">The build process manager used to coordinate and manage build operations. Cannot be null.</param>
+    /// <param name="furnitureProcessManager">The furniture process manager used to coordinate furniture operations. Cannot be null.</param>
     /// <param name="buildContext">The build context that provides information and state for the build process. Cannot be null.</param>
-    public BuildRequestFlow(BuildProcessManager clientBuildManager, BuildContext buildContext)
+    public BuildRequestFlow(
+        BuildProcessManager clientBuildManager,
+        FurnitureProcessManager furnitureProcessManager,
+        BuildContext buildContext)
     {
         ArgumentNullException.ThrowIfNull(clientBuildManager);
+        ArgumentNullException.ThrowIfNull(furnitureProcessManager);
         ArgumentNullException.ThrowIfNull(buildContext);
 
         _clientBuildManager = clientBuildManager;
+        _furnitureProcessManager = furnitureProcessManager;
         _buildContext = buildContext;
 
         _buildContext.BuildEnded += OnBuildEnded;
@@ -66,18 +74,39 @@ public class BuildRequestFlow : IGameFlow, IDisposable
 
     private void OnBuildEnded()
     {
-        var buildIntent = _buildContext.TryCreateBuildIntent();
+        var buildIntent = _buildContext.TryCreateStructureBuildIntent();
 
-        if (buildIntent == null)
+        if (buildIntent != null)
         {
+            ExecuteBuildIntent(buildIntent);
             return;
         }
 
+        var furnitureRequest = _buildContext.TryCreateFurniturePlacementRequest();
+
+        if (furnitureRequest != null)
+        {
+            ExecuteFurniturePlacement(furnitureRequest);
+        }
+    }
+
+    private void ExecuteBuildIntent(BuildIntent buildIntent)
+    {
         BuildResult buildResult = _clientBuildManager.ExecuteBuildIntent(buildIntent);
 
         if (buildResult.Outcome == BuildOperationOutcome.Invalid)
         {
-            DisplayFailureMessage(buildResult.FailureReason);
+            DisplayBuildFailureMessage(buildResult.FailureReason);
+        }
+    }
+
+    private void ExecuteFurniturePlacement(FurniturePlacementRequest request)
+    {
+        FurnitureOperationResult furnitureResult = _furnitureProcessManager.Place(request);
+
+        if (furnitureResult.Outcome == FurnitureOperationOutcome.Invalid)
+        {
+            DisplayFurnitureFailureMessage(furnitureResult.FailureReason);
         }
     }
 
@@ -85,7 +114,7 @@ public class BuildRequestFlow : IGameFlow, IDisposable
 
     #region Display Failure
 
-    private void DisplayFailureMessage(BuildFailureReason failureReason)
+    private void DisplayBuildFailureMessage(BuildFailureReason failureReason)
     {
         switch (failureReason)
         {
@@ -98,6 +127,28 @@ public class BuildRequestFlow : IGameFlow, IDisposable
             case BuildFailureReason.StructureIdAllocationExhausted:
             case BuildFailureReason.StructureIdAlreadyExists:
             case BuildFailureReason.StructureStateInconsistent:
+                ConsoleLog.Info(failureReason.ToString());
+                break;
+
+            default:
+                throw new InvalidOperationException($"{failureReason} not implemented");
+        }
+    }
+
+    private void DisplayFurnitureFailureMessage(FurnitureFailureReason failureReason)
+    {
+        switch (failureReason)
+        {
+            case FurnitureFailureReason.None:
+            case FurnitureFailureReason.FootprintCoordinateOverflow:
+            case FurnitureFailureReason.OutsideGeneratedWorld:
+            case FurnitureFailureReason.StructurePresent:
+            case FurnitureFailureReason.FurniturePresent:
+            case FurnitureFailureReason.OccupancyConflict:
+            case FurnitureFailureReason.InconsistentReservationState:
+            case FurnitureFailureReason.FurnitureIdAllocationExhausted:
+            case FurnitureFailureReason.FurnitureIdAlreadyExists:
+            case FurnitureFailureReason.FurnitureStateInconsistent:
                 ConsoleLog.Info(failureReason.ToString());
                 break;
 
