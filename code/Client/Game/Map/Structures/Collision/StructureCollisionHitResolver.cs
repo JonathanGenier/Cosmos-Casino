@@ -9,7 +9,7 @@ internal static class StructureCollisionHitResolver
 {
     #region Constants
 
-    private const float SurfaceBiasEpsilon = StructureGridMetrics.CellSize * 0.02f;
+    private const float SurfaceBiasEpsilon = WorldGridMetrics.VerticalGridUnitSize * 0.02f;
 
     #endregion
 
@@ -69,8 +69,8 @@ internal static class StructureCollisionHitResolver
             return false;
         }
 
-        double scaled = ((double)worldY + (StructureGridMetrics.CellSize * 0.5d))
-            / StructureGridMetrics.CellSize;
+        double scaled = ((double)worldY + (WorldGridMetrics.VerticalGridUnitSize * 0.5d))
+            / WorldGridMetrics.VerticalGridUnitSize;
         double floored = Math.Floor(scaled);
 
         if (floored < int.MinValue || floored > int.MaxValue)

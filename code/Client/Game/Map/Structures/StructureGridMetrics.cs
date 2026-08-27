@@ -1,4 +1,3 @@
-using CosmosCasino.Core.Game;
 using CosmosCasino.Core.Game.Map;
 using Godot;
 
@@ -33,18 +32,17 @@ internal static class StructureGridMetrics
     #region Coordinates
 
     /// <summary>
-    /// Converts a global logical Structure cell into the Godot world-space center of that structural cell.
+    /// Converts a global logical Structure cell into the Godot world-space center of that authoritative cell.
     /// </summary>
     /// <param name="cell">The authoritative Structure cell coordinate.</param>
     /// <returns>The Godot world-space center for <paramref name="cell"/>.</returns>
     internal static Vector3 ToGodotCenter(MapCellCoord cell)
     {
-        WorldCoord horizontalCenter = MapMath.CellToWorldCenter(cell.ToMapCoord());
-        return horizontalCenter.ToGodotVector3(cell.Y * CellSize);
+        return cell.ToGodotCenter();
     }
 
     /// <summary>
-    /// Converts a global logical Structure cell into a section-local center using canonical structural spacing.
+    /// Converts a global logical Structure cell into a section-local center using authoritative coordinate spacing.
     /// </summary>
     /// <param name="originCell">The section's minimum global cell.</param>
     /// <param name="cell">The global logical Structure cell.</param>
@@ -53,10 +51,7 @@ internal static class StructureGridMetrics
         MapCellCoord originCell,
         MapCellCoord cell)
     {
-        return new Vector3(
-            (cell.X - originCell.X) * CellSize,
-            (cell.Y - originCell.Y) * CellSize,
-            (cell.Z - originCell.Z) * CellSize);
+        return ToGodotCenter(cell) - ToGodotCenter(originCell);
     }
 
     #endregion
