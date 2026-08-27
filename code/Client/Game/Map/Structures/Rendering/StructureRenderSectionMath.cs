@@ -65,7 +65,7 @@ internal static class StructureRenderSectionMath
     /// <returns>The world-space center of the section's minimum global cell.</returns>
     internal static Vector3 ToSectionWorldOrigin(StructureRenderSectionCoord coord)
     {
-        return GetBounds(coord).Min.ToGodotCenter();
+        return StructureGridMetrics.ToGodotCenter(GetBounds(coord).Min);
     }
 
     #endregion

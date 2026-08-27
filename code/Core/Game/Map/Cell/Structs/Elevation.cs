@@ -26,7 +26,7 @@ namespace CosmosCasino.Core.Game.Map
 
         #region Fields
 
-        private readonly int _halfStepIndex;
+        private readonly int _stepIndex;
 
         #endregion
 
@@ -35,7 +35,7 @@ namespace CosmosCasino.Core.Game.Map
         /// <summary>
         /// Gets the vertical <see cref="MapCellCoord.Y"/> coordinate represented by this elevation.
         /// </summary>
-        internal int MapCellY => _halfStepIndex;
+        internal int MapCellY => _stepIndex;
 
         #endregion
 
@@ -68,13 +68,13 @@ namespace CosmosCasino.Core.Game.Map
         #region Validation
 
         /// <summary>
-        /// Resolves the exact half-step index represented by the specified elevation value.
+        /// Resolves the exact grid-step index represented by the specified elevation value.
         /// </summary>
         /// <param name="value">The discrete elevation value.</param>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="value"/> is outside the inclusive supported range.
         /// </exception>
-        private static int GetHalfStepIndex(float value)
+        private static int GetStepIndex(float value)
         {
             if (!float.IsFinite(value) || value < MinValue || value > MaxValue)
             {
@@ -84,9 +84,9 @@ namespace CosmosCasino.Core.Game.Map
                     $"Elevation must be finite and between {MinValue} and {MaxValue}.");
             }
 
-            float halfStepIndex = value / StepSize;
+            float stepIndex = value / StepSize;
 
-            if (halfStepIndex != MathF.Truncate(halfStepIndex))
+            if (stepIndex != MathF.Truncate(stepIndex))
             {
                 throw new ArgumentOutOfRangeException(
                     nameof(value),
@@ -94,7 +94,7 @@ namespace CosmosCasino.Core.Game.Map
                     $"Elevation must align to {StepSize} world-unit increments.");
             }
 
-            return (int)halfStepIndex;
+            return (int)stepIndex;
         }
 
         #endregion

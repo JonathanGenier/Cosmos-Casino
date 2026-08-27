@@ -149,25 +149,30 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
             return;
         }
 
-        RenderPreviewCells(activePreviews, previewData.Cells, previewData.Validity);
+        RenderPreviewCells(
+            activePreviews,
+            previewData.Cells,
+            previewData.Validity,
+            previewData.CellGeometry);
     }
 
     private void RenderPreviewCells(
         List<StructurePreviewCell> activePreviews,
         IReadOnlyList<MapCellCoord> cells,
-        BuildPreviewValidity validity)
+        BuildPreviewValidity validity,
+        BuildPreviewCellGeometry cellGeometry)
     {
         int i = 0;
 
         for (; i < cells.Count && i < activePreviews.Count; i++)
         {
-            ShowPreviewCell(activePreviews[i], cells[i], validity);
+            ShowPreviewCell(activePreviews[i], cells[i], validity, cellGeometry);
         }
 
         for (; i < cells.Count; i++)
         {
             StructurePreviewCell preview = StructurePreviewPool.Fetch();
-            ShowPreviewCell(preview, cells[i], validity);
+            ShowPreviewCell(preview, cells[i], validity, cellGeometry);
             activePreviews.Add(preview);
         }
 
@@ -185,9 +190,11 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     private void ShowPreviewCell(
         StructurePreviewCell preview,
         MapCellCoord cell,
-        BuildPreviewValidity validity)
+        BuildPreviewValidity validity,
+        BuildPreviewCellGeometry cellGeometry)
     {
-        preview.SetWorldPosition(cell.ToGodotCenter());
+        preview.SetCellSize(GetPreviewCellSize(cellGeometry));
+        preview.SetWorldPosition(GetPreviewCellCenter(cell, cellGeometry));
         preview.SetValidity(validity);
         preview.Show();
     }
@@ -218,6 +225,35 @@ public sealed partial class BuildPreviewManager : InitializableNodeManager
     private void ResetStructurePreviewCell(StructurePreviewCell preview)
     {
         preview.Reset();
+    }
+
+    #endregion
+
+    #region Geometry
+
+    private Vector3 GetPreviewCellCenter(
+        MapCellCoord cell,
+        BuildPreviewCellGeometry cellGeometry)
+    {
+        return cellGeometry switch
+        {
+            BuildPreviewCellGeometry.WorldGrid => cell.ToGodotCenter(),
+            BuildPreviewCellGeometry.StructureGrid => StructureGridMetrics.ToGodotCenter(cell),
+            _ => throw new ArgumentOutOfRangeException(nameof(cellGeometry), cellGeometry, "Unsupported preview cell geometry.")
+        };
+    }
+
+    private Vector3 GetPreviewCellSize(BuildPreviewCellGeometry cellGeometry)
+    {
+        return cellGeometry switch
+        {
+            BuildPreviewCellGeometry.WorldGrid => new Vector3(
+                WorldGridMetrics.GridUnitSize,
+                WorldGridMetrics.VerticalGridUnitSize,
+                WorldGridMetrics.GridUnitSize),
+            BuildPreviewCellGeometry.StructureGrid => StructureGridMetrics.CellBoundsSize,
+            _ => throw new ArgumentOutOfRangeException(nameof(cellGeometry), cellGeometry, "Unsupported preview cell geometry.")
+        };
     }
 
     #endregion

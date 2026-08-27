@@ -80,10 +80,7 @@ public sealed class StructurePresentationCatalog
             mesh: null,
             material: null,
             scene: null,
-            localBoundsSize: new Vector3(
-                WorldGridMetrics.GridUnitSize,
-                WorldGridMetrics.VerticalGridUnitSize,
-                WorldGridMetrics.GridUnitSize),
+            localBoundsSize: StructureGridMetrics.CellBoundsSize,
             sceneLocalOffset: Vector3.Zero);
     }
 
@@ -95,9 +92,9 @@ public sealed class StructurePresentationCatalog
         };
 
         var boundsSize = new Vector3(
-            WorldGridMetrics.GridUnitSize * 0.36f,
-            WorldGridMetrics.VerticalGridUnitSize,
-            WorldGridMetrics.GridUnitSize * 0.36f);
+            StructureGridMetrics.CellSize * 0.36f,
+            StructureGridMetrics.CellSize,
+            StructureGridMetrics.CellSize * 0.36f);
 
         return new StructurePresentationDefinition(
             StructureDefinitions.PillarDefinitionId,
@@ -122,13 +119,10 @@ public sealed class StructurePresentationCatalog
             mesh: null,
             material: null,
             scene: GD.Load<PackedScene>("res://scenes/game/structures/door.tscn"),
-            localBoundsSize: new Vector3(
-                WorldGridMetrics.GridUnitSize,
-                WorldGridMetrics.VerticalGridUnitSize,
-                WorldGridMetrics.GridUnitSize),
+            localBoundsSize: StructureGridMetrics.CellBoundsSize,
             sceneLocalOffset: new Vector3(
-                WorldGridMetrics.GridUnitSize * 0.5f,
-                WorldGridMetrics.VerticalGridUnitSize * 0.5f,
+                StructureGridMetrics.HalfCellSize,
+                StructureGridMetrics.HalfCellSize,
                 0f));
     }
 

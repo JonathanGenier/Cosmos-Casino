@@ -13,11 +13,16 @@ namespace CosmosCasino.Core.Game.Map
         /// <summary>
         /// Height of one logical vertical grid unit in world space.
         /// </summary>
-        public const float VerticalGridUnitSize = 0.5f;
+        public const float VerticalGridUnitSize = 1f;
 
         /// <summary>
         /// Half the width and depth of one logical grid unit in world space.
         /// </summary>
         public const float HalfGridUnitSize = GridUnitSize * 0.5f;
+
+        /// <summary>
+        /// Half the height of one logical vertical grid unit in world space.
+        /// </summary>
+        public const float HalfVerticalGridUnitSize = VerticalGridUnitSize * 0.5f;
     }
 }

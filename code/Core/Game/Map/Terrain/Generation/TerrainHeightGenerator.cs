@@ -1,4 +1,5 @@
 using CosmosCasino.Core.Configs;
+using CosmosCasino.Core.Game.Map;
 
 namespace CosmosCasino.Core.Game.Map.Terrain.Generation
 {
@@ -62,7 +63,9 @@ namespace CosmosCasino.Core.Game.Map.Terrain.Generation
                 persistence: TerrainConfigs.NoisePersistence
             );
 
-            return (float)(MathF.Round(h * 10f) / 2f);
+            const float HeightScale = 5f;
+
+            return MathF.Round((h * HeightScale) / Elevation.StepSize) * Elevation.StepSize;
         }
 
         #endregion

@@ -11,17 +11,17 @@ internal readonly struct StructureBlockFace
     /// <summary>
     /// Half of one generated Block's horizontal width in Godot units.
     /// </summary>
-    internal const float HalfWidth = WorldGridMetrics.GridUnitSize * 0.5f;
+    internal const float HalfWidth = StructureGridMetrics.HalfCellSize;
 
     /// <summary>
     /// Half of one generated Block's vertical height in Godot units.
     /// </summary>
-    internal const float HalfHeight = WorldGridMetrics.VerticalGridUnitSize * 0.5f;
+    internal const float HalfHeight = StructureGridMetrics.HalfCellSize;
 
     /// <summary>
     /// Half of one generated Block's horizontal depth in Godot units.
     /// </summary>
-    internal const float HalfDepth = WorldGridMetrics.GridUnitSize * 0.5f;
+    internal const float HalfDepth = StructureGridMetrics.HalfCellSize;
 
     #endregion
 

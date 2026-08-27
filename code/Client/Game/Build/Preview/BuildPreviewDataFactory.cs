@@ -24,7 +24,8 @@ internal static class BuildPreviewDataFactory
 
         return new BuildPreviewData(
             GetStructurePreviewCells(buildResult),
-            ToPreviewValidity(buildResult.Outcome));
+            ToPreviewValidity(buildResult.Outcome),
+            BuildPreviewCellGeometry.StructureGrid);
     }
 
     #endregion
@@ -46,7 +47,8 @@ internal static class BuildPreviewDataFactory
 
         return new BuildPreviewData(
             GetFurniturePreviewCells(request),
-            ToPreviewValidity(result.Outcome));
+            ToPreviewValidity(result.Outcome),
+            BuildPreviewCellGeometry.WorldGrid);
     }
 
     #endregion

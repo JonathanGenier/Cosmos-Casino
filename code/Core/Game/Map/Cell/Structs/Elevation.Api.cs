@@ -22,14 +22,14 @@ namespace CosmosCasino.Core.Game.Map
         /// <summary>
         /// Initializes a new elevation with the specified discrete world-unit value.
         /// </summary>
-        /// <param name="value">A finite world-unit value aligned to a half-unit elevation step.</param>
+        /// <param name="value">A finite world-unit value aligned to the vertical grid step.</param>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown when <paramref name="value"/> is non-finite, outside the inclusive supported range,
-        /// or not aligned to a half-unit elevation step.
+        /// or not aligned to the vertical grid step.
         /// </exception>
         public Elevation(float value)
         {
-            _halfStepIndex = GetHalfStepIndex(value);
+            _stepIndex = GetStepIndex(value);
         }
 
         #endregion
@@ -37,9 +37,9 @@ namespace CosmosCasino.Core.Game.Map
         #region Properties
 
         /// <summary>
-        /// Gets the exact world-unit elevation represented by this discrete half-step value.
+        /// Gets the exact world-unit elevation represented by this discrete vertical grid step.
         /// </summary>
-        public float Value => _halfStepIndex * StepSize;
+        public float Value => _stepIndex * StepSize;
 
         #endregion
     }

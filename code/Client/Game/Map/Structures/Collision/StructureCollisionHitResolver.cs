@@ -1,6 +1,5 @@
 using CosmosCasino.Core.Game.Map;
 using Godot;
-using System;
 
 /// <summary>
 /// Resolves structure collision hits to global logical cells when triangle metadata is unavailable.
@@ -63,24 +62,7 @@ internal static class StructureCollisionHitResolver
 
     private static bool TryResolveVerticalCell(float worldY, out int cellY)
     {
-        if (!float.IsFinite(worldY))
-        {
-            cellY = default;
-            return false;
-        }
-
-        double scaled = ((double)worldY + (WorldGridMetrics.VerticalGridUnitSize * 0.5d))
-            / WorldGridMetrics.VerticalGridUnitSize;
-        double floored = Math.Floor(scaled);
-
-        if (floored < int.MinValue || floored > int.MaxValue)
-        {
-            cellY = default;
-            return false;
-        }
-
-        cellY = (int)floored;
-        return true;
+        return MapMath.TryWorldToCellY(worldY, out cellY);
     }
 
     private static bool IsFinite(Vector3 vector)

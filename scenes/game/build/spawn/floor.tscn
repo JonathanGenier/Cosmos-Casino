@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bidbofnue21fu"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_j8s6s"]
-size = Vector3(1, 0.25, 1)
+size = Vector3(1, 1, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jrfil"]
 albedo_color = Color(0.38928655, 0.38928664, 0.38928658, 1)
@@ -9,17 +9,15 @@ metallic = 1.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_diruf"]
 material = SubResource("StandardMaterial3D_jrfil")
+size = Vector3(1, 1, 1)
 
 [node name="Floor" type="Node3D" unique_id=1767443686]
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1011609620]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=1853639224]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12731934, 0)
 shape = SubResource("BoxShape3D_j8s6s")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D" unique_id=1577832221]
-transform = Transform3D(1, 0, 0, 0, 0.25, 0, 0, 0, 1, 0, -0.125, 0)
 mesh = SubResource("BoxMesh_diruf")
 skeleton = NodePath("../..")

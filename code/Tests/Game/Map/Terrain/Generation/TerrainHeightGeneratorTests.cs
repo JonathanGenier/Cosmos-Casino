@@ -1,3 +1,4 @@
+using CosmosCasino.Core.Game.Map;
 using CosmosCasino.Core.Game.Map.Terrain.Generation;
 using NUnit.Framework;
 
@@ -35,17 +36,32 @@ namespace CosmosCasino.Tests.Game.Map.Terrain.Generation
         }
 
         [Test]
-        public void GetHeight_ResultIsQuantized()
+        public void GetHeight_SampledAreaIsQuantizedToVerticalGridStep()
         {
             // Arrange
             var gen = new TerrainHeightGenerator(seed: 42);
 
             // Act
-            float h = gen.GetHeight(10, 20);
+            for (int x = -5; x <= 5; x++)
+            {
+                for (int y = -5; y <= 5; y++)
+                {
+                    float h = gen.GetHeight(x, y);
 
-            // Assert
-            float doubled = h * 2f;
-            Assert.That(MathF.Abs(doubled - MathF.Round(doubled)) < 0.0001f);
+                    // Assert
+                    AssertHeightAlignedToVerticalGridStep(h);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private static void AssertHeightAlignedToVerticalGridStep(float height)
+        {
+            float scaled = height / Elevation.StepSize;
+            Assert.That(MathF.Abs(scaled - MathF.Round(scaled)) < 0.0001f);
         }
 
         #endregion

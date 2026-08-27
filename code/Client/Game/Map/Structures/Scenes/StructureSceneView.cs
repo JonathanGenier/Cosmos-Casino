@@ -48,7 +48,9 @@ internal sealed partial class StructureSceneView : Node3D
         }
 
         StructureId = snapshot.Id;
-        Transform = GridPlacementTransformResolver.ResolveWorldTransform(snapshot.Anchor, snapshot.Rotation);
+        Transform = GridPlacementTransformResolver.ResolveWorldTransform(
+            StructureGridMetrics.ToGodotCenter(snapshot.Anchor),
+            snapshot.Rotation);
         _sceneRoot = InstantiateSceneRoot(presentation);
         AddChild(_sceneRoot);
         AddCollisionProxies(snapshot, presentation);
@@ -93,7 +95,7 @@ internal sealed partial class StructureSceneView : Node3D
         body.AddChild(collisionShape);
         body.AddChild(pickTarget);
         AddChild(body);
-        body.GlobalTransform = new Transform3D(Basis.Identity, cell.ToGodotCenter());
+        body.GlobalTransform = new Transform3D(Basis.Identity, StructureGridMetrics.ToGodotCenter(cell));
     }
 
     #endregion

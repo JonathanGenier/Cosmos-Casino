@@ -69,41 +69,41 @@ namespace CosmosCasino.Tests.Game.Map.Terrain.Tile
         }
 
         [Test]
-        public void Constructor_FlatHalfStepTile_PreservesHalfStepBaseElevation()
+        public void Constructor_FlatGridStepTile_PreservesGridStepBaseElevation()
         {
-            var tile = new TerrainTile(2.5f, 2.5f, 2.5f, 2.5f);
+            var tile = new TerrainTile(2f, 2f, 2f, 2f);
 
-            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(2.5f)));
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(2f)));
         }
 
         [Test]
-        public void Constructor_HalfStepSlope_UsesLowestCornerAsBaseElevation()
+        public void Constructor_FractionalSlope_UsesFlooredGridStepAsBaseElevation()
         {
             var tile = new TerrainTile(2.5f, 3f, 2.5f, 3f);
 
-            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(2.5f)));
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(2f)));
             Assert.That(tile.IsSlope, Is.True);
         }
 
         [Test]
         public void Constructor_WholeStepSlope_UsesLowestCornerAsBaseElevation()
         {
-            var tile = new TerrainTile(3f, 3.5f, 3f, 3.5f);
+            var tile = new TerrainTile(3f, 4f, 3f, 4f);
 
             Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(3f)));
         }
 
         [Test]
-        public void Constructor_NegativeHalfStepSlope_UsesLowestCornerAsBaseElevation()
+        public void Constructor_NegativeFractionalSlope_UsesFlooredGridStepAsBaseElevation()
         {
             var tile = new TerrainTile(-1.5f, -1f, -1.5f, -1f);
 
-            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(-1.5f)));
+            Assert.That(tile.BaseElevation, Is.EqualTo(new Elevation(-2f)));
         }
 
-        [TestCase(2.75f, 2.5f)]
-        [TestCase(-1.25f, -1.5f)]
-        public void Constructor_ArbitraryFractionalMinimum_FloorsToHalfStep(float minimum, float expected)
+        [TestCase(2.75f, 2f)]
+        [TestCase(-1.25f, -2f)]
+        public void Constructor_ArbitraryFractionalMinimum_FloorsToGridStep(float minimum, float expected)
         {
             var tile = new TerrainTile(minimum, minimum + 0.25f, minimum, minimum + 0.25f);
 
