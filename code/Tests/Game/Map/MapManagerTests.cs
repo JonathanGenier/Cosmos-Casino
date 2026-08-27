@@ -176,7 +176,7 @@ namespace CosmosCasino.Tests.Game.Map
         {
             var manager = new MapManager();
             var coord = new MapCoord(0, 0);
-            var elevation = new Elevation(1.5f);
+            var elevation = new Elevation(1f);
             manager.GenerateMap(seed: 0, mapSize: 5);
             int chunkCount = manager.ChunkCount;
 
@@ -309,7 +309,7 @@ namespace CosmosCasino.Tests.Game.Map
             var coord = new MapCoord(2, -3);
             var lower = new Elevation(-1f);
             var origin = new Elevation(0f);
-            var upper = new Elevation(1.5f);
+            var upper = new Elevation(2f);
             manager.StoreGeneratedTerrain(new TerrainTileWorldCoord(coord.X, coord.Y), FlatTile(0f));
 
             manager.TryPlace(BuildKind.Floor, coord, lower);

@@ -64,7 +64,7 @@ namespace CosmosCasino.Tests.Game.Map
         [Test]
         public void HasFloorAt_NonMatchingElevation_ReturnsFalse()
         {
-            var elevation = new Elevation(2.5f);
+            var elevation = new Elevation(2f);
             var cell = CellAt(elevation);
             PlaceFloor(cell);
 
@@ -176,7 +176,7 @@ namespace CosmosCasino.Tests.Game.Map
         [Test]
         public void HasWallAt_NonMatchingElevation_ReturnsFalse()
         {
-            var elevation = new Elevation(-1.5f);
+            var elevation = new Elevation(-2f);
             var cell = CellAt(elevation);
             PlaceFloorAndWall(cell);
 

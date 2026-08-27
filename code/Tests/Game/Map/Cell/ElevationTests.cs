@@ -9,16 +9,12 @@ namespace CosmosCasino.Tests.Game.Map
         #region Construction
 
         [TestCase(-20f)]
-        [TestCase(-19.5f)]
         [TestCase(-1f)]
-        [TestCase(-0.5f)]
         [TestCase(0f)]
-        [TestCase(0.5f)]
         [TestCase(1f)]
-        [TestCase(1.5f)]
-        [TestCase(19.5f)]
+        [TestCase(19f)]
         [TestCase(20f)]
-        public void Constructor_ValidHalfStep_PreservesValue(float value)
+        public void Constructor_ValidGridStep_PreservesValue(float value)
         {
             var elevation = new Elevation(value);
 
@@ -35,11 +31,17 @@ namespace CosmosCasino.Tests.Game.Map
 
         [TestCase(-20.5f)]
         [TestCase(20.5f)]
+        [TestCase(-19.5f)]
+        [TestCase(-1.5f)]
         [TestCase(-1.75f)]
+        [TestCase(-0.5f)]
         [TestCase(-0.25f)]
         [TestCase(0.25f)]
+        [TestCase(0.5f)]
         [TestCase(1.25f)]
+        [TestCase(1.5f)]
         [TestCase(3.7f)]
+        [TestCase(19.5f)]
         [TestCase(float.NaN)]
         [TestCase(float.PositiveInfinity)]
         [TestCase(float.NegativeInfinity)]
@@ -60,22 +62,22 @@ namespace CosmosCasino.Tests.Game.Map
         #region Equality
 
         [Test]
-        public void HalfStepIdentity_DrivesEqualityAndHashing()
+        public void GridStepIdentity_DrivesEqualityAndHashing()
         {
-            var first = new Elevation(2.5f);
-            var second = new Elevation(2.5f);
+            var first = new Elevation(2f);
+            var second = new Elevation(2f);
 
             Assert.That(second, Is.EqualTo(first));
             Assert.That(second.GetHashCode(), Is.EqualTo(first.GetHashCode()));
-            Assert.That(second, Is.Not.EqualTo(new Elevation(2f)));
+            Assert.That(second, Is.Not.EqualTo(new Elevation(1f)));
             Assert.That(second, Is.Not.EqualTo(new Elevation(3f)));
         }
 
         [Test]
-        public void EqualHalfStepValues_AddressSameDictionaryEntry()
+        public void EqualGridStepValues_AddressSameDictionaryEntry()
         {
-            var stored = new Elevation(2.5f);
-            var lookup = new Elevation(2.5f);
+            var stored = new Elevation(2f);
+            var lookup = new Elevation(2f);
             var values = new Dictionary<Elevation, string>
             {
                 [stored] = "layer",

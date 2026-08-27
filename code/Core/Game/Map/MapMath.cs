@@ -45,6 +45,65 @@ namespace CosmosCasino.Core.Game.Map
             );
         }
 
+        /// <summary>
+        /// Returns the vertical map-cell layer containing the specified world-space height.
+        /// Uses half-open base-plane bounds so each cell starts at its base plane and extends by one vertical grid unit.
+        /// </summary>
+        /// <param name="worldY">
+        /// World-space height to resolve.
+        /// </param>
+        /// <returns>
+        /// The vertical map-cell layer containing <paramref name="worldY"/>.
+        /// </returns>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown when <paramref name="worldY"/> is non-finite or cannot resolve to an <see cref="int"/> layer.
+        /// </exception>
+        public static int WorldToCellY(float worldY)
+        {
+            if (!TryWorldToCellY(worldY, out int cellY))
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(worldY),
+                    worldY,
+                    "World-space height must be finite and resolve to a representable map-cell Y coordinate.");
+            }
+
+            return cellY;
+        }
+
+        /// <summary>
+        /// Attempts to return the vertical map-cell layer containing the specified world-space height.
+        /// </summary>
+        /// <param name="worldY">
+        /// World-space height to resolve.
+        /// </param>
+        /// <param name="cellY">
+        /// The resolved vertical map-cell layer, when successful.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> when <paramref name="worldY"/> resolves to a representable vertical layer; otherwise, <c>false</c>.
+        /// </returns>
+        public static bool TryWorldToCellY(float worldY, out int cellY)
+        {
+            if (!float.IsFinite(worldY))
+            {
+                cellY = default;
+                return false;
+            }
+
+            double scaled = (double)worldY / WorldGridMetrics.VerticalGridUnitSize;
+            double floored = Math.Floor(scaled);
+
+            if (floored < int.MinValue || floored > int.MaxValue)
+            {
+                cellY = default;
+                return false;
+            }
+
+            cellY = (int)floored;
+            return true;
+        }
+
         #endregion
 
         #region Cell To World
@@ -86,13 +145,23 @@ namespace CosmosCasino.Core.Game.Map
         }
 
         /// <summary>
+        /// Returns the world-space vertical base plane for a global logical map-cell Y coordinate.
+        /// </summary>
+        /// <param name="cellY">The global logical vertical map-cell coordinate.</param>
+        /// <returns>The world-space vertical base plane for <paramref name="cellY"/>.</returns>
+        public static float CellYToWorldBasePlane(int cellY)
+        {
+            return cellY * WorldGridMetrics.VerticalGridUnitSize;
+        }
+
+        /// <summary>
         /// Returns the world-space vertical center for a global logical map-cell Y coordinate.
         /// </summary>
         /// <param name="cellY">The global logical vertical map-cell coordinate.</param>
         /// <returns>The world-space vertical center for <paramref name="cellY"/>.</returns>
         public static float CellYToWorldCenter(int cellY)
         {
-            return cellY * WorldGridMetrics.VerticalGridUnitSize;
+            return CellYToWorldBasePlane(cellY) + WorldGridMetrics.HalfVerticalGridUnitSize;
         }
 
         #endregion

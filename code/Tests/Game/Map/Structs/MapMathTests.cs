@@ -7,6 +7,16 @@ namespace CosmosCasino.Tests.Game.Map
     [TestFixture]
     internal sealed class MapMathTests
     {
+        #region Metrics
+
+        [Test]
+        public void VerticalGridUnitSize_MatchesHorizontalGridUnitSize()
+        {
+            Assert.That(WorldGridMetrics.VerticalGridUnitSize, Is.EqualTo(WorldGridMetrics.GridUnitSize));
+        }
+
+        #endregion
+
         #region World To Cell
 
         [TestCase(0.0f, 0)]
@@ -55,6 +65,31 @@ namespace CosmosCasino.Tests.Game.Map
             Assert.That(cell, Is.EqualTo(new MapCoord(0, expectedY)));
         }
 
+        [TestCase(-1.01f, -2)]
+        [TestCase(-1.0f, -1)]
+        [TestCase(-0.01f, -1)]
+        [TestCase(0.0f, 0)]
+        [TestCase(0.49f, 0)]
+        [TestCase(0.999f, 0)]
+        [TestCase(1.0f, 1)]
+        [TestCase(1.49f, 1)]
+        [TestCase(12.999f, 12)]
+        public void WorldToCellY_UsesBasePlaneHalfOpenBounds(float worldY, int expectedCellY)
+        {
+            int cellY = MapMath.WorldToCellY(worldY);
+
+            Assert.That(cellY, Is.EqualTo(expectedCellY));
+        }
+
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        [TestCase(float.NegativeInfinity)]
+        public void WorldToCellY_NonFiniteHeight_ThrowsArgumentOutOfRangeException(float worldY)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => MapMath.WorldToCellY(worldY));
+            Assert.That(MapMath.TryWorldToCellY(worldY, out _), Is.False);
+        }
+
         #endregion
 
         #region Cell To World
@@ -84,14 +119,40 @@ namespace CosmosCasino.Tests.Game.Map
         [TestCase(0, 0f)]
         [TestCase(1, WorldGridMetrics.VerticalGridUnitSize)]
         [TestCase(-1, -WorldGridMetrics.VerticalGridUnitSize)]
-        [TestCase(41, 20.5f)]
-        [TestCase(100_000, 50_000f)]
-        [TestCase(-100_000, -50_000f)]
-        public void CellYToWorldCenter_UsesUnboundedVerticalGridMetric(int cellY, float expectedWorldY)
+        [TestCase(41, 41f)]
+        [TestCase(100_000, 100_000f)]
+        [TestCase(-100_000, -100_000f)]
+        public void CellYToWorldBasePlane_UsesUnboundedVerticalGridMetric(int cellY, float expectedWorldY)
+        {
+            float worldY = MapMath.CellYToWorldBasePlane(cellY);
+
+            Assert.That(worldY, Is.EqualTo(expectedWorldY));
+        }
+
+        [TestCase(0, 0.5f)]
+        [TestCase(1, 1.5f)]
+        [TestCase(-1, -0.5f)]
+        [TestCase(41, 41.5f)]
+        [TestCase(100_000, 100_000.5f)]
+        [TestCase(-100_000, -99_999.5f)]
+        public void CellYToWorldCenter_UsesBasePlanePlusHalfVerticalUnit(int cellY, float expectedWorldY)
         {
             float worldY = MapMath.CellYToWorldCenter(cellY);
 
             Assert.That(worldY, Is.EqualTo(expectedWorldY));
+        }
+
+        [Test]
+        public void CellYToWorldBasePlane_AdjacentLayersTouchWithoutOverlapOrGap()
+        {
+            const int lowerCellY = 4;
+            const int upperCellY = lowerCellY + 1;
+
+            float lowerTop = MapMath.CellYToWorldBasePlane(lowerCellY)
+                + WorldGridMetrics.VerticalGridUnitSize;
+            float upperBase = MapMath.CellYToWorldBasePlane(upperCellY);
+
+            Assert.That(upperBase, Is.EqualTo(lowerTop));
         }
 
         #endregion
@@ -126,6 +187,18 @@ namespace CosmosCasino.Tests.Game.Map
             Assert.That(worldY, Is.GreaterThanOrEqualTo(origin.Y));
             Assert.That(worldY, Is.LessThan(origin.Y + WorldGridMetrics.GridUnitSize));
             Assert.That(MapMath.WorldToCell(center), Is.EqualTo(expectedCell));
+        }
+
+        [TestCase(-100_000)]
+        [TestCase(-1)]
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(100_000)]
+        public void WorldToCellY_CellCenter_RoundTripsToCellY(int cellY)
+        {
+            float worldCenterY = MapMath.CellYToWorldCenter(cellY);
+
+            Assert.That(MapMath.WorldToCellY(worldCenterY), Is.EqualTo(cellY));
         }
 
         #endregion
